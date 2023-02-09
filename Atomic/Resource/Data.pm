@@ -83,7 +83,7 @@ sub create_work_copy
 {
     my ($self) = @_;
     $self->{work} = $self->_clone( ${ $self->{params}->{source} } );
-    return 'MOCK ERROR';
+    return;
 }
 
 # ------------------------------------------------------------------------------

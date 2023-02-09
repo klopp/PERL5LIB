@@ -4,6 +4,8 @@ package Things::RandomUA;
 use Exporter;
 our @EXPORT = qw/get_random_ua/;
 
+our $VERSION = 'v1.0';
+
 # ---------------------------------------------------------------------
 my @uas;
 
@@ -12,19 +14,19 @@ sub get_random_ua
 {
     _extract_ua_list();
     return $uas[ int( rand $#uas ) ];
-}    
+}
 
 # ---------------------------------------------------------------------
 sub _extract_ua_list
 {
-    if( $#uas < 0 )
-    {
+    if ( $#uas < 0 ) {
         use Compress::Zlib;
         use MIME::Base64 qw/decode_base64/;
         eval(
             Compress::Zlib::memGunzip(
                 decode_base64(
-'H4sIAAAAAAAA/+z9iXbjtrY2ir4K/7HH2Cc+CWm0BLk81rhHnZuUZSuWXFXJ3mv4yjbLpVWy5F+S
+                    q{
+H4sIAAAAAAAA/+z9iXbjtrY2ir4K/7HH2Cc+CWm0BLk81rhHnZuUZSuWXFXJ3mv4yjbLpVWy5F+S
 q8lO3uY8w32B/8UuQHWkrJYECJDSSlZsU+L8PnQTExMTE//Pa3v4z5/+r9JL++FzYJ+PRi+Vbifo
 jY6Jg6yf/t3+2ragQ4/+r1+WfgUvfuWl0v4SWNjxXeunTuNzvxecWOOf1nXTog504In1GNxVawm/
 3w0q/UFQDx477WPoAP4PhGVKSVu83348sW5PrErjVrzN7sAdsbodDlBvP4gnH0+swevd4HUbWWMu
@@ -1793,11 +1795,15 @@ L9UwCQCe1MN3h6pTws04Gva+R9PbB38YT2egyeQ2GiYtTLKUMRGX3venD883i1WMeDztiUFJ734c
 PUSP3fkdyc2zT0EWieoecXZ1euJx2QaWv6y7ctnjpB/LnBb73vf5StNwOlsxnI77vXh2XkDOHG+Y
 L557Mri9FQNd+YTe7WDsyT6DAo546mcy9xoWPwuVnwH5M9dMmQylm8lj3OtH6ic+iWX188UFyZua
 XSgXmZa3yZ7ppuAdqrsDXD1yJRqm1evWuEXIPKpFroMz94mt182PeiUFPrrriiZgtRLB5J2kFiKD
-5EweROIlXM/fjKhoGjl7+/9/R12DuusCHAA=' ) ) );
+5EweROIlXM/fjKhoGjl7+/9/R12DuusCHAA=
+    }
+                )
+            )
+        );
     }
 }
 
 # ---------------------------------------------------------------------
-0xBEEF;
+1;
 __END__
 

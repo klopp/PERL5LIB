@@ -10,6 +10,7 @@ use Atomic::Resource::Data;
 use base qw/Atomic::Resource::Data/;
 
 our $VERSION = 'v1.0';
+
 # ------------------------------------------------------------------------------
 sub new
 {

@@ -22,6 +22,8 @@ our %EXPORT_TAGS = (
     ],
 );
 
+our $VERSION = 'v1.0';
+
 # ------------------------------------------------------------------------------
 use Const::Fast;
 use Scalar::Util qw/readonly/;

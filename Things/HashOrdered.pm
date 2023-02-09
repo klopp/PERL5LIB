@@ -1,5 +1,7 @@
 package Things::HashOrdered;
 
+our $VERSION = 'v1.0';
+
 # ------------------------------------------------------------------------------
 use Hash::Ordered;
 use base qw/Hash::Ordered/;
