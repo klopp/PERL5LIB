@@ -50,7 +50,8 @@ sub select_fields
 sub AUTOLOAD
 {
     my ( $self, @args ) = @_;
-    $AUTOLOAD =~ s/^(.+::)+//gsm;
+
+    $AUTOLOAD =~ s/^.*:://gsm;
     my ( $rc, @rc );
     if (wantarray) {
         capture_stderr {
