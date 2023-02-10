@@ -4,7 +4,8 @@ use Exporter qw/import/;
 use base qw/Exporter/;
 
 our @EXPORT_OK = qw/
-    trim set_bool set_true set_false TRUE FALSE xget
+    trim xget
+    set_bool set_true set_false TRUE FALSE parse_bool
     ip2long long2ip
     random_line random_ua
     $DATA_DIR
@@ -14,9 +15,9 @@ our @EXPORT_OK = qw/
     /;
 our %EXPORT_TAGS = (
     'all'   => \@EXPORT_OK,
-    'func'  => [qw/trim set_bool set_true set_false xget random_line random_ua/],
+    'func'  => [qw/trim set_bool set_true set_false xget random_line random_ua parse_bool/],
     'net '  => [qw/ip2long long2ip/],
-    'bool'  => [qw/set_bool set_true set_false TRUE FALSE/],
+    'bool'  => [qw/set_bool set_true set_false TRUE FALSE parse_bool/],
     'const' => [
         qw/
             $DATA_DIR
@@ -78,6 +79,13 @@ sub trim
 # ------------------------------------------------------------------------------
 sub TRUE  {1}
 sub FALSE {0}
+
+# ------------------------------------------------------------------------------
+sub parse_bool
+{
+    $_[0] = ( $_[0] && $_[0] !~ /^0|no|false|none|never$/i ) ? 1 : 0;
+    return $_[0];
+}
 
 # ------------------------------------------------------------------------------
 sub set_true
@@ -204,12 +212,6 @@ sub random_ua
 {
     return trim( random_line( $DATA_DIR . 'ua.list', 1 ) );
 }
-
-# ------------------------------------------------------------------------------
-#sub parse_bool {
-#    $_[0] = ( $_[0] && $_[0] !~ /^0|no|false|none$/i ) ? 1 : 0;
-#    return $_[0];
-#}
 
 # ------------------------------------------------------------------------------
 1;
