@@ -1,23 +1,23 @@
 package Things;
 
-use Exporter;
+use Exporter qw/import/;
 use base qw/Exporter/;
 
 our @EXPORT_OK = qw/
-    trim set_bool set_true set_false xget
+    trim set_bool set_true set_false TRUE FALSE xget
     $YEAR_OFFSET
     $HOUR_IN_DAY $MIN_IN_HOUR $MIN_IN_DAY $SEC_IN_DAY $SEC_IN_HOUR $SEC_IN_MIN
-    @MONTHS3
+    @MONTHS3 %MONTHS3
     /;
 our %EXPORT_TAGS = (
     'all'   => \@EXPORT_OK,
     'func'  => [qw/trim set_bool set_true set_false xget/],
-    'bool'  => [qw/set_bool set_true set_false/],
+    'bool'  => [qw/set_bool set_true set_false TRUE FALSE/],
     'const' => [
         qw/
             $YEAR_OFFSET
             $SEC_IN_MIN $HOUR_IN_DAY $MIN_IN_HOUR $MIN_IN_DAY $SEC_IN_HOUR $SEC_IN_DAY
-            @MONTHS3
+            @MONTHS3 %MONTHS3
             /
     ],
 );
@@ -28,37 +28,48 @@ our $VERSION = 'v1.0';
 use Const::Fast;
 use Scalar::Util qw/readonly/;
 
-const my $YEAR_OFFSET => 1900;
-const my $SEC_IN_MIN  => 60;
-const my $HOUR_IN_DAY => 24;
-const my $MIN_IN_HOUR => 60;
-const my $MIN_IN_DAY  => $MIN_IN_HOUR * $HOUR_IN_DAY;
-const my $SEC_IN_HOUR => $SEC_IN_MIN * $MIN_IN_HOUR;
-const my $SEC_IN_DAY  => $SEC_IN_HOUR * $HOUR_IN_DAY;
-const my @MONTHS3     => qw/Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec/;
+const our $YEAR_OFFSET => 1900;
+const our $SEC_IN_MIN  => 60;
+const our $HOUR_IN_DAY => 24;
+const our $MIN_IN_HOUR => 60;
+const our $MIN_IN_DAY  => $MIN_IN_HOUR * $HOUR_IN_DAY;
+const our $SEC_IN_HOUR => $SEC_IN_MIN * $MIN_IN_HOUR;
+const our $SEC_IN_DAY  => $SEC_IN_HOUR * $HOUR_IN_DAY;
+const our @MONTHS3     => qw/Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec/;
+const our %MONTHS3     => map { $_ => $MONTHS3[$_] } 0 .. @MONTHS3 - 1;
+
+# ------------------------------------------------------------------------------
+BEGIN {
+}
 
 # ------------------------------------------------------------------------------
 sub trim
 {
+    CORE::state $TRIM_RX = qr{^\s+|\s+$};
+
     for (@_) {
 
         # trim( ' ... ' ) умник, да?
         readonly($_) and next;
 
         if ( ref $_ eq 'ARRAY' ) {
-            trim( @{$_} );
+            $_ =~ s/$TRIM_RX//gsm for @{$_};
         }
         elsif ( ref $_ eq 'HASH' ) {
             while ( my ($key) = each %{$_} ) {
-                trim( $_->{$key} );
+                $_->{$key} =~ s/$TRIM_RX//gsm;
             }
         }
         elsif ( !ref $_ ) {
-            s/^\s+|\s+$//gsm;
+            $_ =~ s/$TRIM_RX//gsm;
         }
     }
     return wantarray ? @_ : $_[0];
 }
+
+# ------------------------------------------------------------------------------
+sub TRUE  {1}
+sub FALSE {0}
 
 # ------------------------------------------------------------------------------
 sub set_true
