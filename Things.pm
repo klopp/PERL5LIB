@@ -7,6 +7,7 @@ our @EXPORT_OK = qw/
     trim set_bool set_true set_false TRUE FALSE xget
     ip2long long2ip
     random_line random_ua
+    $DATA_DIR
     $YEAR_OFFSET
     $HOUR_IN_DAY $MIN_IN_HOUR $MIN_IN_DAY $SEC_IN_DAY $SEC_IN_HOUR $SEC_IN_MIN
     @MONTHS3 %MONTHS3
@@ -18,6 +19,7 @@ our %EXPORT_TAGS = (
     'bool'  => [qw/set_bool set_true set_false TRUE FALSE/],
     'const' => [
         qw/
+            $DATA_DIR
             $YEAR_OFFSET
             $SEC_IN_MIN $HOUR_IN_DAY $MIN_IN_HOUR $MIN_IN_DAY $SEC_IN_HOUR $SEC_IN_DAY
             @MONTHS3 %MONTHS3
@@ -42,9 +44,7 @@ const our $SEC_IN_HOUR => $SEC_IN_MIN * $MIN_IN_HOUR;
 const our $SEC_IN_DAY  => $SEC_IN_HOUR * $HOUR_IN_DAY;
 const our @MONTHS3     => qw/Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec/;
 const our %MONTHS3     => map { $_ => $MONTHS3[$_] } 0 .. @MONTHS3 - 1;
-
-# ------------------------------------------------------------------------------
-const my $DATA_DIR => Module::Filename->new->filename(__PACKAGE__)->dir . '/data/';
+const our $DATA_DIR    => Module::Filename->new->filename(__PACKAGE__)->dir . '/data/';
 
 # ------------------------------------------------------------------------------
 BEGIN {
