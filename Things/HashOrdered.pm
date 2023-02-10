@@ -8,8 +8,7 @@ use base qw/Hash::Ordered/;
 
 =for comment
     Надстройка над Hash::Ordered, позволяет использовать
-    обычный синтаксис each и $hash->{}.
-    Экспортируется всегда.
+    обычный синтаксис each и $hash->{}
 =cut
 
 use overload
