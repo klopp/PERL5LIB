@@ -2,6 +2,7 @@ package Things::Db;
 
 use StdUse;
 
+use Capture::Tiny qw/capture_stderr/;
 use Const::Fast;
 use Module::Filename;
 
@@ -24,7 +25,11 @@ sub new
 sub select_field
 {
     my ( $self, $select, $field, @attrs ) = @_;
-    my $rc = $self->{db}->selectrow_hashref($select, @attrs);
+    my $rc;
+    capture_stderr {
+        $rc = $self->{db}->selectrow_hashref( $select, @attrs );
+    };
+    $rc or return;
     return $rc->{$field};
 }
 
@@ -32,7 +37,11 @@ sub select_field
 sub select_fields
 {
     my ( $self, $select, $field, @attrs ) = @_;
-    my $rc = $self->{db}->selectall_arrayref($select, { Slice => {} }, @attrs);
+    my $rc;
+    capture_stderr {
+        $rc = $self->{db}->selectall_arrayref( $select, { Slice => {} }, @attrs );
+    };
+    $rc or return;
     my @fields = map { $_->{$field} } @{$rc};
     return wantarray ? @fields : \@fields;
 }
@@ -42,7 +51,18 @@ sub AUTOLOAD
 {
     my ( $self, @args ) = @_;
     $AUTOLOAD =~ s/^(.+::)+//gsm;
-    return $self->{db}->$AUTOLOAD(@args);
+    my ( $rc, @rc );
+    if (wantarray) {
+        capture_stderr {
+            @rc = $self->{db}->$AUTOLOAD(@args);
+        };
+    }
+    else {
+        capture_stderr {
+            $rc = $self->{db}->$AUTOLOAD(@args);
+        };
+    }
+    return wantarray ? @rc : $rc;
 }
 
 # ------------------------------------------------------------------------------
