@@ -5,13 +5,16 @@ use base qw/Exporter/;
 
 our @EXPORT_OK = qw/
     trim set_bool set_true set_false TRUE FALSE xget
+    ip2long long2ip
+    random_line random_ua
     $YEAR_OFFSET
     $HOUR_IN_DAY $MIN_IN_HOUR $MIN_IN_DAY $SEC_IN_DAY $SEC_IN_HOUR $SEC_IN_MIN
     @MONTHS3 %MONTHS3
     /;
 our %EXPORT_TAGS = (
     'all'   => \@EXPORT_OK,
-    'func'  => [qw/trim set_bool set_true set_false xget/],
+    'func'  => [qw/trim set_bool set_true set_false xget random_line random_ua/],
+    'net '  => [qw/ip2long long2ip/],
     'bool'  => [qw/set_bool set_true set_false TRUE FALSE/],
     'const' => [
         qw/
@@ -26,7 +29,9 @@ our $VERSION = 'v1.0';
 
 # ------------------------------------------------------------------------------
 use Const::Fast;
+use Module::Filename;
 use Scalar::Util qw/readonly/;
+use Socket qw/inet_aton inet_ntoa/;
 
 const our $YEAR_OFFSET => 1900;
 const our $SEC_IN_MIN  => 60;
@@ -37,6 +42,9 @@ const our $SEC_IN_HOUR => $SEC_IN_MIN * $MIN_IN_HOUR;
 const our $SEC_IN_DAY  => $SEC_IN_HOUR * $HOUR_IN_DAY;
 const our @MONTHS3     => qw/Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec/;
 const our %MONTHS3     => map { $_ => $MONTHS3[$_] } 0 .. @MONTHS3 - 1;
+
+# ------------------------------------------------------------------------------
+const my $DATA_DIR => Module::Filename->new->filename(__PACKAGE__)->dir . '/data/';
 
 # ------------------------------------------------------------------------------
 BEGIN {
@@ -154,6 +162,54 @@ sub xget
     }
     return $cursor;
 }
+
+# ------------------------------------------------------------------------------
+sub ip2long
+{
+    my ($ip) = @_;
+    return unpack( 'l*', pack( 'l*', unpack( 'N*', inet_aton($ip) ) ) );
+}
+
+# ------------------------------------------------------------------------------
+sub long2ip
+{
+    my ($ip) = @_;
+    return inet_ntoa( pack( 'N*', $ip ) );
+}
+
+# ------------------------------------------------------------------------------
+sub random_line
+{
+    my ( $filename, $noempty ) = @_;
+
+    open my $fh, '<', $filename or Carp::confess sprintf 'can not open file "%s"', $filename;
+    my $filesize = -s $filename;
+    seek( $fh, int( rand $filesize ), 0 );
+    <$fh>;
+    seek( $fh, 0, 0 ) if eof $fh;
+    $line = <$fh>;
+    trim($line);
+    while ($noempty) {
+        last if $line;
+        $line = <$fh>;
+        trim($line);
+        seek( $fh, 0, 0 ) if eof $fh;
+    }
+    close $fh;
+    return $line;
+}
+
+# ------------------------------------------------------------------------------
+sub random_ua
+{
+    return trim( random_line( $DATA_DIR . 'ua.list', 1 ) );
+}
+
+# ------------------------------------------------------------------------------
+#sub parse_bool {
+#    $_[0] = ( $_[0] && $_[0] !~ /^0|no|false|none$/i ) ? 1 : 0;
+#    return $_[0];
+#}
 
 # ------------------------------------------------------------------------------
 1;
