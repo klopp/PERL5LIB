@@ -44,10 +44,10 @@ sub upsert
                 VALUES (%s)
             ON CONFLICT("%s") DO UPDATE 
                 SET %s 
-    }, $table, join( '","', @fields ), join( ',', @placeholders ), $key, join(',', @set);
+    }, $table, join( '","', @fields ), join( q{,}, @placeholders ), $key, join( q{,}, @set );
 
     my $sth = $self->prepare($q);
-    return $sth ? $sth->execute(@values, @values) : $sth;
+    return $sth ? $sth->execute( @values, @values ) : $sth;
 }
 
 # ------------------------------------------------------------------------------

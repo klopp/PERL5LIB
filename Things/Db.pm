@@ -4,7 +4,6 @@ use StdUse;
 
 use Carp qw/confess/;
 use Const::Fast;
-use DBI;
 use JSON::XS qw/decode_json encode_json/;
 use Try::Tiny;
 
@@ -25,7 +24,7 @@ sub new
 sub get_object
 {
     my ($self) = @_;
-    $self->{db} or return confess sprintf 'Error: {db} field is empty.', ( caller 1 )[3];
+    $self->{db} or return confess sprintf 'Error: {db} field is empty in "%s()".', ( caller 1 )[3];
     return $self->{db};
 }
 
@@ -81,10 +80,8 @@ sub upsert
 sub cget
 {
     my ( $self, $name ) = @_;
-    return $self->select_field(
-        sprintf( 'SELECT value FROM %s WHERE name = ?', $CONFIG_TABLE ), 'value', undef,
-        $name
-    );
+    return $self->select_field( sprintf( 'SELECT value FROM %s WHERE name = ?', $CONFIG_TABLE ), 'value', undef,
+        $name );
 }
 
 # ------------------------------------------------------------------------------
