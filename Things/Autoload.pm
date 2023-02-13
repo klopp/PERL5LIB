@@ -1,7 +1,11 @@
 package Things::Autoload;
 
+use strict;
+use warnings;
+
 # ------------------------------------------------------------------------------
 our $AUTOLOAD;
+our $VERSION = 'v1.0';
 
 #------------------------------------------------------------------------------
 sub get_object
@@ -20,7 +24,7 @@ sub AUTOLOAD
     my $class  = ref $self;
     {
         no strict 'refs';
-        *{ $class . '::' . $AUTOLOAD } = sub { shift; return $object->$AUTOLOAD(@_); };
+        *{ $class . q{::} . $AUTOLOAD } = sub { shift; return $object->$AUTOLOAD(@_); };
     }
     return $object->$AUTOLOAD(@args);
 }
