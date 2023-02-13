@@ -79,15 +79,17 @@ sub upsert
 sub cget
 {
     my ( $self, $name ) = @_;
-    return $self->select_field( sprintf( 'SELECT value FROM %s WHERE name = ?', $CONFIG_TABLE ), 'value', undef,
-        $name );
+    return $self->select_field(
+        sprintf( 'SELECT value FROM %s WHERE name = ?', $CONFIG_TABLE ), 'value', undef,
+        $name
+    );
 }
 
 # ------------------------------------------------------------------------------
 sub cset
 {
     my ( $self, $name, $value ) = @_;
-    return $self->upsert( $CONFIG_TABLE, 'name', { name => 'name', value => $value } );
+    return $self->upsert( $CONFIG_TABLE, 'name', { name => $name, value => $value } );
 }
 
 # ------------------------------------------------------------------------------
