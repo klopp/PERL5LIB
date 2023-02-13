@@ -17,16 +17,15 @@ sub get_object
 #------------------------------------------------------------------------------
 sub AUTOLOAD
 {
-    my ( $self, @args ) = @_;
+    my $self = shift;
 
-    $AUTOLOAD =~ s/^.*:://gsm;
+    ( my $method = $AUTOLOAD ) =~ s/.*:://gsm;
     my $object = $self->get_object;
-    my $class  = ref $self;
     {
         no strict 'refs';
-        *{ $class . q{::} . $AUTOLOAD } = sub { shift; return $object->$AUTOLOAD(@_); };
+        *{$AUTOLOAD} = sub { shift; return $object->$method(@_); };
     }
-    return $object->$AUTOLOAD(@args);
+    return $object->$method(@_);
 }
 
 # ------------------------------------------------------------------------------

@@ -29,7 +29,7 @@ sub new
         Carp::croak('Invalid EXEC parameter.');
     }
 
-    if ( defined $opt->{LOG} && ref $opt->{EXEC} ne 'CODE' ) {
+    if ( defined $opt->{LOG} && ref $opt->{LOG} ne 'CODE' ) {
         Carp::croak('Invalid LOG parameter.');
     }
 
