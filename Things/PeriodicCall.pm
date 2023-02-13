@@ -5,19 +5,12 @@ use StdUse;
 
 # ------------------------------------------------------------------------------
 use Const::Fast;
+use Things qw/:const/;
 use Mutex;
 use POSIX qw/mktime/;
 
 # ------------------------------------------------------------------------------
 our $VERSION = 'v1.0';
-
-# ------------------------------------------------------------------------------
-const my $MAX_HOUR    => 24;
-const my @MONTHS      => qw/Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec/;
-const my $SEC_IN_MIN  => 60;
-const my $MIN_IN_DAY  => 60;
-const my $SEC_IN_DAY  => $SEC_IN_MIN * $MIN_IN_DAY * $MAX_HOUR;
-const my $YEAR_OFFSET => 1900;
 
 # ------------------------------------------------------------------------------
 sub new
@@ -45,16 +38,16 @@ sub new
     }
 
     $opt->{HOUR_START} //= 1;
-    $opt->{HOUR_END}   //= $MAX_HOUR;
+    $opt->{HOUR_END}   //= $HOUR_IN_DAY;
     if (   $opt->{HOUR_START} !~ /^\d+$/sm
         || $opt->{HOUR_START} < 0
-        || $opt->{HOUR_START} > $MAX_HOUR )
+        || $opt->{HOUR_START} > $HOUR_IN_DAY )
     {
         Carp::croak('Invalid HOUR_START parameter.');
     }
     if (   $opt->{HOUR_END} !~ /^\d+$/sm
         || $opt->{HOUR_END} < 0
-        || $opt->{HOUR_END} > $MAX_HOUR )
+        || $opt->{HOUR_END} > $HOUR_IN_DAY )
     {
         Carp::croak('Invalid HOUR_END parameter.');
     }
@@ -111,7 +104,7 @@ sub _event_now
     my $now = time;
     return $event <= $now if $self->{opt}->{HOUR_START} == $self->{opt}->{HOUR_END};
 
-    my $hour = ( localtime $now )[2] || $MAX_HOUR;
+    my $hour = ( localtime $now )[2] || $HOUR_IN_DAY;
     return $hour >= $self->{opt}->{HOUR_START} && $hour < $self->{opt}->{HOUR_END} && $event <= $now;
 }
 
@@ -126,7 +119,7 @@ sub _get_next_event
     do {
         $next += $self->{opt}->{INTERVAL};
         ( undef, undef, $hour, $mday, $mon, $year ) = localtime $next;
-        $hour ||= $MAX_HOUR;
+        $hour ||= $HOUR_IN_DAY;
 
         if ( ++$iter > $self->{ITER_MAX} ) {
             $self->{opt}->{LOG}->( $self->{opt}, q{!}, 'Can not find next event time, set to period start.' )
@@ -146,8 +139,11 @@ sub _print_next_event
 
     if ( $self->{opt}->{LOG} ) {
         my ( $sec, $min, $hour, $mday, $mon, $year ) = localtime $next;
-        $self->{opt}->{LOG}
-            ->( $self->{opt}, q{.}, 'Next event: %u %s %u, at %02u:%02u:%02u.', $mday, $MONTHS[$mon], $year + $YEAR_OFFSET, $hour, $min, $sec );
+        $self->{opt}->{LOG}->(
+            $self->{opt}, q{.},           'Next event: %u %s %u, at %02u:%02u:%02u.',
+            $mday,        $MONTHS3[$mon], $year + $YEAR_OFFSET,
+            $hour,        $min,           $sec
+        );
     }
     return $next;
 }
