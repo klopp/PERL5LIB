@@ -47,6 +47,35 @@ sub select_fields
 }
 
 # ------------------------------------------------------------------------------
+sub upsert
+{
+
+=for comment
+    table (string),
+    key (string),
+    {
+        name => value, ...
+    }
+=cut
+
+    my ( $self, $table, $key, $data ) = @_;
+
+    my ( @fields, @values, @placeholders );
+
+    while ( my ( $k, $v ) = each %{$data} ) {
+        push @fields,       $k;
+        push @values,       $v;
+        push @placeholders, q{?};
+    }
+    my $q = sprintf q{
+            REPLACE INTO `%s` (`%s`) VALUES(%s)
+        }, $table, join( '`,`', @fields ), join( ',', @placeholders );
+
+    my $sth = $self->prepare($q);
+    return $sth ? $sth->execute(@values) : $sth;
+}
+
+# ------------------------------------------------------------------------------
 sub cget
 {
     my ( $self, $name ) = @_;
@@ -58,13 +87,7 @@ sub cget
 sub cset
 {
     my ( $self, $name, $value ) = @_;
-    my $q = sprintf q{
-            INSERT INTO %s (name, value) VALUES(?, ?)
-                ON CONFLICT(name) DO 
-            UPDATE SET value = ?
-        }, $CONFIG_TABLE;
-    my $sth = $self->prepare($q);
-    return $sth ? $sth->execute( $name, $value, $value ) : $sth;
+    return $self->upsert( $CONFIG_TABLE, 'name', { name => 'name', value => $value } );
 }
 
 # ------------------------------------------------------------------------------
