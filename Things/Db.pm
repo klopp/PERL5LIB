@@ -2,6 +2,7 @@ package Things::Db;
 
 use StdUse;
 
+use Carp qw/confess/;
 use Const::Fast;
 use DBI;
 use JSON::XS qw/decode_json encode_json/;
@@ -24,6 +25,7 @@ sub new
 sub get_object
 {
     my ($self) = @_;
+    $self->{db} or return confess sprintf 'Error: {db} field is empty.', ( caller 1 )[3];
     return $self->{db};
 }
 
