@@ -28,21 +28,21 @@ our %TASKS;
     Схема использования:
 
         # Файл отмапленный в память:
-        use Resource::MemFile;
-        my $rfm = Resource::MemFile->new( { source => '/my/data/table.xyz', id => 'memfile', }, );
+        use Atomic::Resource::MemFile;
+        my $rfm = Atomic::Resource::MemFile->new( { source => '/my/data/table.xyz', id => 'memfile', }, );
 
         # Сложная структура данных:
-        use Resource::Data;
+        use Atomic::Resource::Data;
         my $data = { ... };
-        my $rd = Resource::Data->new( { source => \$data, id => 'data', }, );
+        my $rd = Atomic::Resource::Data->new( { source => \$data, id => 'data', }, );
 
-        my $task = MyTask->new( [ $rfm, $rd, ], { mutex => Mutex->new, }, );
+        my $task = MyTask->new( [ $rfm, $rd, ], { mutex => Mutex::Mutex->new, }, );
         $task->run;
         exit;
 
         package MyTask;
-        use AtomicTaskPP;
-        use base qw/AtomicTaskPP/;
+        use Atomic::Task;
+        use base qw/Atomic::Task/;
 
         sub execute
         {
@@ -55,10 +55,10 @@ our %TASKS;
             #   описано в соответствующих исходниках.
             #   Основное (а другого и не нужно):
             #
-            #       что-то делаем с данными: $data->{work}
+            #       что-то делаем с данными : $data->{work}, 
             #       $data->modified; (если менялось)
             #
-            #       что-то делаем с содержимым файла в памяти: $memfile->{work}
+            #       что-то делаем с содержимым файла в памяти: $memfile->{work},
             #       $memfile->modified; (если менялось)
             #            
             return;
