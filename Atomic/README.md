@@ -56,13 +56,13 @@
 
 | Atomic::Mutex | CPAN |
 | :------ | :------ |
-| [Atomic::Mutex::Mutex](Mutex/Mutex.pm) | [Mutex](https://metacpan.org/pod/Mutex) |
-| [Atomic::Mutex::MceMutex](Mutex/MceMutex.pm) | [MCE::Mutex](https://metacpan.org/pod/MCE::Mutex) |
-| [Atomic::Mutex::JipLockFile](Mutex/JipLockFile.pm) | [JIP::LockFile](https://metacpan.org/pod/JIP::LockFile) |
-| [Atomic::Mutex::JipLockSocket](Mutex/JipLockSocket.pm) | [JIP::LockSocket](https://metacpan.org/pod/JIP::LockSocket) |
-| [Atomic::Mutex::GlobalLock](Mutex/GlobalLock.pm) | [Global::MutexLock](https://metacpan.org/pod/Global::MutexLock) |
-| [Atomic::Mutex::LinuxFutex](Mutex/LinuxFutex.pm) | [Linux::Futex](https://metacpan.org/pod/Linux::Futex) |
-| [Atomic::Mutex::IoLambda](Mutex/IoLambda.pm) | [IO::Lambda::Mutex](https://metacpan.org/pod/IO::Lambda::Mutex) |
+| [Atomic::Mutex::Mutex](../Mutex/Mutex.pm) | [Mutex](https://metacpan.org/pod/Mutex) |
+| [Atomic::Mutex::MceMutex](../Mutex/MceMutex.pm) | [MCE::Mutex](https://metacpan.org/pod/MCE::Mutex) |
+| [Atomic::Mutex::JipLockFile](../Mutex/JipLockFile.pm) | [JIP::LockFile](https://metacpan.org/pod/JIP::LockFile) |
+| [Atomic::Mutex::JipLockSocket](../Mutex/JipLockSocket.pm) | [JIP::LockSocket](https://metacpan.org/pod/JIP::LockSocket) |
+| [Atomic::Mutex::GlobalLock](../Mutex/GlobalLock.pm) | [Global::MutexLock](https://metacpan.org/pod/Global::MutexLock) |
+| [Atomic::Mutex::LinuxFutex](../Mutex/LinuxFutex.pm) | [Linux::Futex](https://metacpan.org/pod/Linux::Futex) |
+| [Atomic::Mutex::IoLambda](../Mutex/IoLambda.pm) | [IO::Lambda::Mutex](https://metacpan.org/pod/IO::Lambda::Mutex) |
 
 ## Создание атомарной задачи
 
@@ -97,8 +97,8 @@
                 return;
     }
 
-    use Atomic::Mutex::Mutex;
-    my $task = ATask->new( [$xml_file], { mutex => Atomic::Mutex::Mutex->new, quiet => 1 } );
+    use Mutex::Mutex;
+    my $task = ATask->new( [$xml_file], { mutex => Mutex::Mutex->new, quiet => 1 } );
 ```
 
 При желании можно перегрузить метод проверки входных параметров:
