@@ -17,7 +17,7 @@
 
 ## Базовый класс 
 
-[Atomic::Task](Atomic/Task.pm)
+[Atomic::Task](Task.pm)
 
 Принимает массив модифицируемых ресурсов (`Atomic::Resource::*`) и дополнительные параметры:
 
@@ -56,17 +56,17 @@
 
 | Atomic::Mutex | CPAN |
 | :------ | :------ |
-| [Atomic::Mutex::Mutex](Atomic/Mutex/Mutex.pm) | [Mutex](https://metacpan.org/pod/Mutex) |
-| [Atomic::Mutex::MceMutex](Atomic/Mutex/MceMutex.pm) | [MCE::Mutex](https://metacpan.org/pod/MCE::Mutex) |
-| [Atomic::Mutex::JipLockFile](Atomic/Mutex/JipLockFile.pm) | [JIP::LockFile](https://metacpan.org/pod/JIP::LockFile) |
-| [Atomic::Mutex::JipLockSocket](Atomic/Mutex/JipLockSocket.pm) | [JIP::LockSocket](https://metacpan.org/pod/JIP::LockSocket) |
-| [Atomic::Mutex::GlobalLock](Atomic/Mutex/GlobalLock.pm) | [Global::MutexLock](https://metacpan.org/pod/Global::MutexLock) |
-| [Atomic::Mutex::LinuxFutex](Atomic/Mutex/LinuxFutex.pm) | [Linux::Futex](https://metacpan.org/pod/Linux::Futex) |
-| [Atomic::Mutex::IoLambda](Atomic/Mutex/IoLambda.pm) | [IO::Lambda::Mutex](https://metacpan.org/pod/IO::Lambda::Mutex) |
+| [Atomic::Mutex::Mutex](Mutex/Mutex.pm) | [Mutex](https://metacpan.org/pod/Mutex) |
+| [Atomic::Mutex::MceMutex](Mutex/MceMutex.pm) | [MCE::Mutex](https://metacpan.org/pod/MCE::Mutex) |
+| [Atomic::Mutex::JipLockFile](Mutex/JipLockFile.pm) | [JIP::LockFile](https://metacpan.org/pod/JIP::LockFile) |
+| [Atomic::Mutex::JipLockSocket](Mutex/JipLockSocket.pm) | [JIP::LockSocket](https://metacpan.org/pod/JIP::LockSocket) |
+| [Atomic::Mutex::GlobalLock](Mutex/GlobalLock.pm) | [Global::MutexLock](https://metacpan.org/pod/Global::MutexLock) |
+| [Atomic::Mutex::LinuxFutex](Mutex/LinuxFutex.pm) | [Linux::Futex](https://metacpan.org/pod/Linux::Futex) |
+| [Atomic::Mutex::IoLambda](Mutex/IoLambda.pm) | [IO::Lambda::Mutex](https://metacpan.org/pod/IO::Lambda::Mutex) |
 
 ## Создание атомарной задачи
 
-Необхдимо унаследоваться от [Atomic::Task](Atomic/Task.pm) и перегрузить метод `execute()`:
+Необхдимо унаследоваться от [Atomic::Task](Task.pm) и перегрузить метод `execute()`:
 
 ```perl
     package ATask;
@@ -117,11 +117,9 @@ sub check_params
 
 ```
 
-Примеры можно посмотреть в каталоге [examples](./examples/).
-
 ## Ресурсы
 
-Наследуются от абстрактного класса [Atomic::Resource::Base](Atomic/Resource/Base.pm). Конструктор принимает ссылку на хэш с параметрами:
+Наследуются от абстрактного класса [Atomic::Resource::Base](Resource/Base.pm). Конструктор принимает ссылку на хэш с параметрами:
 
 ```perl
     sub new
@@ -151,7 +149,7 @@ sub check_params
     };
 ```
 
-### [Atomic::Resource::Data](Atomic/Resource/Data.pm)
+### [Atomic::Resource::Data](Resource/Data.pm)
 
 Любая структура данных (SCALAR, HASH, ARRAY, OBJECT). В случае blessed-объекта для корректного копирования в объекте должен быть (при необходимости) метод `clone()`.
 
@@ -163,7 +161,7 @@ sub check_params
 
 `Atomic::Task::wget()` возвращает копию исходной структуры данных.
 
-### [Atomic::Resource::JSON](Atomic/Resource/JSON.pm)
+### [Atomic::Resource::JSON](Resource/JSON.pm)
 
 Скаляр с JSON. Дополнительно могут быть указаны методы для управления парсером, см. [JSON::XS#OBJECT-ORIENTED-INTERFACE](https://metacpan.org/pod/JSON::XS#OBJECT-ORIENTED-INTERFACE).
 
@@ -175,7 +173,7 @@ sub check_params
 
 `Atomic::Task::wget()` возвращает хэш с результатами разбора JSON.
 
-<a name="Resource_BSON"></a>
+### [Atomic::Resource::BSON](Resource/BSON.pm)
 
 Скаляр с BSON. Дополнительно могут быть указаны параметры для управления парсером, см. [BSON#ATTRIBUTES](https://metacpan.org/pod/BSON#ATTRIBUTES).
 
@@ -187,7 +185,7 @@ sub check_params
 
 `Atomic::Task::wget()` возвращает хэш с результатами разбора BSON.
 
-### [Atomic::Resource::XML](Atomic/Resource/XML.pm)
+### [Atomic::Resource::XML](Resource/XML.pm)
 
 Скаляр с XMP. Дополнительно могут быть указаны параметры для управления парсером, см. [XML::Hash::XS#OPTIONS](https://metacpan.org/pod/XML::Hash::XS#OPTIONS).
 
@@ -199,7 +197,7 @@ sub check_params
 
 `Atomic::Task::wget()` возвращает хэш с результатами разбора XML.
 
-### [Atomic::Resource::File](Atomic/Resource/File.pm)
+### [Atomic::Resource::File](Resource/File.pm)
 
 Произвольный файл. В конструкторе только один обязательный параметр: имя файла.
 
@@ -210,11 +208,11 @@ sub check_params
 
 `Atomic::Task::wget()` возвращает объект [Path::Tiny](https://metacpan.org/pod/Path::Tiny).
 
-### [Atomic::Resource::MemFile](Atomic/Resource/MemFile.pm)
+### [Atomic::Resource::MemFile](Resource/MemFile.pm)
 
 То же самое, но `Atomic::Task::wget()` возвращает буфер в памяти с содержимым исходного файла.
 
-### [Atomic::Resource::XmlFile](Atomic/Resource/XmlFile.pm)
+### [Atomic::Resource::XmlFile](Resource/XmlFile.pm)
 
 Аналогично `Atomic::Resource::XML`, но на входе имя файла:
 
@@ -223,7 +221,7 @@ sub check_params
     my $r_xmlfile = Atomic::Resource::XmlFile->new( { source => './data/hello.xml', xml => { keep_root => 1 } } );
 ```
 
-### [Atomic::Resource::Imager](Atomic/Resource/Imager.pm)
+### [Atomic::Resource::Imager](Resource/Imager.pm)
 
 Картинка. Поддерживаются форматы `raw, sgi, bmp, pnm, ico, jpeg, tga, png, gif, tiff`.
 
