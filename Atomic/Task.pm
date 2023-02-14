@@ -36,7 +36,7 @@ our %TASKS;
         my $data = { ... };
         my $rd = Resource::Data->new( { source => \$data, id => 'data', }, );
 
-        my $task = MyTask->new( [ $rfm, $rd, ], { mutex => Mutex->new, }, );
+        my $task = MyTask->new( [ $rfm, $rd, ], { mutex => Mutex::Mutex->new, }, );
         $task->run;
         exit;
 
@@ -48,17 +48,17 @@ our %TASKS;
         {
             my ($self) = @_;
 
-            my $memfile = $self->rget( 'memfile' );
-            my $data    = $self->rget( 'data' );
+            my $memfile = $self->wget( 'memfile' );
+            my $data    = $self->wget( 'data' );
             #
             # Что здесь доступно для каждого типа ресурсов
             #   описано в соответствующих исходниках.
             #   Основное (а другого и не нужно):
             #
-            #       что-то делаем с данными: $data->{work}
+            #       что-то делаем с данными : $data, 
             #       $data->modified; (если менялось)
             #
-            #       что-то делаем с содержимым файла в памяти: $memfile->{work}
+            #       что-то делаем с содержимым файла в памяти: $memfile,
             #       $memfile->modified; (если менялось)
             #            
             return;
