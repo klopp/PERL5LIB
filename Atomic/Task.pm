@@ -48,8 +48,8 @@ our %TASKS;
         {
             my ($self) = @_;
 
-            my $memfile = $self->rget( 'memfile' );
-            my $data    = $self->rget( 'data' );
+            my $memfile = $self->wget( 'memfile' );
+            my $data    = $self->wget( 'data' );
             #
             # Что здесь доступно для каждого типа ресурсов
             #   описано в соответствующих исходниках.
