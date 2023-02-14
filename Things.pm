@@ -46,6 +46,7 @@ const our $SEC_IN_DAY  => $SEC_IN_HOUR * $HOUR_IN_DAY;
 const our @MONTHS3     => qw/Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec/;
 const our %MONTHS3     => map { $_ => $MONTHS3[$_] } 0 .. @MONTHS3 - 1;
 const our $DATA_DIR    => Module::Filename->new->filename(__PACKAGE__)->dir . '/data/';
+const our $UA_LIST     => $DATA_DIR . 'ua.list';
 
 # ------------------------------------------------------------------------------
 BEGIN {
@@ -190,7 +191,7 @@ sub random_line
 {
     my ( $filename, $noempty ) = @_;
 
-    open my $fh, '<', $filename or Carp::confess sprintf 'can not open file "%s"', $filename;
+    open my $fh, '<', $filename or Carp::confess sprintf 'Can not open file "%s" in "%s()"', $filename, ( caller 1 )[0];
     my $filesize = -s $filename;
     seek( $fh, int( rand $filesize ), 0 );
     <$fh>;
@@ -210,7 +211,7 @@ sub random_line
 # ------------------------------------------------------------------------------
 sub random_ua
 {
-    return trim( random_line( $DATA_DIR . 'ua.list', 1 ) );
+    return trim( random_line( $UA_LIST, 1 ) );
 }
 
 # ------------------------------------------------------------------------------
