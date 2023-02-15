@@ -3,9 +3,10 @@ package Atomic::Task;
 # ------------------------------------------------------------------------------
 use Modern::Perl;
 
+use Array::Utils qw/intersect/;
 use Carp qw/cluck confess/;
 use Things qw/trim/;
-use Time::HiRes qw/gettimeofday/;
+use UUID qw/uuid/;
 
 use lib q{..};
 use Atomic::Resource::Base;
@@ -103,8 +104,9 @@ sub new
         params    => $params,
         id        => $params->{id},
     );
+    $data{params}->{lock_commit} = $data{params}->{commit_lock};
     delete $data{params}->{id};
-    $data{id} or $data{id} = join q{.}, ( gettimeofday() );
+    $data{id} or $data{id} = uuid;
     exists $TASKS{ $data{id} } and confess sprintf 'Error: task ID "%s" already exists!', $data{id};
 
     my $self = bless \%data, $class;
@@ -162,6 +164,27 @@ sub run
         $error = $self->{params}->{mutex}->lock;
         $error and return confess sprintf "Error locking task: %s\n", trim($error);
     }
+    elsif ( !$self->{params}->{mutex} || $self->{params}->{commit_lock} ) {
+
+=for comment
+    Проверка на пересечение по ресурсам если в задаче лочится только коммит 
+=cut
+
+        while ( my ( $tid, $task ) = each %TASKS ) {
+            next if $tid eq $self->{id};
+            my @rc = intersect( @{ $self->{resources} }, @{ $task->{resources} } );
+            if (@rc) {
+                $error .= "\n  '$tid'";
+                $error .= sprintf( "\n    => '%s' (%s)", $_->id, ref $_ ) for @rc;
+            }
+        }
+        $error
+            and return confess sprintf
+            "Task '%s', no {mutex} or {commit_lock} is set, but other tasks work with the same resources:%s\n",
+            $self->{id},
+            $error;
+    }
+
     for ( 0 .. @{ $self->{resources} } - 1 ) {
         my $rs = $self->{resources}->[$_];
 

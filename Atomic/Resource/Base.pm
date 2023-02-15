@@ -5,7 +5,7 @@ use Modern::Perl;
 
 use Carp qw/confess/;
 use Things qw/set_bool/;
-use Time::HiRes qw/gettimeofday/;
+use UUID qw/uuid/;
 
 our $VERSION = 'v1.0';
 our %RESOURCES;
@@ -51,7 +51,7 @@ sub new
         id       => $params->{id},
     );
     delete $data{params}->{id};
-    $data{id} or $data{id} = join q{.}, ( gettimeofday() );
+    $data{id} or $data{id} = uuid;
     exists $RESOURCES{ $data{id} } and confess sprintf 'Error: resource ID "%s" already exists!', $data{id};
 
     my $self  = bless \%data, $class;
