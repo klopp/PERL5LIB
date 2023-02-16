@@ -2,7 +2,6 @@ package Atomic::Task::Pool;
 
 # ------------------------------------------------------------------------------
 use Modern::Perl;
-use Array::Utils qw/intersect/;
 use Sys::Info;
 
 use lib q{..};
