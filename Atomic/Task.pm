@@ -111,15 +111,12 @@ sub new
     }
 
     my %data = (
-        resources => $resources,
-        params    => $params,
-        id        => $params->{id},
+        params      => $params,
+        id          => $params->{id} || uuid,
+        lock_commit => $params->{commit_lock},
+        resources   => { map { $_->{id} => $_ } @{$resources} },
     );
-    $data{params}->{lock_commit} = $data{params}->{commit_lock};
-    delete $data{params}->{id};
-    $data{id} or $data{id} = uuid;
-    my $self = bless \%data, $class;
-    %{ $self->{_res} } = map { $_->{id} => $_ } @{$resources};
+    my $self  = bless \%data, $class;
     my $error = $self->check_params;
     $error and confess sprintf 'Error: invalid parameters: %s', $error;
     return $self;
@@ -137,6 +134,7 @@ sub check_params
     Возвращает undef при отсутствии ошибок, или сообщение об ошибке.
 =cut
 
+    my ($self) = @_;
     return;
 }
 
@@ -151,14 +149,14 @@ sub id
 sub rget
 {
     my ( $self, $id ) = @_;
-    return $self->{_res}->{$id};
+    return $self->{resources}->{$id};
 }
 
 # ------------------------------------------------------------------------------
 sub wget
 {
     my ( $self, $id ) = @_;
-    return exists $self->{_res}->{$id} ? $self->{_res}->{$id}->{work} : undef;
+    return exists $self->{resources}->{$id} ? $self->{resources}->{$id}->{work} : undef;
 }
 
 # ------------------------------------------------------------------------------
@@ -174,20 +172,20 @@ sub run
             and return $self->{params}->{ecb}->( $self, $ELOCK, trim($error) );
     }
 
-    for ( 0 .. @{ $self->{resources} } - 1 ) {
-        my $rs = $self->{resources}->[$_];
+    while ( my ( undef, $resource ) = each %{ $self->{resources} } ) {
 
 =for comment
     Создаём рабочую копию ресурса
 =cut
 
-        $error = $rs->create_work_copy;
+        $error = $resource->create_work_copy;
 
 =for comment
     При ошибке удаляем все временные ресурсы и уходим
 =cut
+
         if ($error) {
-            $_ and $self->_delete_works( $_ - 1 );
+            $_ and $self->_delete_works;
             return $self->{params}->{ecb}->( $self, $EWORK, trim($error) );
         }
     }
@@ -219,24 +217,24 @@ sub run
             return $self->{params}->{ecb}->( $self, $ECLOCK, trim($error) );
         }
     }
-    for ( 0 .. @{ $self->{resources} } - 1 ) {
-        my $rs = $self->{resources}->[$_];
-        if ( $rs->is_modified ) {
-            $error = $rs->create_backup_copy;
+
+    while ( my ( undef, $resource ) = each %{ $self->{resources} } ) {
+        if ( $resource->is_modified ) {
+            $error = $resource->create_backup_copy;
             if ($error) {
-                $self->_rollback($_);
+                $self->_rollback;
                 $self->{params}->{mutex}->unlock if $self->{params}->{mutex};
                 return $self->{params}->{ecb}->( $self, $EBACKUP, trim($error) );
             }
 
-            $error = $rs->commit;
+            $error = $resource->commit;
 
 =for comment
     При ошибке откатываемся на резервные копии
 =cut
 
             if ($error) {
-                $self->_rollback($_);
+                $self->_rollback;
                 $self->{params}->{mutex}->unlock if $self->{params}->{mutex};
                 return $self->{params}->{ecb}->( $self, $ECOMMIT, trim($error) );
             }
@@ -266,16 +264,13 @@ sub execute
 # ------------------------------------------------------------------------------
 sub _rollback
 {
-    my ( $self, $i ) = @_;
-    $i //= @{ $self->{resources} } - 1;
-    for ( 0 .. $i ) {
-        my $rs = $self->{resources}->[$_];
-        next unless $rs;
-        if ( $rs->is_modified ) {
-            $rs->rollback;
-            $rs->delete_bakup_copy;
+    my ($self) = @_;
+    while ( my ( undef, $resource ) = each %{ $self->{resources} } ) {
+        if ( $resource->is_modified ) {
+            $resource->rollback;
+            $resource->delete_bakup_copy;
         }
-        $rs->delete_work_copy;
+        $resource->delete_work_copy;
     }
     return;
 }
@@ -284,8 +279,8 @@ sub _rollback
 sub _delete_backups
 {
     my ($self) = @_;
-    for ( @{ $self->{resources} } ) {
-        $_->is_modified and $_->delete_backup_copy;
+    while ( my ( undef, $resource ) = each %{ $self->{resources} } ) {
+        $resource->is_modified and $resource->delete_backup_copy;
     }
     return;
 }
@@ -294,9 +289,8 @@ sub _delete_backups
 sub _delete_works
 {
     my ( $self, $i ) = @_;
-    $i //= @{ $self->{resources} } - 1;
-    for ( 0 .. $i ) {
-        $self->{resources}->[$_]->delete_work_copy;
+    while ( my ( undef, $resource ) = each %{ $self->{resources} } ) {
+        $resource->{work} and $resource->delete_work_copy;
     }
     return $i;
 }
