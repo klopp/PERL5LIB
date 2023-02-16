@@ -1,6 +1,8 @@
 package Atomic::Resource::Data;
 
 # ------------------------------------------------------------------------------
+use threads;
+use threads::shared;
 use Modern::Perl;
 
 use Carp qw/cluck/;
@@ -46,11 +48,11 @@ sub check_params
 {
     my ($self) = @_;
 
-    if (   ref $self->{params}->{source} ne 'REF'
-        && ref $self->{params}->{source} ne 'SCALAR' )
-    {
-        return 'ref {params}->{source} is not REF or SCALAR';
-    }
+    #    if (   ref $self->{params}->{source} ne 'REF'
+    #        && ref $self->{params}->{source} ne 'SCALAR' )
+    #    {
+    #        return 'ref {params}->{source} is not REF or SCALAR';
+    #    }
     return;
 }
 
@@ -82,7 +84,12 @@ sub delete_backup_copy
 sub create_work_copy
 {
     my ($self) = @_;
+
+    use DDP;
+    say np ${ $self->{params}->{source} };
+
     $self->{work} = $self->_clone( ${ $self->{params}->{source} } );
+    $self->{work} = shared_clone( $self->{work} );
     return;
 }
 

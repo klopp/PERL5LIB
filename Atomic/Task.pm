@@ -5,14 +5,24 @@ use Modern::Perl;
 
 use Array::Utils qw/intersect/;
 use Carp qw/cluck confess/;
+use Const::Fast;
 use Things qw/trim/;
 use UUID qw/uuid/;
 
 use lib q{..};
 use Atomic::Resource::Base;
 
+const my $ELOCK   => 1;
+const my $EWORK   => 2;
+const my $EEXEC   => 3;
+const my $ECLOCK  => 4;
+const my $EBACKUP => 5;
+const my $ECOMMIT => 6;
+
+use Exporter;
+
+our @EXPORT  = qw/$ELOCK $EWORK $EEXEC $ECLOCK $EBACKUP $ECOMMIT/;
 our $VERSION = 'v2.0';
-our %TASKS;
 
 # ------------------------------------------------------------------------------
 
@@ -37,7 +47,7 @@ our %TASKS;
         my $data = { ... };
         my $rd = Atomic::Resource::Data->new( { source => \$data, id => 'data', }, );
 
-        my $task = MyTask->new( [ $rfm, $rd, ], { mutex => Mutex::Mutex->new, }, );
+        my $task = MyTask->new( [ $rfm, $rd, ], { ecb => sub { ... }, mutex => Mutex::Mutex->new, }, );
         $task->run;
         exit;
 
@@ -89,6 +99,7 @@ sub new
     $params //= {};
     ref $params eq 'HASH'                          or confess 'Error: invalid {params} value';
     ( ref $resources eq 'ARRAY' && @{$resources} ) or confess 'Error: invalid {resources} value';
+    ( ref $params->{ecb} eq 'CODE' )               or confess 'Error: invalid {ecb} value';
 
     if ( $params->{mutex} ) {
         $params->{mutex}->can('lock')   or confess 'Error: {mutex} can not lock()!';
@@ -107,13 +118,10 @@ sub new
     $data{params}->{lock_commit} = $data{params}->{commit_lock};
     delete $data{params}->{id};
     $data{id} or $data{id} = uuid;
-    exists $TASKS{ $data{id} } and confess sprintf 'Error: task ID "%s" already exists!', $data{id};
-
     my $self = bless \%data, $class;
     %{ $self->{_res} } = map { $_->{id} => $_ } @{$resources};
     my $error = $self->check_params;
     $error and confess sprintf 'Error: invalid parameters: %s', $error;
-    $TASKS{ $self->{id} } = $self;
     return $self;
 }
 
@@ -162,27 +170,8 @@ sub run
 
     if ( $self->{params}->{mutex} && !$self->{params}->{commit_lock} ) {
         $error = $self->{params}->{mutex}->lock;
-        $error and return confess sprintf "Error locking task: %s\n", trim($error);
-    }
-    elsif ( !$self->{params}->{mutex} || $self->{params}->{commit_lock} ) {
-
-=for comment
-    Проверка на пересечение по ресурсам если в задаче лочится только коммит 
-=cut
-
-        while ( my ( $tid, $task ) = each %TASKS ) {
-            next if $tid eq $self->{id};
-            my @rc = intersect( @{ $self->{resources} }, @{ $task->{resources} } );
-            if (@rc) {
-                $error .= "\n  '$tid'";
-                $error .= sprintf( "\n    => '%s' (%s)", $_->id, ref $_ ) for @rc;
-            }
-        }
         $error
-            and return confess sprintf
-            "Task '%s', no {mutex} or {commit_lock} is set, but other tasks work with the same resources:%s\n",
-            $self->{id},
-            $error;
+            and return $self->{params}->{ecb}->( $self, $ELOCK, trim($error) );
     }
 
     for ( 0 .. @{ $self->{resources} } - 1 ) {
@@ -197,10 +186,9 @@ sub run
 =for comment
     При ошибке удаляем все временные ресурсы и уходим
 =cut
-
         if ($error) {
             $_ and $self->_delete_works( $_ - 1 );
-            return confess sprintf "Error creating work copy: %s\n", trim($error);
+            return $self->{params}->{ecb}->( $self, $EWORK, trim($error) );
         }
     }
 
@@ -217,7 +205,7 @@ sub run
     if ($error) {
         $self->{params}->{mutex}->unlock if $self->{params}->{mutex} && !$self->{params}->{commit_lock};
         $self->_delete_works;
-        return confess sprintf "Error executing task: %s\n", trim($error);
+        return $self->{params}->{ecb}->( $self, $EEXEC, trim($error) );
     }
 
 =for comment
@@ -228,7 +216,7 @@ sub run
         $error = $self->{params}->{mutex}->lock;
         if ($error) {
             $self->_delete_works;
-            return confess sprintf "Error locking commit: %s\n", trim($error);
+            return $self->{params}->{ecb}->( $self, $ECLOCK, trim($error) );
         }
     }
     for ( 0 .. @{ $self->{resources} } - 1 ) {
@@ -238,7 +226,7 @@ sub run
             if ($error) {
                 $self->_rollback($_);
                 $self->{params}->{mutex}->unlock if $self->{params}->{mutex};
-                return confess sprintf "Error creating backup copy: %s\n", trim($error);
+                return $self->{params}->{ecb}->( $self, $EBACKUP, trim($error) );
             }
 
             $error = $rs->commit;
@@ -250,7 +238,7 @@ sub run
             if ($error) {
                 $self->_rollback($_);
                 $self->{params}->{mutex}->unlock if $self->{params}->{mutex};
-                return confess sprintf "Error commit changes: %s\n", trim($error);
+                return $self->{params}->{ecb}->( $self, $ECOMMIT, trim($error) );
             }
         }
     }
