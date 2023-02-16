@@ -7,7 +7,6 @@ use lib q{..};
 use Atomic::TaskPool;
 use base qw/Atomic::TaskPool/;
 
-use AnyEvent::Sleep;
 use POE;
 
 our $VERSION = 'v1.0';
