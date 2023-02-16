@@ -1,8 +1,6 @@
 package Atomic::Resource::Base;
 
 # ------------------------------------------------------------------------------
-use threads;
-use threads::shared;
 use Modern::Perl;
 
 use Carp qw/confess/;
@@ -44,43 +42,15 @@ sub new
     ref $params eq 'HASH' or confess 'Error: invalid {params} value.';
     $params->{source}     or confess 'Error: no {source} in {params}.';
 
-    #    my %data :shared;
-
-    my %data;
-
-    $data{params}   = $params;
-    $data{modified} = 0;
-    $data{backup}   = undef;
-    $data{work}     = undef;
-    $data{id}       = $params->{id} || uuid;
-
-    #    share(%data);
-    %data = %{ shared_clone( \%data ) };
-
-=for comment
-    = (
+    my %data = (
         params   => $params,
         modified => 0,
         backup   => undef,
         work     => undef,
-        id       => $params->{id},
+        id       => $params->{id} || uuid,
     );
-    delete $data{params}->{id};
-    $data{id} or $data{id} = uuid;
-=cut
 
-    my $self = bless \%data, $class;
-
-=for comment
-    $self->{params}   = $params;
-    $self->{modified} = 0;
-    $self->{backup}   = undef;
-    $self->{work}     = undef;
-    $self->{id}       = $params->{id};
-    delete $self->{params}->{id};
-    $self->{id} or $self->{id} = uuid;   
-=cut
-
+    my $self  = bless \%data, $class;
     my $error = $self->check_params;
     $error and confess sprintf 'Error: invalid parameters: %s', $error;
     return $self;
