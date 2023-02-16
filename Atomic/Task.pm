@@ -5,14 +5,33 @@ use Modern::Perl;
 
 use Array::Utils qw/intersect/;
 use Carp qw/cluck confess/;
+use Const::Fast;
 use Things qw/trim/;
 use UUID qw/uuid/;
 
 use lib q{..};
 use Atomic::Resource::Base;
 
+const my $ELOCK   => 1;
+const my $EWORK   => 2;
+const my $EEXEC   => 3;
+const my $ECLOCK  => 4;
+const my $EBACKUP => 5;
+const my $ECOMMIT => 6;
+
+const my %EMESSAGES = (
+    $ELOCK   => 'task locking',
+    $EWORK   => 'working copy creation',
+    $EEXEC   => 'execute() call',
+    $ECLOCK  => 'commit locking',
+    $EBACKUP => 'backup copy creation',
+    $ECOMMIT => 'commit',
+);
+
+use Exporter;
+
+our @EXPORT  = qw/$ELOCK $EWORK $EEXEC $ECLOCK $EBACKUP $ECOMMIT/;
 our $VERSION = 'v2.0';
-our %TASKS;
 
 # ------------------------------------------------------------------------------
 
@@ -100,20 +119,14 @@ sub new
     }
 
     my %data = (
-        resources => $resources,
-        params    => $params,
-        id        => $params->{id},
+        params      => $params,
+        id          => $params->{id} || uuid,
+        lock_commit => $params->{commit_lock},
+        resources   => { map { $_->{id} => $_ } @{$resources} },
     );
-    $data{params}->{lock_commit} = $data{params}->{commit_lock};
-    delete $data{params}->{id};
-    $data{id} or $data{id} = uuid;
-    exists $TASKS{ $data{id} } and confess sprintf 'Error: task ID "%s" already exists!', $data{id};
-
-    my $self = bless \%data, $class;
-    %{ $self->{_res} } = map { $_->{id} => $_ } @{$resources};
+    my $self  = bless \%data, $class;
     my $error = $self->check_params;
     $error and confess sprintf 'Error: invalid parameters: %s', $error;
-    $TASKS{ $self->{id} } = $self;
     return $self;
 }
 
@@ -129,6 +142,7 @@ sub check_params
     Возвращает undef при отсутствии ошибок, или сообщение об ошибке.
 =cut
 
+    my ($self) = @_;
     return;
 }
 
@@ -143,14 +157,21 @@ sub id
 sub rget
 {
     my ( $self, $id ) = @_;
-    return $self->{_res}->{$id};
+    return $self->{resources}->{$id};
 }
 
 # ------------------------------------------------------------------------------
 sub wget
 {
     my ( $self, $id ) = @_;
-    return exists $self->{_res}->{$id} ? $self->{_res}->{$id}->{work} : undef;
+    return exists $self->{resources}->{$id} ? $self->{resources}->{$id}->{work} : undef;
+}
+
+# ------------------------------------------------------------------------------
+sub ecb
+{
+    my ( $self, $ecode, $emsg ) = @_;
+    return confess sprintf "FATAL: %s (%s)\n", $EMESSAGES{$ecode} || q{?}, $emsg;
 }
 
 # ------------------------------------------------------------------------------
@@ -162,45 +183,25 @@ sub run
 
     if ( $self->{params}->{mutex} && !$self->{params}->{commit_lock} ) {
         $error = $self->{params}->{mutex}->lock;
-        $error and return confess sprintf "Error locking task: %s\n", trim($error);
-    }
-    elsif ( !$self->{params}->{mutex} || $self->{params}->{commit_lock} ) {
-
-=for comment
-    Проверка на пересечение по ресурсам если в задаче лочится только коммит 
-=cut
-
-        while ( my ( $tid, $task ) = each %TASKS ) {
-            next if $tid eq $self->{id};
-            my @rc = intersect( @{ $self->{resources} }, @{ $task->{resources} } );
-            if (@rc) {
-                $error .= "\n  '$tid'";
-                $error .= sprintf( "\n    => '%s' (%s)", $_->id, ref $_ ) for @rc;
-            }
-        }
         $error
-            and return confess sprintf
-            "Task '%s', no {mutex} or {commit_lock} is set, but other tasks work with the same resources:%s\n",
-            $self->{id},
-            $error;
+            and return $self->ecb( $ELOCK, trim($error) );
     }
 
-    for ( 0 .. @{ $self->{resources} } - 1 ) {
-        my $rs = $self->{resources}->[$_];
+    while ( my ( undef, $resource ) = each %{ $self->{resources} } ) {
 
 =for comment
     Создаём рабочую копию ресурса
 =cut
 
-        $error = $rs->create_work_copy;
+        $error = $resource->create_work_copy;
 
 =for comment
     При ошибке удаляем все временные ресурсы и уходим
 =cut
 
         if ($error) {
-            $_ and $self->_delete_works( $_ - 1 );
-            return confess sprintf "Error creating work copy: %s\n", trim($error);
+            $_ and $self->_delete_works;
+            return $self->ecb( $EWORK, trim($error) );
         }
     }
 
@@ -217,7 +218,7 @@ sub run
     if ($error) {
         $self->{params}->{mutex}->unlock if $self->{params}->{mutex} && !$self->{params}->{commit_lock};
         $self->_delete_works;
-        return confess sprintf "Error executing task: %s\n", trim($error);
+        return $self->ecb( $EEXEC, trim($error) );
     }
 
 =for comment
@@ -228,29 +229,29 @@ sub run
         $error = $self->{params}->{mutex}->lock;
         if ($error) {
             $self->_delete_works;
-            return confess sprintf "Error locking commit: %s\n", trim($error);
+            return $self->ecb( $ECLOCK, trim($error) );
         }
     }
-    for ( 0 .. @{ $self->{resources} } - 1 ) {
-        my $rs = $self->{resources}->[$_];
-        if ( $rs->is_modified ) {
-            $error = $rs->create_backup_copy;
+
+    while ( my ( undef, $resource ) = each %{ $self->{resources} } ) {
+        if ( $resource->is_modified ) {
+            $error = $resource->create_backup_copy;
             if ($error) {
-                $self->_rollback($_);
+                $self->_rollback;
                 $self->{params}->{mutex}->unlock if $self->{params}->{mutex};
-                return confess sprintf "Error creating backup copy: %s\n", trim($error);
+                return $self->ecb( $EBACKUP, trim($error) );
             }
 
-            $error = $rs->commit;
+            $error = $resource->commit;
 
 =for comment
     При ошибке откатываемся на резервные копии
 =cut
 
             if ($error) {
-                $self->_rollback($_);
+                $self->_rollback;
                 $self->{params}->{mutex}->unlock if $self->{params}->{mutex};
-                return confess sprintf "Error commit changes: %s\n", trim($error);
+                return $self->ecb( $ECOMMIT, trim($error) );
             }
         }
     }
@@ -278,16 +279,13 @@ sub execute
 # ------------------------------------------------------------------------------
 sub _rollback
 {
-    my ( $self, $i ) = @_;
-    $i //= @{ $self->{resources} } - 1;
-    for ( 0 .. $i ) {
-        my $rs = $self->{resources}->[$_];
-        next unless $rs;
-        if ( $rs->is_modified ) {
-            $rs->rollback;
-            $rs->delete_bakup_copy;
+    my ($self) = @_;
+    while ( my ( undef, $resource ) = each %{ $self->{resources} } ) {
+        if ( $resource->is_modified ) {
+            $resource->rollback;
+            $resource->delete_bakup_copy;
         }
-        $rs->delete_work_copy;
+        $resource->delete_work_copy;
     }
     return;
 }
@@ -296,8 +294,8 @@ sub _rollback
 sub _delete_backups
 {
     my ($self) = @_;
-    for ( @{ $self->{resources} } ) {
-        $_->is_modified and $_->delete_backup_copy;
+    while ( my ( undef, $resource ) = each %{ $self->{resources} } ) {
+        $resource->is_modified and $resource->delete_backup_copy;
     }
     return;
 }
@@ -306,9 +304,8 @@ sub _delete_backups
 sub _delete_works
 {
     my ( $self, $i ) = @_;
-    $i //= @{ $self->{resources} } - 1;
-    for ( 0 .. $i ) {
-        $self->{resources}->[$_]->delete_work_copy;
+    while ( my ( undef, $resource ) = each %{ $self->{resources} } ) {
+        $resource->{work} and $resource->delete_work_copy;
     }
     return $i;
 }

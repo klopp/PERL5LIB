@@ -8,7 +8,6 @@ use Things qw/set_bool/;
 use UUID qw/uuid/;
 
 our $VERSION = 'v1.0';
-our %RESOURCES;
 
 # ------------------------------------------------------------------------------
 
@@ -48,16 +47,12 @@ sub new
         modified => 0,
         backup   => undef,
         work     => undef,
-        id       => $params->{id},
+        id       => $params->{id} || uuid,
     );
-    delete $data{params}->{id};
-    $data{id} or $data{id} = uuid;
-    exists $RESOURCES{ $data{id} } and confess sprintf 'Error: resource ID "%s" already exists!', $data{id};
 
     my $self  = bless \%data, $class;
     my $error = $self->check_params;
     $error and confess sprintf 'Error: invalid parameters: %s', $error;
-    $RESOURCES{ $self->{id} } = $self;
     return $self;
 }
 

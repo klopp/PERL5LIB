@@ -3,6 +3,9 @@
 * [Базовый класс](#базовый-класс)
 * [Блокировка](#блокировка)
 * [Создание атомарной задачи](#создание-атомарной-задачи)
+    * [Обработка ошибок](#обработка-ошибок)
+    * [Дополнительно](#дополнительно)
+* [Многопоточное исполнение](#многопоточное-исполнение)
 * [Ресурсы](#ресурсы)
     * [Atomic::Resource::Data](#atomicresourcedata)
     * [Atomic::Resource::JSON](#atomicresourcejson)
@@ -103,6 +106,32 @@
     my $task = ATask->new( [$xml_file], { mutex => Mutex::Mutex->new, quiet => 1 } );
 ```
 
+### Обработка ошибок
+
+При возникновении ошибок в методе `Atomic::Task::execute()` генерируется исключение с выводом сообщения. Для установки своего обработчика ошибок необходимо перегрузить метод `ecb()`:
+
+```perl
+    sub ecb 
+    {
+        my ( $self, $ecode, $emsg ) = @_;
+        return;
+    }
+```
+
+Здесь `$ecode` может быть:
+
+| Код   | Ошибка при |
+| :-- | :-- |
+| $ELOCK  | блокировке задачи |
+| $EWORK | создании рабочей копии ресурса |
+| $EEXEC | вызове `execute()` |
+| $ECLOCK  | блокировке коммита |
+| $EBACKUP | создании резервной копии ресурса |
+| $ECOMMIT | коммите |
+
+
+### Дополнительно
+
 При желании можно перегрузить метод проверки входных параметров:
 
 ```perl
@@ -117,6 +146,41 @@ sub check_params
     return;
 }
 
+```
+
+## Многопоточное исполнение
+
+Обеспечивается объектом [Atomic::TaskPool](TaskPool.pm). Это базовый класс, для создания задачи необходимо использовать один из:
+
+| Atomic | Базируется на | 
+| :-- | :-- |
+| [Atomic::Task::AE](Task/AE.pm) | [AnyEvent](https://metacpan.org/pod/AnyEvent) |
+| [Atomic::Task::POE](Task/POE.pm) | [POE](https://metacpan.org/pod/POE) |
+| [Atomic::Task::Coro](Task/Coro.pm) | [Coro](https://metacpan.org/pod/Coro) |
+| [Atomic::Task::Mojo](Task/Mojo.pm) | [Mojo::IOLoop](https://metacpan.org/pod/Mojo::IOLoop) |
+
+Конструкторы этих объектов принимают массив из задач и список параметров:
+
+```perl
+sub new 
+    {
+        my ( $class, $tasks, $params ) = @_;
+        #   $tasks => [ 
+        #       Atomic::Task::*, ... 
+        #   ]
+        #   $params = {
+        #       children => NUMBER, # количество потоков исполнения 
+        #                           # по умолчанию берётся из Sys::Info
+        #   }
+        # ...
+    }
+```
+
+Например:
+
+```perl
+    my $pool = Atomic::Task::POE->new( \@tasks );
+    $pool->run(10); # можно переопределить количество потоков исполнения
 ```
 
 ## Ресурсы
