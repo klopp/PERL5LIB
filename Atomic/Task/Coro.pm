@@ -4,8 +4,8 @@ package Atomic::Task::Coro;
 use Modern::Perl;
 
 use lib q{..};
-use Atomic::Task::Pool;
-use base qw/Atomic::Task::Pool/;
+use Atomic::TaskPool;
+use base qw/Atomic::TaskPool/;
 
 use Coro;
 
