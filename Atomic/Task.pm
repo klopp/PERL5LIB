@@ -19,6 +19,15 @@ const my $ECLOCK  => 4;
 const my $EBACKUP => 5;
 const my $ECOMMIT => 6;
 
+const my %EMESSAGES = (
+    $ELOCK   => 'task locking',
+    $EWORK   => 'working copy creation',
+    $EEXEC   => 'execute() call',
+    $ECLOCK  => 'commit locking',
+    $EBACKUP => 'backup copy creation',
+    $ECOMMIT => 'commit',
+);
+
 use Exporter;
 
 our @EXPORT  = qw/$ELOCK $EWORK $EEXEC $ECLOCK $EBACKUP $ECOMMIT/;
@@ -47,7 +56,7 @@ our $VERSION = 'v2.0';
         my $data = { ... };
         my $rd = Atomic::Resource::Data->new( { source => \$data, id => 'data', }, );
 
-        my $task = MyTask->new( [ $rfm, $rd, ], { ecb => sub { ... }, mutex => Mutex::Mutex->new, }, );
+        my $task = MyTask->new( [ $rfm, $rd, ], { mutex => Mutex::Mutex->new, }, );
         $task->run;
         exit;
 
@@ -99,7 +108,6 @@ sub new
     $params //= {};
     ref $params eq 'HASH'                          or confess 'Error: invalid {params} value';
     ( ref $resources eq 'ARRAY' && @{$resources} ) or confess 'Error: invalid {resources} value';
-    ( ref $params->{ecb} eq 'CODE' )               or confess 'Error: invalid {ecb} value';
 
     if ( $params->{mutex} ) {
         $params->{mutex}->can('lock')   or confess 'Error: {mutex} can not lock()!';
@@ -160,6 +168,13 @@ sub wget
 }
 
 # ------------------------------------------------------------------------------
+sub ecb
+{
+    my ( $self, $ecode, $emsg ) = @_;
+    return confess sprintf "FATAL: %s (%s)\n", $EMESSAGES{$ecode} || q{?}, $emsg;
+}
+
+# ------------------------------------------------------------------------------
 sub run
 {
     my ($self) = @_;
@@ -169,7 +184,7 @@ sub run
     if ( $self->{params}->{mutex} && !$self->{params}->{commit_lock} ) {
         $error = $self->{params}->{mutex}->lock;
         $error
-            and return $self->{params}->{ecb}->( $self, $ELOCK, trim($error) );
+            and return $self->ecb( $ELOCK, trim($error) );
     }
 
     while ( my ( undef, $resource ) = each %{ $self->{resources} } ) {
@@ -186,7 +201,7 @@ sub run
 
         if ($error) {
             $_ and $self->_delete_works;
-            return $self->{params}->{ecb}->( $self, $EWORK, trim($error) );
+            return $self->ecb( $EWORK, trim($error) );
         }
     }
 
@@ -203,7 +218,7 @@ sub run
     if ($error) {
         $self->{params}->{mutex}->unlock if $self->{params}->{mutex} && !$self->{params}->{commit_lock};
         $self->_delete_works;
-        return $self->{params}->{ecb}->( $self, $EEXEC, trim($error) );
+        return $self->ecb( $EEXEC, trim($error) );
     }
 
 =for comment
@@ -214,7 +229,7 @@ sub run
         $error = $self->{params}->{mutex}->lock;
         if ($error) {
             $self->_delete_works;
-            return $self->{params}->{ecb}->( $self, $ECLOCK, trim($error) );
+            return $self->ecb( $ECLOCK, trim($error) );
         }
     }
 
@@ -224,7 +239,7 @@ sub run
             if ($error) {
                 $self->_rollback;
                 $self->{params}->{mutex}->unlock if $self->{params}->{mutex};
-                return $self->{params}->{ecb}->( $self, $EBACKUP, trim($error) );
+                return $self->ecb( $EBACKUP, trim($error) );
             }
 
             $error = $resource->commit;
@@ -236,7 +251,7 @@ sub run
             if ($error) {
                 $self->_rollback;
                 $self->{params}->{mutex}->unlock if $self->{params}->{mutex};
-                return $self->{params}->{ecb}->( $self, $ECOMMIT, trim($error) );
+                return $self->ecb( $ECOMMIT, trim($error) );
             }
         }
     }
