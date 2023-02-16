@@ -1,4 +1,4 @@
-package Atomic::Task::Pool;
+package Atomic::TaskPool;
 
 # ------------------------------------------------------------------------------
 use Modern::Perl;
