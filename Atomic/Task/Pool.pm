@@ -20,8 +20,6 @@ sub new
     %{ $self->{tasks} } = map { $_->id => $_ } @{$tasks};
     $self->_check_resources_lock($_) for values %{ $self->{tasks} };
     $self->{params}->{children} ||= Sys::Info->new->device('CPU')->count;
-    $self->{params}->{pieces}
-        = POSIX::ceil( scalar( keys %{ $self->{tasks} } ) / $self->{params}->{children} );
     return $self;
 }
 
