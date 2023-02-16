@@ -34,7 +34,6 @@ sub run
         push @threads, async {
 
             for ( $_[0] .. $_[1] ) {
-                say sprintf '%s => %s', @_;
                 my $task = $tasks[$_];
                 last unless $task;
                 $task->run;
