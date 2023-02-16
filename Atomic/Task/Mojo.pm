@@ -24,7 +24,6 @@ sub run
     my ( $self, $children ) = @_;
 
     $children ||= $self->{params}->{children};
-
     my ( $worker, @tasks ) = ( undef, values %{ $self->{tasks} } );
 
     $worker = sub {
@@ -34,7 +33,7 @@ sub run
         }
         Mojo::IOLoop->stop;
     };
-    $worker->() for 1 .. $self->{params}->{children};
+    $worker->() for 1 .. $children;
     Mojo::IOLoop->start;
     return;
 }
