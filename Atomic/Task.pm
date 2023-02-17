@@ -11,7 +11,6 @@ use UUID qw/uuid/;
 
 use lib q{..};
 use Atomic::Resource::Base;
-
 const my $ELOCK   => 1;
 const my $EWORK   => 2;
 const my $EEXEC   => 3;
@@ -19,7 +18,7 @@ const my $ECLOCK  => 4;
 const my $EBACKUP => 5;
 const my $ECOMMIT => 6;
 
-const my %EMESSAGES = (
+const my %EMESSAGES => (
     $ELOCK   => 'task locking',
     $EWORK   => 'working copy creation',
     $EEXEC   => 'execute() call',
