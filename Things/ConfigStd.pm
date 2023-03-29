@@ -2,7 +2,7 @@ package Things::ConfigStd;
 
 use lib q{.};
 use StdUse;
-use Things qw/:types/;
+use Things qw/:types trim/;
 
 use Encode qw/decode_utf8/;
 use Config::Std;
@@ -25,7 +25,7 @@ sub new
             read_config $file => %self;
         }
         catch {
-            $self{error} = $_;
+            $self{error} = trim $_;
         };
 
         if ( !$self{error} ) {
@@ -54,16 +54,17 @@ sub _decode
         if ( ref $hash->{$key} eq $ARRAY ) {
             for ( @{ $hash->{$key} } ) {
                 try {
-                    $_ = decode_utf8($_);
+                    $_ = decode_utf8 $_;
                 };
             }
         }
         else {
             try {
-                $hash->{$key} = decode_utf8( $hash->{$key} );
+                $hash->{$key} = decode_utf8 $hash->{$key};
             };
         }
     }
+    return $hash;
 }
 
 #------------------------------------------------------------------------------
