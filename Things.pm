@@ -12,6 +12,7 @@ our @EXPORT_OK = qw/
     $YEAR_OFFSET
     $HOUR_IN_DAY $MIN_IN_HOUR $MIN_IN_DAY $SEC_IN_DAY $SEC_IN_HOUR $SEC_IN_MIN
     @MONTHS3 %MONTHS3
+    $ARRAY $HASH
     /;
 our %EXPORT_TAGS = (
     'all'   => \@EXPORT_OK,
@@ -24,6 +25,12 @@ our %EXPORT_TAGS = (
             $YEAR_OFFSET
             $SEC_IN_MIN $HOUR_IN_DAY $MIN_IN_HOUR $MIN_IN_DAY $SEC_IN_HOUR $SEC_IN_DAY
             @MONTHS3 %MONTHS3
+            $ARRAY $HASH
+            /,
+    ],
+    'types' => [
+        qw/
+            $ARRAY $HASH
             /
     ],
 );
@@ -36,6 +43,8 @@ use Module::Filename;
 use Scalar::Util qw/readonly/;
 use Socket qw/inet_aton inet_ntoa/;
 
+const our $ARRAY       => 'ARRAY';
+const our $HASH        => 'HASH';
 const our $YEAR_OFFSET => 1900;
 const our $SEC_IN_MIN  => 60;
 const our $HOUR_IN_DAY => 24;
@@ -191,13 +200,15 @@ sub random_line
 {
     my ( $filename, $noempty ) = @_;
 
-    open my $fh, '<', $filename or Carp::confess sprintf 'Can not open file "%s" in "%s()"', $filename, ( caller 1 )[0];
+    open my $fh, '<', $filename
+        or Carp::confess sprintf 'Can not open file "%s" in "%s()"', $filename, ( caller 1 )[0];
     my $filesize = -s $filename;
     seek( $fh, int( rand $filesize ), 0 );
     <$fh>;
     seek( $fh, 0, 0 ) if eof $fh;
     $line = <$fh>;
     trim($line);
+
     while ($noempty) {
         last if $line;
         $line = <$fh>;
