@@ -37,7 +37,9 @@ sub new
                     $section = q{_};
                 }
                 _lowercase_section( $self{$section} );
-                _multikeys( $self{$section}, \@multikeys );
+                my $all = any { $_ eq q{*} or /^all$/ism } @multikeys;
+                $all = undef if any { $_ eq '-' } @multikeys;
+                _multikeys( $self{$section}, $all, \@multikeys );
                 _decode( $self{$section} );
             }
         }
@@ -70,9 +72,7 @@ sub _decode
 #------------------------------------------------------------------------------
 sub _multikeys
 {
-    my ( $hash, $multikeys ) = @_;
-
-    my $all = any { $_ eq q{*} or /^all$/ism } @{$multikeys};
+    my ( $hash, $all, $multikeys ) = @_;
 
     for my $key ( keys %{$hash} ) {
         if ($all) {
