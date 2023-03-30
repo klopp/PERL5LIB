@@ -99,7 +99,7 @@ sub commit
     }
     catch {
         $error = sprintf 'File :: "%s": %s', $self->{params}->{source}, $_;
-    }
+    };
     return $error;
 }
 
@@ -114,7 +114,7 @@ sub rollback
     }
     catch {
         $error = sprintf 'File :: "%s": %s', $self->{params}->{source}, $_;
-    }
+    };
     return $error;
 }
 
