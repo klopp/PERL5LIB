@@ -129,6 +129,18 @@
 | $EBACKUP | создании резервной копии ресурса |
 | $ECOMMIT | коммите |
 
+В `%Atomic::Task::EMESSAGES` (экспортируется) содержатся краткие сообщения от ошибках:
+
+```perl
+    const my %EMESSAGES => (
+        $ELOCK   => 'task locking',
+        $EWORK   => 'working copy creation',
+        $EEXEC   => 'execute() call',
+        $ECLOCK  => 'commit locking',
+        $EBACKUP => 'backup copy creation',
+        $ECOMMIT => 'commit',
+    );
+```
 
 ### Дополнительно
 
