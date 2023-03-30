@@ -12,7 +12,7 @@ our @EXPORT_OK = qw/
     $YEAR_OFFSET
     $HOUR_IN_DAY $MIN_IN_HOUR $MIN_IN_DAY $SEC_IN_DAY $SEC_IN_HOUR $SEC_IN_MIN
     @MONTHS3 %MONTHS3
-    $ARRAY $HASH
+    $ARRAY $HASH $SCALAR
     /;
 our %EXPORT_TAGS = (
     'all'   => \@EXPORT_OK,
@@ -25,13 +25,13 @@ our %EXPORT_TAGS = (
             $YEAR_OFFSET
             $SEC_IN_MIN $HOUR_IN_DAY $MIN_IN_HOUR $MIN_IN_DAY $SEC_IN_HOUR $SEC_IN_DAY
             @MONTHS3 %MONTHS3
-            $ARRAY $HASH
+            $ARRAY $HASH $SCALAR
             /,
     ],
     'types' => [
         qw/
-            $ARRAY $HASH
-            /
+            $ARRAY $HASH $SCALAR
+            /,
     ],
 );
 
@@ -45,6 +45,7 @@ use Socket qw/inet_aton inet_ntoa/;
 
 const our $ARRAY       => 'ARRAY';
 const our $HASH        => 'HASH';
+const our $SCALAR      => 'SCALAR';
 const our $YEAR_OFFSET => 1900;
 const our $SEC_IN_MIN  => 60;
 const our $HOUR_IN_DAY => 24;
@@ -71,10 +72,10 @@ sub trim
         # trim( ' ... ' ) умник, да?
         readonly($_) and next;
 
-        if ( ref $_ eq 'ARRAY' ) {
+        if ( ref $_ eq $ARRAY ) {
             $_ =~ s/$TRIM_RX//gsm for @{$_};
         }
-        elsif ( ref $_ eq 'HASH' ) {
+        elsif ( ref $_ eq $HASH ) {
             while ( my ($key) = each %{$_} ) {
                 $_->{$key} =~ s/$TRIM_RX//gsm;
             }
@@ -133,7 +134,7 @@ sub set_bool
         Carp::cluck sprintf 'No target argument at %s()', ( caller 0 )[3];
         return;
     }
-    if ( ref $_[0] ne 'SCALAR' ) {
+    if ( ref $_[0] ne $SCALAR ) {
         Carp::cluck sprintf 'Target argument must be SCALAR REF at %s()', ( caller 0 )[3];
         return;
     }
@@ -164,14 +165,17 @@ sub xget
 
     for (@parts) {
         if (/^\[(\d+)\]$/) {
-            return if ref $cursor ne 'ARRAY';
+            return if ref $cursor ne $ARRAY;
+            return unless exists $cursor->[$1];
             $cursor = $cursor->[$1];
         }
-        elsif ( ref $cursor eq 'HASH' ) {
+        elsif ( ref $cursor eq $HASH ) {
+            return unless exists $cursor->[$_];
             $cursor = $cursor->{$_};
         }
-        elsif ( ref $cursor eq 'ARRAY' ) {
+        elsif ( ref $cursor eq $ARRAY ) {
             return unless /^(\d+)$/;
+            return unless exists $cursor->[$1];
             $cursor = $cursor->[$1];
         }
         else {
