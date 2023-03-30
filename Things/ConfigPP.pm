@@ -11,7 +11,7 @@ use List::Util qw/any/;
 use Try::Tiny;
 
 our $VERSION = 'v1.1';
-const my $PKG_PFX => q{_} . __PACKAGE__ . q{_};
+const my $PKG_KEY => q{_} . __PACKAGE__ . q{_};
 
 # ------------------------------------------------------------------------------
 sub new
@@ -36,9 +36,10 @@ sub new
             $all = undef if any { $_ eq '-' } @multikeys;
             _multikeys( $self, $all, \@multikeys );
             $self = _decode($self);
+####            $self->{ data } = $self;
         }
     }
-    return bless $self, $class;
+    return bless { _ => $self }, $class;
 }
 
 #------------------------------------------------------------------------------
@@ -92,7 +93,7 @@ sub _lowercase_hash
     my ($hash) = @_;
 
     for ( keys %{$hash} ) {
-        my $pkey = $PKG_PFX . lc;
+        my $pkey = $PKG_KEY . lc;
         push @{ $hash->{$pkey} }, $hash->{$_};
     }
     return $hash;
@@ -108,7 +109,7 @@ sub _keys_back
         @{$dest} = map { _keys_back($_) } @{$src};
     }
     elsif ( ref $src eq $HASH ) {
-        my $pkey = $PKG_PFX . '([[:lower:]]+)';
+        my $pkey = $PKG_KEY . '([[:lower:]]+)';
         for ( keys %{$src} ) {
             $dest->{$1} = $src->{$_} if /$pkey/;
         }
@@ -128,7 +129,7 @@ sub _lowercase_keys
     }
     elsif ( ref $src eq $HASH ) {
         for ( keys %{$src} ) {
-            push @{ $dest->{ $PKG_PFX . lc } }, $src->{$_};
+            push @{ $dest->{ $PKG_KEY . lc } }, $src->{$_};
         }
     }
     return $level ? $dest : _keys_back($dest);
@@ -138,14 +139,14 @@ sub _lowercase_keys
 sub error
 {
     my ($self) = @_;
-    return ref $self eq $HASH ? $self->{error_} : undef;
+    return $self->{error_};
 }
 
 # ------------------------------------------------------------------------------
 sub get
 {
     my ( $self, $path ) = @_;
-    return xget( $self, $path );
+    return xget( $self->{_}, lc $path );
 }
 
 # ------------------------------------------------------------------------------

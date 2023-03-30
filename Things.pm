@@ -170,7 +170,7 @@ sub xget
             $cursor = $cursor->[$1];
         }
         elsif ( ref $cursor eq $HASH ) {
-            return unless exists $cursor->[$_];
+            return unless exists $cursor->{$_};
             $cursor = $cursor->{$_};
         }
         elsif ( ref $cursor eq $ARRAY ) {
