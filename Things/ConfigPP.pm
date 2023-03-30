@@ -7,11 +7,10 @@ use Things qw/:types trim xget/;
 use Const::Fast;
 use Encode qw/decode_utf8/;
 use English qw/-no_match_vars/;
-
 use List::Util qw/any/;
 use Try::Tiny;
 
-our $VERSION = 'v1.0';
+our $VERSION = 'v1.1';
 const my $PKG_PFX => q{_} . __PACKAGE__ . q{_};
 
 # ------------------------------------------------------------------------------
@@ -84,7 +83,6 @@ sub _multikeys
             }
         }
     }
-
     return $src;
 }
 
@@ -92,6 +90,7 @@ sub _multikeys
 sub _lowercase_hash
 {
     my ($hash) = @_;
+
     for ( keys %{$hash} ) {
         my $pkey = $PKG_PFX . lc;
         push @{ $hash->{$pkey} }, $hash->{$_};
@@ -121,6 +120,7 @@ sub _keys_back
 sub _lowercase_keys
 {
     my ( $src, $level ) = @_;
+
     $level ||= 0;
     my $dest;
     if ( ref $src eq $ARRAY ) {
@@ -131,7 +131,6 @@ sub _lowercase_keys
             push @{ $dest->{ $PKG_PFX . lc } }, $src->{$_};
         }
     }
-
     return $level ? $dest : _keys_back($dest);
 }
 
