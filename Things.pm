@@ -8,15 +8,22 @@ our @EXPORT_OK = qw/
     set_bool set_true set_false TRUE FALSE parse_bool
     ip2long long2ip
     random_line random_ua
+    interval_to_seconds
     $DATA_DIR
     $YEAR_OFFSET
     $HOUR_IN_DAY $MIN_IN_HOUR $MIN_IN_DAY $SEC_IN_DAY $SEC_IN_HOUR $SEC_IN_MIN
     @MONTHS3 %MONTHS3
-    $ARRAY $HASH $SCALAR
+    $ARRAY $HASH $SCALAR $GLOB
     /;
 our %EXPORT_TAGS = (
     'all'   => \@EXPORT_OK,
-    'func'  => [qw/trim set_bool set_true set_false xget random_line random_ua parse_bool/],
+    'func'  => [
+        qw/
+            set_bool set_true set_false parse_bool
+            trim xget random_line random_ua
+            interval_to_seconds
+            /,
+    ],
     'net '  => [qw/ip2long long2ip/],
     'bool'  => [qw/set_bool set_true set_false TRUE FALSE parse_bool/],
     'const' => [
@@ -25,12 +32,12 @@ our %EXPORT_TAGS = (
             $YEAR_OFFSET
             $SEC_IN_MIN $HOUR_IN_DAY $MIN_IN_HOUR $MIN_IN_DAY $SEC_IN_HOUR $SEC_IN_DAY
             @MONTHS3 %MONTHS3
-            $ARRAY $HASH $SCALAR
+            $ARRAY $HASH $SCALAR $GLOB
             /,
     ],
     'types' => [
         qw/
-            $ARRAY $HASH $SCALAR
+            $ARRAY $HASH $SCALAR $GLOB
             /,
     ],
 );
@@ -46,6 +53,7 @@ use Socket qw/inet_aton inet_ntoa/;
 const our $ARRAY       => 'ARRAY';
 const our $HASH        => 'HASH';
 const our $SCALAR      => 'SCALAR';
+const our $GLOB        => 'GLOB';
 const our $YEAR_OFFSET => 1900;
 const our $SEC_IN_MIN  => 60;
 const our $HOUR_IN_DAY => 24;
@@ -85,6 +93,55 @@ sub trim
         }
     }
     return wantarray ? @_ : $_[0];
+}
+
+# ------------------------------------------------------------------------------
+# Part:
+#   \d+[s] - seconds
+#   \d+m   - minutes
+#   \d+h   - hours
+#   \d+d   - days
+# IN string:
+#   PART[{, }PART...]
+# Example:
+#   "1d, 3h, 24m, 30s"
+#
+# OR
+#   "23:3:6:15" => 23 days, 3 hours, 6 minutes, 15 seconds
+#
+# ------------------------------------------------------------------------------
+sub interval_to_seconds
+{
+    my ($interval) = @_;
+    my $seconds = 0;
+    my @parts;
+
+    if ( $interval =~ /^(\d+[:]?)+$/gsm ) {
+        @parts = split /[:]/, $interval;
+        $seconds += pop @parts;
+        $seconds += pop(@parts) * $SEC_IN_MIN  if @parts;
+        $seconds += pop(@parts) * $SEC_IN_HOUR if @parts;
+        $seconds += pop(@parts) * $SEC_IN_DAY  if @parts;
+        return $seconds;
+    }
+
+    @parts = split /[,\s]+/sm, lc $interval;
+    for (@parts) {
+        return unless /^(\d+)([smhd]?)$/ism;
+        if ( $2 eq 'm' ) {
+            $seconds += $1 * $SEC_IN_MIN;
+        }
+        elsif ( $2 eq 'h' ) {
+            $seconds += $1 * $SEC_IN_HOUR;
+        }
+        elsif ( $2 eq 'd' ) {
+            $seconds += $1 * $SEC_IN_DAY;
+        }
+        else {
+            $seconds += $1;
+        }
+    }
+    return $seconds;
 }
 
 # ------------------------------------------------------------------------------
