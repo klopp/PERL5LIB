@@ -96,19 +96,17 @@ sub trim
 }
 
 # ------------------------------------------------------------------------------
-# Part:
-#   \d+[s] - seconds
-#   \d+m   - minutes
-#   \d+h   - hours
-#   \d+d   - days
+# PART:
+#   \d+[s] - seconds, \d+[m] - minutes, \d+[h] - hours, \d+[d] - days
 # IN string:
 #   PART[{, }PART...]
 # Example:
-#   "1d, 3h, 24m, 30s"
+#   "1d, 24m, 3h, 30s"
 #
 # OR
 #   "23:3:6:15" => 23 days, 3 hours, 6 minutes, 15 seconds
-#
+#   "3:6:15"    => 3 hours, 6 minutes, 15 seconds
+#   etc
 # ------------------------------------------------------------------------------
 sub interval_to_seconds
 {
