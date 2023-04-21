@@ -8,10 +8,18 @@ use warnings;
 use base qw/Exporter/;
 our @EXPORT  = qw/trim/;
 our $VERSION = 'v1.0';
+our $nomod;
 
 # ------------------------------------------------------------------------------
 use Things::Const qw/:types/;
 use Scalar::Util qw/readonly/;
+
+# ------------------------------------------------------------------------------
+sub nomod
+{
+    ($nomod) = @_;
+    return $nomod;
+}
 
 # ------------------------------------------------------------------------------
 sub trim
@@ -25,8 +33,8 @@ sub trim
             push @rc, trim($_) for @{$_};
         }
         elsif ( ref $_ eq $HASH ) {
-            while ( my ($key) = each %{$_} ) {
-                push @rc, $key, trim( $_->{$key} );
+            while ( my ($key, $value) = each %{$_} ) {
+                push @rc, $key, trim( $value );
             }
         }
         elsif ( !ref $_ ) {

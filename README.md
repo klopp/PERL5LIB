@@ -10,13 +10,51 @@
 
 Хранилице внутренних баз.
 
-## [Things](Things.pm)
-
-Набор всяких разных функций и констант.
-
 ## [Things::*](Things/)
 
-Небольшие полезные модули.
+Всякие полезные модули.
+
+### [Things::I2S](Things/I2S.pm)
+
+#### sub i2s( )
+#### sub interval_to_seconds( )
+
+Разбирают строки вида:
+
+```perl
+"1d, 24m, 3h, 30s" => 1 day, 3 hours, 24 minutes, 30 seconds
+```
+или
+
+```perl
+"23:3:6:15" => 23 days, 3 hours, 6 minutes, 15 seconds
+"3:6:15"    => 3 hours, 6 minutes, 15 seconds
+```
+
+Возвращают количество секунд.
+
+### [Things::IP](Things/IP.pm)
+
+#### sub long2ip( )
+#### sub ip2long( )
+
+### [Things::RandomLine](Things/RandomLine.pm)
+
+#### sub random_line( filename [, noempty] )
+
+Возвращает случайную строку файла (не пустую при `$noempty`)
+
+### [Things::Trim](Things/Trim.pm)
+
+#### sub trim( data )
+
+Принимает хэш, массив или скаляр. Удаляет конечные и начальные `\s` у значений.
+
+### [Things::Xget](Things/Xget.pm)
+
+#### sub xget( data, xpath )
+
+Возвращает значение из структуры по пути (например, `"/a/b/c/d/[2]"`). Предотвращает `autovification` при обращении к несуществующим значениям.
 
 ### [Things::ConfigPP](Things/ConfigPP.pm)
 

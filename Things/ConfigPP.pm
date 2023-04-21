@@ -2,9 +2,9 @@ package Things::ConfigPP;
 
 use strict;
 use warnings;
-use Things:Const qw/:types/;
-use Things:Trim;
-use Things:Xget;
+use Things::Const qw/:types/;
+use Things::Trim;
+use Things::Xget;
 
 # ------------------------------------------------------------------------------
 use Const::Fast;
