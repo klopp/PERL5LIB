@@ -15,36 +15,36 @@ use Things::Const qw/:types/;
 use Scalar::Util qw/readonly/;
 
 # ------------------------------------------------------------------------------
-sub nomod
-{
-    ($nomod) = @_;
-    return $nomod;
-}
-
-# ------------------------------------------------------------------------------
 sub trim
 {
     CORE::state $TRIM_RX = qr{^\s+|\s+$};
 
-    my @rc;
-    for (@_) {
-
-        if ( ref $_ eq $ARRAY ) {
-            push @rc, trim($_) for @{$_};
-        }
-        elsif ( ref $_ eq $HASH ) {
-            while ( my ($key, $value) = each %{$_} ) {
-                push @rc, $key, trim( $value );
-            }
-        }
-        elsif ( !ref $_ ) {
-            my $s = $_;
-            $s =~ s/$TRIM_RX//gsm;
-            push @rc, $s;
-            $_ = $s unless readonly $_;
+    my ( $src, $nomod ) = @_;
+    my $dest;
+    if ( ref $src eq $ARRAY ) {
+        @{$dest} = map { trim( $_, $nomod ) } @{$src};
+        if( !$nomod ) {
+            readonly @_ or @_ = @{$dest};
         }
     }
-    return wantarray ? @rc : \@rc;
+    elsif ( ref $src eq $HASH ) {
+        %{$dest} = map { $_ => trim( $src->{$_}, $nomod ) } keys %{$src};
+        if ( !$nomod ) {
+            readonly @_ or @_ = %{$dest};
+        }
+    }
+    elsif ( ref \$src eq $SCALAR ) {
+        $dest = $src;
+        $dest =~ s/$TRIM_RX//gsm;
+        if ( !$nomod ) {
+            readonly $_[0] or $_[0] = $dest;
+        }
+    }
+    else {
+        Carp::cluck sprintf '%s() :: 1st argument must be %s REF, %s REF or %s', ( caller 0 )[3], $ARRAY, $HASH,
+            $SCALAR;
+    }
+    return $dest;
 }
 
 # ------------------------------------------------------------------------------
