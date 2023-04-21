@@ -1,15 +1,15 @@
 package Things::PeriodicCall;
 
 # ------------------------------------------------------------------------------
-use StdUse;
-
+use strict;
+use warnings;
 =for comment
     WIP!
 =cut
 
 # ------------------------------------------------------------------------------
 use Const::Fast;
-use Things qw/:const/;
+use Things::Const qw/:datetime/;
 use Mutex;
 use POSIX qw/mktime/;
 

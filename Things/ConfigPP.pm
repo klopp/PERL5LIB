@@ -1,9 +1,12 @@
 package Things::ConfigPP;
 
-use lib q{.};
-use StdUse;
-use Things qw/:types trim xget/;
+use strict;
+use warnings;
+use Things:Const qw/:types/;
+use Things:Trim;
+use Things:Xget;
 
+# ------------------------------------------------------------------------------
 use Const::Fast;
 use Encode qw/decode_utf8/;
 use English qw/-no_match_vars/;

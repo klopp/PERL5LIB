@@ -9,7 +9,6 @@ use base qw/Exporter/;
 our @EXPORT = qw/random_line/;
 our $VERSION = 'v1.0';
 
-use lib qw{.};
 use Things::Trim;
 
 # ------------------------------------------------------------------------------

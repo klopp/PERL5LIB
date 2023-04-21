@@ -1,7 +1,7 @@
 package Things::Mysql;
 
-use StdUse;
-
+use strict;
+use warnings;
 use DBI;
 
 use Things::Db;

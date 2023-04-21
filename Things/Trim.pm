@@ -10,7 +10,6 @@ our @EXPORT  = qw/trim/;
 our $VERSION = 'v1.0';
 
 # ------------------------------------------------------------------------------
-use lib q{.};
 use Things::Const qw/:types/;
 use Scalar::Util qw/readonly/;
 

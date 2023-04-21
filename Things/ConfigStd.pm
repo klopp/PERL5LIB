@@ -1,8 +1,9 @@
 package Things::ConfigStd;
 
-use lib q{.};
-use StdUse;
-use Things qw/:types trim/;
+use strict;
+use warnings;
+use Things::Const qw/:types/;
+use Things::Trim;
 
 use Encode qw/decode_utf8/;
 use Config::Std;

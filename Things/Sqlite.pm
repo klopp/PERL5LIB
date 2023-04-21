@@ -1,7 +1,7 @@
 package Things::Sqlite;
 
-use StdUse;
-
+use strict;
+use warnings;
 use Const::Fast;
 use Module::Filename;
 

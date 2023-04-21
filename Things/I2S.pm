@@ -1,12 +1,12 @@
 package Things::I2S;
 
-#use Exporter qw/import/;
+use strict;
+use warnings;
 use base qw/Exporter/;
 our @EXPORT  = qw/i2s interval_to_seconds/;
 our $VERSION = 'v1.0';
 
 # ------------------------------------------------------------------------------
-use lib q{.};
 use Things::Const qw/:datetime/;
 
 # ------------------------------------------------------------------------------

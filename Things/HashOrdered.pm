@@ -1,11 +1,14 @@
 package Things::HashOrdered;
 
+use strict;
+use warnings;
 our $VERSION = 'v1.0';
 
 # ------------------------------------------------------------------------------
 use Hash::Ordered;
 use base qw/Hash::Ordered/;
 
+# ------------------------------------------------------------------------------
 =for comment
     Надстройка над Hash::Ordered, позволяет использовать
     обычный синтаксис each и $hash->{}

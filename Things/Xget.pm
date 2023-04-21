@@ -9,7 +9,6 @@ use base qw/Exporter/;
 our @EXPORT  = qw/xget/;
 our $VERSION = 'v1.0';
 
-use lib q{.};
 use Things::Const qw/:types/;
 use Things::Trim;
 
