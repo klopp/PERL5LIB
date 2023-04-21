@@ -4,7 +4,7 @@ package Atomic::Resource::Base;
 use Modern::Perl;
 
 use Carp qw/confess/;
-use Things qw/set_bool/;
+use Things::Bool;
 use UUID qw/uuid/;
 
 our $VERSION = 'v1.0';
@@ -67,7 +67,7 @@ sub id
 sub modified
 {
     my $self = shift;
-    return set_bool( \$self->{modified}, @_ ? shift : 1 );
+    return set_bool( $self->{modified}, @_ ? shift : 1 );
 }
 
 # ------------------------------------------------------------------------------

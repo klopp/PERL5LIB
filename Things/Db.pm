@@ -1,6 +1,7 @@
 package Things::Db;
 
-use StdUse;
+use strict;
+use warnings;
 
 use Carp qw/confess/;
 use Const::Fast;
