@@ -1,5 +1,10 @@
 package Things::Bool;
 
+# ------------------------------------------------------------------------------
+use strict;
+use warnings;
+
+# ------------------------------------------------------------------------------
 use base qw/Exporter/;
 our @EXPORT  = qw/set_bool set_true set_false TRUE FALSE parse_bool/;
 our $VERSION = 'v1.0';

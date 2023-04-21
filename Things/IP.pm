@@ -1,5 +1,10 @@
 package Things::IP;
 
+# ------------------------------------------------------------------------------
+use strict;
+use warnings;
+
+# ------------------------------------------------------------------------------
 use base qw/Exporter/;
 our @EXPORT  = qw/ip2long long2ip/;
 our $VERSION = 'v1.0';

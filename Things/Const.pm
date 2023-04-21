@@ -1,9 +1,11 @@
 package Things::Const;
 
 # ------------------------------------------------------------------------------
-use Exporter qw/import/;
-use base qw/Exporter/;
+use strict;
+use warnings;
 
+# ------------------------------------------------------------------------------
+use base qw/Exporter/;
 our @EXPORT_OK = qw/
     $YEAR_OFFSET
     $HOUR_IN_DAY $MIN_IN_HOUR $MIN_IN_DAY $SEC_IN_DAY $SEC_IN_HOUR $SEC_IN_MIN
