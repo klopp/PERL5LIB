@@ -6,7 +6,11 @@ use warnings;
 
 # ------------------------------------------------------------------------------
 use base qw/Exporter/;
-our @EXPORT  = qw/set_bool set_true set_false TRUE FALSE parse_bool/;
+our @EXPORT  = qw/
+        set_bool set_true set_false 
+        true false True False TRUE FALSE 
+        parse_bool
+    /;
 our $VERSION = 'v1.0';
 
 use lib q{.};
@@ -15,6 +19,10 @@ use Things::Const qw/:types/;
 # ------------------------------------------------------------------------------
 sub TRUE  {1}
 sub FALSE {0}
+sub true  {1}
+sub false {0}
+sub True  {1}
+sub False {0}
 
 # ------------------------------------------------------------------------------
 sub parse_bool
@@ -40,7 +48,6 @@ sub set_false
 # ------------------------------------------------------------------------------
 sub set_bool
 {
-
 =for comment
     * выставить:
         $flag = set_bool($flag);
@@ -54,12 +61,10 @@ sub set_bool
             return set_bool($self->{flag}, @_ ? shift : 1);
         }
 =cut
-
     if ( @_ < 1 ) {
         Carp::cluck sprintf 'No target argument at %s()', ( caller 0 )[3];
         return;
     }
-
     if ( ref \$_[0] ne $SCALAR ) {
         Carp::cluck sprintf 'Target argument must be SCALAR REF at %s()', ( caller 0 )[3];
         return;

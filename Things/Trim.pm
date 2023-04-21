@@ -1,14 +1,18 @@
 package Things::Trim;
 
-#use Exporter qw/import/;
+# ------------------------------------------------------------------------------
+use strict;
+use warnings;
+
+# ------------------------------------------------------------------------------
 use base qw/Exporter/;
 our @EXPORT  = qw/trim/;
 our $VERSION = 'v1.0';
 
 # ------------------------------------------------------------------------------
-use Scalar::Util qw/readonly/;
 use lib q{.};
 use Things::Const qw/:types/;
+use Scalar::Util qw/readonly/;
 
 # ------------------------------------------------------------------------------
 sub trim
@@ -30,6 +34,7 @@ sub trim
             my $s = $_;
             $s =~ s/$TRIM_RX//gsm;
             push @rc, $s;
+            $_ = $s unless readonly $_;
         }
     }
     return wantarray ? @rc : \@rc;
