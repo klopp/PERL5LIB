@@ -6,7 +6,7 @@ use Modern::Perl;
 use Array::Utils qw/intersect/;
 use Carp qw/cluck confess/;
 use Const::Fast;
-use Things qw/trim/;
+use Things::Trim;
 use UUID qw/uuid/;
 
 use lib q{..};
