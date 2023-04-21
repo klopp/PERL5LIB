@@ -21,10 +21,10 @@ sub trim
 
     my ( $src, $mod ) = @_;
     my $dest;
-    
+
     if ( ref $src eq $ARRAY ) {
         @{$dest} = map { trim( $_, $mod ) } @{$src};
-        if( parse_bool($mod) ) {
+        if ( parse_bool($mod) ) {
             readonly @_ or @_ = @{$dest};
         }
     }

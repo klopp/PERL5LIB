@@ -6,10 +6,10 @@ use warnings;
 
 # ------------------------------------------------------------------------------
 use base qw/Exporter/;
-our @EXPORT  = qw/
-        set_bool set_true set_false 
-        true false True False TRUE FALSE 
-        parse_bool
+our @EXPORT = qw/
+    set_bool set_true set_false
+    true false True False TRUE FALSE
+    parse_bool
     /;
 our $VERSION = 'v1.0';
 
@@ -48,6 +48,7 @@ sub set_false
 # ------------------------------------------------------------------------------
 sub set_bool
 {
+
 =for comment
     * выставить:
         $flag = set_bool($flag);
@@ -61,6 +62,7 @@ sub set_bool
             return set_bool($self->{flag}, @_ ? shift : 1);
         }
 =cut
+
     if ( @_ < 1 ) {
         Carp::cluck sprintf 'No target argument at %s()', ( caller 0 )[3];
         return;
