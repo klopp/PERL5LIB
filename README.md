@@ -44,11 +44,15 @@
 
 Возвращает случайную строку файла (не пустую при `$noempty`)
 
+### [Things::Out](Things/Out.pm)
+
+Небольшик обёртки над функциями стандартного вывода (`puts()` => гибрид `say()`+`printf()`, и т.д.).
+
 ### [Things::Trim](Things/Trim.pm)
 
 #### sub trim( data [, mod = BOOLEAN] )
 
-Принимает хэш, массив или скаляр. Удаляет конечные и начальные `\s` у значений. Если `mod`, то все поля исходных данных (кроме `readonly`) также будут обработаны.
+Принимает хэш, массив или скаляр. Возвращает копию исходных данных, у которой удаляет конечные и начальные `\s` значений. Если `mod`, то все поля исходных данных (кроме `readonly`) также будут модифицированы.
 
 ### [Things::Xget](Things/Xget.pm)
 
@@ -78,6 +82,17 @@
 ### [Things::HashOrdered](Things/HashOrdered.pm)
 
 Обёртка над [Hash::Ordered](https://metacpan.org/pod/Hash::Ordered), позволяющая использовать стандартный синтаксис `$hash->{}`, `$hash{}` и `each(%hash)`.
+
+### [Things::String](Things/String.pm)
+
+Небольшое расширение для обычных строковых скаляров:
+
+```perl
+    use Things::String;
+    my $string = string 'abc';
+```
+
+Фактически ради более строгого контроля типа и операций с ним. Ну и ради перегрузки оператора `+=` (то же самое, что и `.=`).
 
 ### [Things::Sqlite](Things/Sqlite.pm), [Things::Mysql](Things/Mysql.pm),  [Things::Pg](Things/Pg.pm)
 
