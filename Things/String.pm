@@ -13,19 +13,23 @@ our $VERSION = 'v1.0';
 # ------------------------------------------------------------------------------
 use overload
 
-    # copy constructor:
-    q{=} => sub {
-    return bless { data => shift->{data} }, __PACKAGE__;
-    },
-
     # stringify:
     q{""} => sub {
     return shift->{data};
     },
 
+    # copy constructor:
+    q{=} => sub {
+    return bless { data => shift->{data} }, __PACKAGE__;
+    },
+
     # concat:
+    q{+}  => \&_concat,
     q{+=} => \&_concat,
-    q{.=} => \&_concat,
+
+    # compare:
+    q{<=>} => \&_cmp,
+    q{cmp} => \&_cmp,
     ;
 
 # ------------------------------------------------------------------------------
@@ -38,11 +42,15 @@ sub string
 # ------------------------------------------------------------------------------
 sub _concat
 {
-    my ( $self, $tail ) = @_;
-    $self->{data} //= q{};
-    $tail //= q{};
-    $self->{data} .= $tail;
-    return $self->{data};
+    my ( $s1, $s2, $invert ) = @_;
+    return string $invert ? ( $s2 . $s1 ) : ( $s1 . $s2 );
+}
+
+# ------------------------------------------------------------------------------
+sub _cmp
+{
+    my ( $s1, $s2, $invert ) = @_;
+    return string $invert ? ( "$s2" cmp "$s1" ) : ( "$s1" cmp "$s2" );
 }
 
 # ------------------------------------------------------------------------------
