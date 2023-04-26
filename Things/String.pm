@@ -50,7 +50,7 @@ sub _concat
 sub _cmp
 {
     my ( $s1, $s2, $invert ) = @_;
-    return string $invert ? ( "$s2" cmp "$s1" ) : ( "$s1" cmp "$s2" );
+    return $invert ? ( "$s2" cmp "$s1" ) : ( "$s1" cmp "$s2" );
 }
 
 # ------------------------------------------------------------------------------
