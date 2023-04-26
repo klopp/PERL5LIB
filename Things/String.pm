@@ -15,7 +15,7 @@ use overload
 
     # copy constructor:
     q{=} => sub {
-    return bless shift, __PACKAGE__;
+    return bless { data => shift->{data} }, __PACKAGE__;
     },
 
     # stringify:
@@ -39,8 +39,8 @@ sub string
 sub _concat
 {
     my ( $self, $tail ) = @_;
-    $self->{data} //= '';
-    $tail //= '';
+    $self->{data} //= q{};
+    $tail //= q{};
     $self->{data} .= $tail;
     return $self->{data};
 }
