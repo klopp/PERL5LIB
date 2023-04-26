@@ -7,8 +7,11 @@ use English qw/-no_match_vars/;
 
 # ------------------------------------------------------------------------------
 use base qw/Exporter/;
-our @EXPORT  = qw/puts fputs fprintf perror strerror strerr/;
+our @EXPORT  = qw/puts fputs fprintf perror strerror strerr fopen/;
 our $VERSION = 'v1.0';
+
+# ------------------------------------------------------------------------------
+use Try::Tiny;
 
 # ------------------------------------------------------------------------------
 BEGIN {
@@ -51,4 +54,21 @@ sub perror
 }
 
 # ------------------------------------------------------------------------------
+sub fopen
+{
+    my ( $filename, $filemode ) = @_;
+    my $fh;
+    try {
+        if ( !open $fh, $filemode, $filename ) {
+            Carp::croak strerror( sprintf 'Can not open file "%s"', $filename );
+        }
+    }
+    catch {
+        Carp::croak $_;
+    };
+    return $fh;
+}
+
+# ------------------------------------------------------------------------------
+
 1;
