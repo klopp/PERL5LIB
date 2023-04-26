@@ -57,13 +57,14 @@ sub perror
 sub fopen
 {
     my ( $filename, $filemode ) = @_;
-    my $fh;
+    my $fh = IO::File->new;
     try {
         if ( !open $fh, $filemode, $filename ) {
-            Carp::croak strerror( sprintf 'Can not open file "%s"', $filename );
+            Carp::croak strerror( sprintf 'Open file "%s"', $filename );
         }
     }
     catch {
+        undef $fh;
         Carp::croak $_;
     };
     return $fh;
