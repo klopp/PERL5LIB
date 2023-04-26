@@ -44,6 +44,10 @@
 
 Возвращает случайную строку файла (не пустую при `$noempty`)
 
+### [Things::Out](Things/Out.pm)
+
+Небольшик обёртки над функциями стандартного вывода (`puts()` => гибрид `say()`+`printf()`, и т.д.).
+
 ### [Things::Trim](Things/Trim.pm)
 
 #### sub trim( data [, mod = BOOLEAN] )
