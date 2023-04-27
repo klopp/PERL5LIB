@@ -18,6 +18,11 @@ use overload
     return shift->{data};
     },
 
+    # deref:
+    q[${}] => sub {
+    return \shift->{data};
+    },
+
     # copy constructor:
     q{=} => sub {
     return bless { data => shift->{data} }, __PACKAGE__;
@@ -41,6 +46,53 @@ sub string
 {
     my ($data) = @_;
     return bless { data => $data }, __PACKAGE__;
+}
+
+# ------------------------------------------------------------------------------
+sub lc
+{
+    my ($self) = @_;
+
+    if ( ref $self eq __PACKAGE__ ) {
+        $self->{data} = CORE::lc $self->{data};
+        return $self->{data};
+    }
+    return CORE::lc $self;
+}
+
+# ------------------------------------------------------------------------------
+sub lcfirst
+{
+    my ($self) = @_;
+
+    if ( ref $self eq __PACKAGE__ ) {
+        $self->{data} = CORE::lcfirst $self->{data};
+        return $self->{data};
+    }
+    return CORE::lcfirst $self;
+}
+
+# ------------------------------------------------------------------------------
+sub uc
+{
+    my ($self) = @_;
+    if ( ref $self eq __PACKAGE__ ) {
+        $self->{data} = CORE::uc $self->{data};
+        return $self->{data};
+    }
+    return CORE::uc $self;
+}
+
+# ------------------------------------------------------------------------------
+sub ucfirst
+{
+    my ($self) = @_;
+
+    if ( ref $self eq __PACKAGE__ ) {
+        $self->{data} = CORE::ucfirst $self->{data};
+        return $self->{data};
+    }
+    return CORE::ucfirst $self;
 }
 
 # ------------------------------------------------------------------------------
@@ -74,6 +126,7 @@ __END__
  
     use Things::String;
     my $string = string 'abc';
+    $string->ucfirst;
     # ...
 
 =cut
