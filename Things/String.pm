@@ -25,6 +25,7 @@ use overload
 
     # concat:
     q{+} => \&_concat,
+    q{&} => \&_concat,
 
     # compare:
     q{<=>} => \&_cmp,
