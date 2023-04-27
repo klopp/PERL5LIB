@@ -126,6 +126,7 @@ __END__
  
     use Things::String;
     my $string = string 'abc';
+    $string->ucfirst;
     # ...
 
 =cut
