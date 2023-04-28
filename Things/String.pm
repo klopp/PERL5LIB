@@ -20,12 +20,12 @@ use overload
 
     # deref:
     q[${}] => sub {
-    return \shift->{data};
+    \shift->{data};
     },
 
     # copy constructor:
     q{=} => sub {
-    return bless { data => shift->{data} }, __PACKAGE__;
+    bless { data => shift->{data} }, __PACKAGE__;
     },
 
     # concat:
@@ -33,8 +33,8 @@ use overload
     q{&} => \&_concat,
 
     # inc/dec:
-    q{--} => \&_dec,
     q{++} => \&_inc,
+    q{--} => \&_dec,
 
     # compare:
     q{<=>} => \&_cmp,
@@ -117,14 +117,56 @@ sub _rep
 sub _inc
 {
     my ($self) = @_;
-    return string ++$self->{data};
+
+    if ( !$self->{data} ) {
+        $self->{data} = q{a};
+        return $self;
+    }
+
+    my $c = substr $self->{data}, -1, 1;
+    if ( $c =~ /^[[:alnum:]]$/ ) {
+        ++$self->{data};
+    }
+    else {
+        chop $self->{data};
+    }
+
+    return $self;
 }
 
 # ------------------------------------------------------------------------------
 sub _dec
 {
     my ($self) = @_;
-    return string --$self->{data};
+    $self->{data} or return $self;
+
+    my $c = substr $self->{data}, -1, 1;
+    if ( $c =~ /^[[:digit:]]$/ ) {
+        if ( $c eq q{0} ) {
+            chop $self->{data};
+        }
+        else {
+            --$c;
+            $self->{data} =~ s/.$/$c/gsm;
+        }
+    }
+    elsif ( $c =~ /^[[:alpha:]]$/ ) {
+        if ( $c eq q{A} ) {
+            $c = q{z};
+            $self->{data} =~ s/.$/$c/gsm;
+        }
+        elsif ( $c eq q{a} ) {
+            chop $self->{data};
+        }
+        else {
+            $c = chr ord($c) - 1;
+            $self->{data} =~ s/.$/$c/gsm;
+        }
+    }
+    else {
+        chop $self->{data};
+    }
+    return $self;
 }
 
 # ------------------------------------------------------------------------------
