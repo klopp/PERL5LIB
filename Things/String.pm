@@ -33,7 +33,7 @@ use overload
     q{&} => \&_concat,
 
     # inc/dec:
-    q{++} => sub { ++shift->{data} },
+    q{++} => \&_inc,
     q{--} => \&_dec,
 
     # compare:
@@ -114,6 +114,27 @@ sub _rep
 }
 
 # ------------------------------------------------------------------------------
+sub _inc
+{
+    my ($self) = @_;
+
+    if ( !$self->{data} ) {
+        $self->{data} = q{a};
+        return $self;
+    }
+
+    my $c = substr $self->{data}, -1, 1;
+    if ( $c =~ /^[[:alnum:]]$/ ) {
+        ++$self->{data};
+    }
+    else {
+        chop $self->{data};
+    }
+
+    return $self;
+}
+
+# ------------------------------------------------------------------------------
 sub _dec
 {
     my ($self) = @_;
@@ -121,28 +142,30 @@ sub _dec
 
     my $c = substr $self->{data}, -1, 1;
     if ( $c =~ /^[[:digit:]]$/ ) {
-        if ( $c eq '0' ) {
-            $c = '';
+        if ( $c eq q{0} ) {
+            chop $self->{data};
         }
         else {
             --$c;
+            $self->{data} =~ s/.$/$c/gsm;
         }
     }
     elsif ( $c =~ /^[[:alpha:]]$/ ) {
-        if ( $c eq 'A' ) {
-            $c = 'z';
+        if ( $c eq q{A} ) {
+            $c = q{z};
+            $self->{data} =~ s/.$/$c/gsm;
         }
-        elsif ( $c eq 'a' ) {
-            $c = '';
+        elsif ( $c eq q{a} ) {
+            chop $self->{data};
         }
         else {
             $c = chr ord($c) - 1;
+            $self->{data} =~ s/.$/$c/gsm;
         }
     }
     else {
-        $c = '';
+        chop $self->{data};
     }
-    $self->{data} =~ s/.$/$c/gsm;
     return $self;
 }
 
