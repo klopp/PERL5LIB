@@ -20,12 +20,12 @@ use overload
 
     # deref:
     q[${}] => sub {
-    return \shift->{data};
+    \shift->{data};
     },
 
     # copy constructor:
     q{=} => sub {
-    return bless { data => shift->{data} }, __PACKAGE__;
+    bless { data => shift->{data} }, __PACKAGE__;
     },
 
     # concat:
@@ -33,8 +33,8 @@ use overload
     q{&} => \&_concat,
 
     # inc/dec:
+    q{++} => sub { ++shift->{data} },
     q{--} => \&_dec,
-    q{++} => \&_inc,
 
     # compare:
     q{<=>} => \&_cmp,
@@ -114,17 +114,36 @@ sub _rep
 }
 
 # ------------------------------------------------------------------------------
-sub _inc
-{
-    my ($self) = @_;
-    return string ++$self->{data};
-}
-
-# ------------------------------------------------------------------------------
 sub _dec
 {
     my ($self) = @_;
-    return string --$self->{data};
+    $self->{data} or return $self;
+
+    my $c = substr $self->{data}, -1, 1;
+    if ( $c =~ /^[[:digit:]]$/ ) {
+        if ( $c eq '0' ) {
+            $c = '';
+        }
+        else {
+            --$c;
+        }
+    }
+    elsif ( $c =~ /^[[:alpha:]]$/ ) {
+        if ( $c eq 'A' ) {
+            $c = 'z';
+        }
+        elsif ( $c eq 'a' ) {
+            $c = '';
+        }
+        else {
+            $c = chr ord($c) - 1;
+        }
+    }
+    else {
+        $c = '';
+    }
+    $self->{data} =~ s/.$/$c/gsm;
+    return $self;
 }
 
 # ------------------------------------------------------------------------------
