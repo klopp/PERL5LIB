@@ -39,8 +39,6 @@ use overload
 ## no critic (ProhibitSubroutinePrototypes, RequireArgUnpacking)
 sub uuid(;$)
 {
-    use DDP;
-    p @_;
     if ( !exists $_[0] ) {
         return bless { uuid => UUID::uuid }, __PACKAGE__;
     }

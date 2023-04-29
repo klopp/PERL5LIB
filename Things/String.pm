@@ -10,8 +10,6 @@ use base qw/Exporter/;
 our @EXPORT  = qw/string/;
 our $VERSION = 'v1.0';
 
-use DDP;
-
 # ------------------------------------------------------------------------------
 use overload
 
