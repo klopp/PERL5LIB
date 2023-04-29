@@ -10,21 +10,31 @@ use base qw/Exporter/;
 our @EXPORT  = qw/string/;
 our $VERSION = 'v1.0';
 
+use DDP;
+use Tie::Simple;
+#use parent qw/Tie::StdScalar/;
+
 # ------------------------------------------------------------------------------
 use overload
 
+    # nomethod
+    q{nomethod} => \&_nomethod,
+
     # stringify:
     q{""} => sub {
+#    printf 'stringify() :: %s', np @_;
     return shift->{data};
     },
 
     # deref:
     q[${}] => sub {
-    \shift->{data};
+    my $data = ${shift->{data}};
+    $data;
     },
 
     # copy constructor:
     q{=} => sub {
+    printf '=() ';
     bless { data => shift->{data} }, __PACKAGE__;
     },
 
@@ -39,6 +49,8 @@ use overload
     # compare:
     q{<=>} => \&_cmp,
     q{cmp} => \&_cmp,
+    q{!=}  => \&_ne,
+    q{==}  => \&_eq,
 
     # repeat:
     q{x} => \&_rep,
@@ -46,10 +58,54 @@ use overload
     ;
 
 # ------------------------------------------------------------------------------
-sub string
+sub _FETCH
 {
-    my ($data) = @_;
-    return bless { data => $data }, __PACKAGE__;
+    my ( $self ) = @_;
+    printf "fetch()\n";
+    p $self;
+    return $self;
+}
+
+sub _STORE
+{
+    my ( $self, $data ) = @_;
+    printf "store()\n";
+    $self->{data} = $data;
+    return $self;
+}
+
+sub _TIESCALAR
+{
+    my ( $class, $data ) = @_;
+    my $self = bless { data => $data }, $class;
+    return $self;    
+}
+
+# ------------------------------------------------------------------------------
+sub _nomethod
+{
+    printf 'nomethod() :: %s', np @_;
+#    my ( $self, $data ) = @_;
+#    $self->{data} = $data;
+#    return $self;
+}
+
+# ------------------------------------------------------------------------------
+## no critic (ProhibitSubroutinePrototypes, RequireArgUnpacking)
+sub string(\$;$)
+{
+#    printf 'string(->) :: %s', np @_;
+    my $data = $_[1] || '';
+#    my $self =  { data => $data };
+#    ${ $_[0] } = bless { data => $data }, __PACKAGE__;
+    tie my $var, 'Tie::Simple', $data,
+        FETCH => \&_FETCH,
+        STORE => \&_STORE,
+        TIESCALAR => \&_TIESCALAR,
+        ;
+#    printf 'string(<-) :: %s', np @_;
+    ${ $_[0] } = $var;
+    return;
 }
 
 # ------------------------------------------------------------------------------
@@ -103,14 +159,16 @@ sub ucfirst
 sub _concat
 {
     my ( $s1, $s2, $invert ) = @_;
-    return string $invert ? ( $s2 . $s1 ) : ( $s1 . $s2 );
+    string my $s => $invert ? ( $s2 . $s1 ) : ( $s1 . $s2 );
+    return $s;
 }
 
 # ------------------------------------------------------------------------------
 sub _rep
 {
     my ( $s1, $s2, $invert ) = @_;
-    return string $invert ? ( "$s2" x int $s1 ) : ( "$s1" x int $s2 );
+    string my $s => $invert ? ( "$s2" x int $s1 ) : ( "$s1" x int $s2 );
+    return $s;
 }
 
 # ------------------------------------------------------------------------------
@@ -181,6 +239,20 @@ sub _cmp
 {
     my ( $s1, $s2, $invert ) = @_;
     return $invert ? ( "$s2" cmp "$s1" ) : ( "$s1" cmp "$s2" );
+}
+
+# ------------------------------------------------------------------------------
+sub _eq
+{
+    my ( $s1, $s2 ) = @_;
+    return "$s2" eq "$s1";
+}
+
+# ------------------------------------------------------------------------------
+sub _ne
+{
+    my ( $s1, $s2 ) = @_;
+    return "$s2" ne "$s1";
 }
 
 # ------------------------------------------------------------------------------
