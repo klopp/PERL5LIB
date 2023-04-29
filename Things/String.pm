@@ -11,31 +11,23 @@ our @EXPORT  = qw/string/;
 our $VERSION = 'v1.0';
 
 use DDP;
-use Tie::Simple;
-#use parent qw/Tie::StdScalar/;
 
 # ------------------------------------------------------------------------------
 use overload
 
-    # nomethod
-    q{nomethod} => \&_nomethod,
-
     # stringify:
     q{""} => sub {
-#    printf 'stringify() :: %s', np @_;
-    return shift->{data};
+    return shift->{data} // q{};
     },
 
     # deref:
     q[${}] => sub {
-    my $data = ${shift->{data}};
-    $data;
+    \shift->{data};
     },
 
     # copy constructor:
     q{=} => sub {
-    printf '=() ';
-    bless { data => shift->{data} }, __PACKAGE__;
+    bless { data => shift->{data} // q{} }, __PACKAGE__;
     },
 
     # concat:
@@ -49,8 +41,8 @@ use overload
     # compare:
     q{<=>} => \&_cmp,
     q{cmp} => \&_cmp,
-    q{!=}  => \&_ne,
     q{==}  => \&_eq,
+    q{!=}  => \&_ne,
 
     # repeat:
     q{x} => \&_rep,
@@ -58,54 +50,15 @@ use overload
     ;
 
 # ------------------------------------------------------------------------------
-sub _FETCH
-{
-    my ( $self ) = @_;
-    printf "fetch()\n";
-    p $self;
-    return $self;
-}
-
-sub _STORE
-{
-    my ( $self, $data ) = @_;
-    printf "store()\n";
-    $self->{data} = $data;
-    return $self;
-}
-
-sub _TIESCALAR
-{
-    my ( $class, $data ) = @_;
-    my $self = bless { data => $data }, $class;
-    return $self;    
-}
-
-# ------------------------------------------------------------------------------
-sub _nomethod
-{
-    printf 'nomethod() :: %s', np @_;
-#    my ( $self, $data ) = @_;
-#    $self->{data} = $data;
-#    return $self;
-}
-
-# ------------------------------------------------------------------------------
 ## no critic (ProhibitSubroutinePrototypes, RequireArgUnpacking)
-sub string(\$;$)
+sub string(;$$)
 {
-#    printf 'string(->) :: %s', np @_;
-    my $data = $_[1] || '';
-#    my $self =  { data => $data };
-#    ${ $_[0] } = bless { data => $data }, __PACKAGE__;
-    tie my $var, 'Tie::Simple', $data,
-        FETCH => \&_FETCH,
-        STORE => \&_STORE,
-        TIESCALAR => \&_TIESCALAR,
-        ;
-#    printf 'string(<-) :: %s', np @_;
-    ${ $_[0] } = $var;
-    return;
+    if ( !exists $_[0] || defined $_[0] ) {
+        my ($data) = @_;
+        return bless { data => $_[0] // q{} }, __PACKAGE__;
+    }
+    $_[0] = bless { data => $_[1] // q{} }, __PACKAGE__;
+    return $_[0];
 }
 
 # ------------------------------------------------------------------------------
@@ -159,16 +112,14 @@ sub ucfirst
 sub _concat
 {
     my ( $s1, $s2, $invert ) = @_;
-    string my $s => $invert ? ( $s2 . $s1 ) : ( $s1 . $s2 );
-    return $s;
+    return string $invert ? ( $s2 . $s1 ) : ( $s1 . $s2 );
 }
 
 # ------------------------------------------------------------------------------
 sub _rep
 {
     my ( $s1, $s2, $invert ) = @_;
-    string my $s => $invert ? ( "$s2" x int $s1 ) : ( "$s1" x int $s2 );
-    return $s;
+    return string $invert ? ( "$s2" x int $s1 ) : ( "$s1" x int $s2 );
 }
 
 # ------------------------------------------------------------------------------
@@ -183,14 +134,16 @@ sub _inc
     }
 
     my $c = substr $self->{data}, -1, 1;
+
     # проверяем что в конце цифра/буква, иначе инкремент не
     # пройдёт и вылезет warning:
     if ( $c =~ /^[[:alnum:]]$/ ) {
+
         # OK, обычный строковый инкремент
         ++$self->{data};
     }
     else {
-        # укорачиваем строкку:
+        # укорачиваем строку:
         chop $self->{data};
     }
     return $self;
@@ -203,6 +156,7 @@ sub _dec
     $self->{data} or return $self;
 
     my $c = substr $self->{data}, -1, 1;
+
     # в конце цифра? уменьшаем её,
     # или укорачиваем строку, если 0
     if ( $c =~ /^[[:digit:]]$/ ) {
@@ -214,6 +168,7 @@ sub _dec
             $self->{data} =~ s/.$/$c/gsm;
         }
     }
+
     # буква - то же самое:
     elsif ( $c =~ /^[[:alpha:]]$/ ) {
         if ( $c eq q{A} ) {
@@ -245,14 +200,14 @@ sub _cmp
 sub _eq
 {
     my ( $s1, $s2 ) = @_;
-    return "$s2" eq "$s1";
+    return "$s1" eq "$s2";
 }
 
 # ------------------------------------------------------------------------------
 sub _ne
 {
     my ( $s1, $s2 ) = @_;
-    return "$s2" ne "$s1";
+    return "$s1" ne "$s2";
 }
 
 # ------------------------------------------------------------------------------
@@ -264,8 +219,11 @@ __END__
 =head1 SYNOPSIS
  
     use Things::String;
-    my $string = string 'abc';
-    $string->ucfirst;
+    my $s = string 'abc';
+    # OR
+    # string my $s, 'def';
+    # OR
+    # string my $s => 'zxc';
     # ...
 
 =cut
