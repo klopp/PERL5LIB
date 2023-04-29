@@ -31,14 +31,24 @@ use overload
     # compare:
     q{<=>} => \&_cmp,
     q{cmp} => \&_cmp,
+    q{==}  => \&_eq,
+    q{!=}  => \&_ne,
     ;
 
 # ------------------------------------------------------------------------------
-sub uuid(\$)
+## no critic (ProhibitSubroutinePrototypes, RequireArgUnpacking)
+sub uuid(;$)
 {
-    #    my ($data) = @_;
-    ${ $_[0] } = bless { uuid => UUID::uuid }, __PACKAGE__;
-    return;
+    use DDP;
+    p @_;
+    if ( !exists $_[0] ) {
+        return bless { uuid => UUID::uuid }, __PACKAGE__;
+    }
+    if ( Scalar::Util::readonly $_[0] ) {
+        Carp::confess sprintf 'Call %s() without arguments!', ( caller(0) )[3];
+    }
+    $_[0] = bless { uuid => UUID::uuid }, __PACKAGE__;
+    return $_[0];
 }
 
 # ------------------------------------------------------------------------------
@@ -57,6 +67,20 @@ sub _cmp
 }
 
 # ------------------------------------------------------------------------------
+sub _eq
+{
+    my ( $s1, $s2 ) = @_;
+    return "$s1" eq "$s2";
+}
+
+# ------------------------------------------------------------------------------
+sub _ne
+{
+    my ( $s1, $s2 ) = @_;
+    return "$s1" ne "$s2";
+}
+
+# ------------------------------------------------------------------------------
 1;
 __END__
 
@@ -66,9 +90,12 @@ __END__
  
     use Things::UUID;
     uuid my $uuid;
+    # OR
+    # my $uuid = uuid;
+    puts( $uuid );   # stringify $uuid
+    $uuid++;         # generate next UUID
     puts( $uuid );
-    $uuid++; # generate next UUID
-    puts( $uuid );
+    puts( ++$uuid ); # and next
     # ...
 
 =cut

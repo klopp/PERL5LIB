@@ -10,12 +10,14 @@ use base qw/Exporter/;
 our @EXPORT  = qw/string/;
 our $VERSION = 'v1.0';
 
+use DDP;
+
 # ------------------------------------------------------------------------------
 use overload
 
     # stringify:
     q{""} => sub {
-    return shift->{data};
+    return shift->{data} // q{};
     },
 
     # deref:
@@ -25,7 +27,7 @@ use overload
 
     # copy constructor:
     q{=} => sub {
-    bless { data => shift->{data} }, __PACKAGE__;
+    bless { data => shift->{data} // q{} }, __PACKAGE__;
     },
 
     # concat:
@@ -39,6 +41,8 @@ use overload
     # compare:
     q{<=>} => \&_cmp,
     q{cmp} => \&_cmp,
+    q{==}  => \&_eq,
+    q{!=}  => \&_ne,
 
     # repeat:
     q{x} => \&_rep,
@@ -46,10 +50,15 @@ use overload
     ;
 
 # ------------------------------------------------------------------------------
-sub string
+## no critic (ProhibitSubroutinePrototypes, RequireArgUnpacking)
+sub string(;$$)
 {
-    my ($data) = @_;
-    return bless { data => $data }, __PACKAGE__;
+    if ( !exists $_[0] || defined $_[0] ) {
+        my ($data) = @_;
+        return bless { data => $_[0] // q{} }, __PACKAGE__;
+    }
+    $_[0] = bless { data => $_[1] // q{} }, __PACKAGE__;
+    return $_[0];
 }
 
 # ------------------------------------------------------------------------------
@@ -125,14 +134,16 @@ sub _inc
     }
 
     my $c = substr $self->{data}, -1, 1;
+
     # проверяем что в конце цифра/буква, иначе инкремент не
     # пройдёт и вылезет warning:
     if ( $c =~ /^[[:alnum:]]$/ ) {
+
         # OK, обычный строковый инкремент
         ++$self->{data};
     }
     else {
-        # укорачиваем строкку:
+        # укорачиваем строку:
         chop $self->{data};
     }
     return $self;
@@ -145,6 +156,7 @@ sub _dec
     $self->{data} or return $self;
 
     my $c = substr $self->{data}, -1, 1;
+
     # в конце цифра? уменьшаем её,
     # или укорачиваем строку, если 0
     if ( $c =~ /^[[:digit:]]$/ ) {
@@ -156,6 +168,7 @@ sub _dec
             $self->{data} =~ s/.$/$c/gsm;
         }
     }
+
     # буква - то же самое:
     elsif ( $c =~ /^[[:alpha:]]$/ ) {
         if ( $c eq q{A} ) {
@@ -184,6 +197,20 @@ sub _cmp
 }
 
 # ------------------------------------------------------------------------------
+sub _eq
+{
+    my ( $s1, $s2 ) = @_;
+    return "$s1" eq "$s2";
+}
+
+# ------------------------------------------------------------------------------
+sub _ne
+{
+    my ( $s1, $s2 ) = @_;
+    return "$s1" ne "$s2";
+}
+
+# ------------------------------------------------------------------------------
 1;
 __END__
 
@@ -192,8 +219,11 @@ __END__
 =head1 SYNOPSIS
  
     use Things::String;
-    my $string = string 'abc';
-    $string->ucfirst;
+    my $s = string 'abc';
+    # OR
+    # string my $s, 'def';
+    # OR
+    # string my $s => 'zxc';
     # ...
 
 =cut

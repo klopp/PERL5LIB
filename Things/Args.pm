@@ -23,6 +23,7 @@ sub xargs
 sub hargs
 {
     my $args;
+    ## no critic (RequireArgUnpacking)
     if ( @_ == 1 ) {
         if ( ref $_[0] eq $HASH ) {
             $args = shift;
