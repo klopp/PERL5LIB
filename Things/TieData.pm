@@ -8,14 +8,6 @@ use Things::Const qw/:types/;
 use Scalar::Util qw/blessed/;
 
 # ------------------------------------------------------------------------------
-sub new(;$)
-{
-    my ( $class, $data ) = @_;
-    tie my $self, ( caller(0) )[0], { data => $data };
-    return $self;
-}
-
-# ------------------------------------------------------------------------------
 sub FETCH
 {
     my ($self) = @_;
