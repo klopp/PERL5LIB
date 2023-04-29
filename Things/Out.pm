@@ -29,6 +29,7 @@ sub puts
 sub fputs
 {
     my ( $fh, $fmt, @args ) = @_;
+    $fmt //= q{};
     return printf {$fh} sprintf( "%s\n", $fmt ), @args;
 }
 
@@ -36,6 +37,7 @@ sub fputs
 sub fprintf
 {
     my ( $fh, $fmt, @args ) = @_;
+    $fmt //= q{};
     return printf {$fh} $fmt, @args;
 }
 
