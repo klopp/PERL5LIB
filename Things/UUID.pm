@@ -8,8 +8,10 @@ use utf8::all;
 # ------------------------------------------------------------------------------
 use base qw/Exporter/;
 our @EXPORT  = qw/uuid/;
-our $VERSION = 'v1.0';
+our $VERSION = 'v1.1';
 
+use Things::TieData;
+use base qw/Things::TieData/;
 use UUID;
 
 # ------------------------------------------------------------------------------
@@ -17,12 +19,12 @@ use overload
 
     # stringify:
     q{""} => sub {
-    return shift->{uuid};
+    return shift->{data};
     },
 
     # copy constructor:
     q{=} => sub {
-    bless { data => shift->{uuid} }, __PACKAGE__;
+    shift;
     },
 
     # inc:
@@ -36,16 +38,14 @@ use overload
     ;
 
 # ------------------------------------------------------------------------------
-## no critic (ProhibitSubroutinePrototypes, RequireArgUnpacking)
-sub uuid(;$)
+## no critic (RequireArgUnpacking)
+sub uuid
 {
-    if ( !exists $_[0] ) {
-        return bless { uuid => UUID::uuid }, __PACKAGE__;
+    if ( !exists $_[0] or @_ > 1 or Scalar::Util::readonly $_[0] ) {
+        Carp::confess sprintf 'Usage: uuid my $uuid;';
     }
-    if ( Scalar::Util::readonly $_[0] ) {
-        Carp::confess sprintf 'Call %s() without arguments!', ( caller(0) )[3];
-    }
-    $_[0] = bless { uuid => UUID::uuid }, __PACKAGE__;
+    bless \$_[0], __PACKAGE__;
+    tie $_[0], __PACKAGE__, UUID::uuid;
     return $_[0];
 }
 
@@ -53,7 +53,7 @@ sub uuid(;$)
 sub _inc
 {
     my ($self) = @_;
-    $self->{uuid} = UUID::uuid;
+    $self->{data} = UUID::uuid;
     return $self;
 }
 

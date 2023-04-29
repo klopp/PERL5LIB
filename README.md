@@ -89,8 +89,6 @@
 
 ```perl
     use Things::String;
-    my $string = string 'abc';
-    # или
     # string my $string, 'abc';
     # или
     # string my $string => 'abc';
@@ -108,14 +106,21 @@
 ```perl
     use Things::UUID;
     uuid my $uuid;
-    # или
-    # my $uuid = uuid;
     puts( $uuid );   # stringify $uuid
     $uuid++;         # generate next UUID
     puts( $uuid );
     puts( ++$uuid ); # and next
     # ...
 ```
+
+**NB!** Зачем нужны пляски с `tie` здесь и в `Things::String`. Дело в том, что присвоения типа таких убивают объект и превращают его в банальный скаляр (или что там будет присвоено):
+
+```perl
+    string my $string => 'xyz';
+    $string = 'abc';
+```
+
+Перегрузка глобального оператора `=` в Perl *невозможна by design*. А вот базовый класс `Things::TieData` отслеживает и корректно обрабатывает такие ситуации.
 
 ### [Things::Args](Things/Args.pm)
 
