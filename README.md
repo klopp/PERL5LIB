@@ -90,7 +90,10 @@
 ```perl
     use Things::String;
     my $string = string 'abc';
-    $string->ucfirst;
+    # или
+    # string my $string, 'abc';
+    # или
+    # string my $string => 'abc';
     # ...
 ```
 
@@ -105,9 +108,12 @@
 ```perl
     use Things::UUID;
     uuid my $uuid;
+    # или
+    # my $uuid = uuid;
+    puts( $uuid );   # stringify $uuid
+    $uuid++;         # generate next UUID
     puts( $uuid );
-    $uuid++; # generate next UUID
-    puts( $uuid );
+    puts( ++$uuid ); # and next
     # ...
 ```
 
