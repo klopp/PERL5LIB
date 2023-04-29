@@ -94,6 +94,23 @@
     # ...
 ```
 
+Плюс перегружены некоторые операторы, включая `++` и `--`;
+
+
+### [Things::UUID](Things/UUID.pm)
+
+Сахар для [UUID](https://metacpan.org/pod/UUID):
+
+
+```perl
+    use Things::UUID;
+    uuid my $uuid;
+    puts( $uuid );
+    $uuid++; # generate next UUID
+    puts( $uuid );
+    # ...
+```
+
 ### [Things::Args](Things/Args.pm)
 
 Проверка аргументов функций и методов.
