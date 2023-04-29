@@ -7,7 +7,7 @@ use English qw/-no_match_vars/;
 
 # ------------------------------------------------------------------------------
 use base qw/Exporter/;
-our @EXPORT  = qw/puts fputs fprintf perror strerror strerr fopen/;
+our @EXPORT  = qw/puts eputs fputs fprintf perror strerror strerr fopen/;
 our $VERSION = 'v1.0';
 
 # ------------------------------------------------------------------------------
@@ -16,6 +16,13 @@ use Try::Tiny;
 # ------------------------------------------------------------------------------
 BEGIN {
     *{strerr} = \&strerror;
+}
+
+# ------------------------------------------------------------------------------
+sub eputs
+{
+    unshift @_, *{STDERR};
+    goto &fputs;
 }
 
 # ------------------------------------------------------------------------------
