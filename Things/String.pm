@@ -8,10 +8,10 @@ use utf8::all;
 # ------------------------------------------------------------------------------
 use base qw/Exporter/;
 our @EXPORT  = qw/string/;
-our $VERSION = 'v1.0';
+our $VERSION = 'v1.1';
 
-use DDP;
-
+use Things::TieData;
+use base qw/Things::TieData/;
 # ------------------------------------------------------------------------------
 use overload
 
@@ -20,14 +20,9 @@ use overload
     return shift->{data} // q{};
     },
 
-    # deref:
-    q[${}] => sub {
-    \shift->{data};
-    },
-
     # copy constructor:
     q{=} => sub {
-    bless { data => shift->{data} // q{} }, __PACKAGE__;
+    shift;
     },
 
     # concat:
@@ -50,14 +45,14 @@ use overload
     ;
 
 # ------------------------------------------------------------------------------
-## no critic (ProhibitSubroutinePrototypes, RequireArgUnpacking)
-sub string(;$$)
+## no critic (RequireArgUnpacking)
+sub string
 {
-    if ( !exists $_[0] || defined $_[0] ) {
-        my ($data) = @_;
-        return bless { data => $_[0] // q{} }, __PACKAGE__;
+    if ( @_ > 2 or !exists $_[0] or defined $_[0] ) {
+        Carp::confess 'Usage: string my $string [=> "string"] or [, "string"];';
     }
-    $_[0] = bless { data => $_[1] // q{} }, __PACKAGE__;
+    bless \$_[0], __PACKAGE__;
+    tie $_[0], __PACKAGE__, $_[1] || q{};
     return $_[0];
 }
 
