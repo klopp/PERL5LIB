@@ -34,9 +34,9 @@ use overload
     ;
 
 # ------------------------------------------------------------------------------
+## no critic (ProhibitSubroutinePrototypes, RequireArgUnpacking)
 sub uuid(\$)
 {
-    #    my ($data) = @_;
     ${ $_[0] } = bless { uuid => UUID::uuid }, __PACKAGE__;
     return;
 }
