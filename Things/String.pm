@@ -118,19 +118,23 @@ sub _inc
 {
     my ($self) = @_;
 
+    # если строка пустая - делаем 'a':
     if ( !$self->{data} ) {
         $self->{data} = q{a};
         return $self;
     }
 
     my $c = substr $self->{data}, -1, 1;
+    # проверяем что в конце цифра/буква, иначе инкремент не
+    # пройдёт и вылезет warning:
     if ( $c =~ /^[[:alnum:]]$/ ) {
+        # OK, обычный строковый инкремент
         ++$self->{data};
     }
     else {
+        # укорачиваем строкку:
         chop $self->{data};
     }
-
     return $self;
 }
 
@@ -141,6 +145,8 @@ sub _dec
     $self->{data} or return $self;
 
     my $c = substr $self->{data}, -1, 1;
+    # в конце цифра? уменьшаем её,
+    # или укорачиваем строку, если 0
     if ( $c =~ /^[[:digit:]]$/ ) {
         if ( $c eq q{0} ) {
             chop $self->{data};
@@ -150,6 +156,7 @@ sub _dec
             $self->{data} =~ s/.$/$c/gsm;
         }
     }
+    # буква - то же самое:
     elsif ( $c =~ /^[[:alpha:]]$/ ) {
         if ( $c eq q{A} ) {
             $c = q{z};
