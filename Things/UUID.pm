@@ -31,7 +31,7 @@ sub import
         Carp::confess 'Only one name can be exported.';
     }
     if ($export) {
-        if ( $export !~ /^\$[[:alpha:]][[:alnum:]]*$/sm ) {
+        if ( $export !~ /^\$[a-z][\S]*$/ism ) {
             Carp::confess sprintf 'Name "%s" is incorrect.', $export;
         }
         no strict 'refs';

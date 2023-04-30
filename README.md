@@ -104,7 +104,10 @@
 
 
 ```perl
+    # по умолчанию экспортируется $uuid:
     use Things::UUID;
+    # но можно указать любое другое имя:
+    # use Things::UUID qw/$UU_ID/;
     puts( $uuid );   # stringify $uuid
     $uuid++;         # generate next UUID
     puts( $uuid );
