@@ -7,12 +7,31 @@ use utf8::all;
 
 # ------------------------------------------------------------------------------
 use base qw/Exporter/;
-our @EXPORT  = qw/uuid/;
-our $VERSION = 'v1.1';
+our @EXPORT  = qw/$uuid/;
+our $VERSION = 'v1.2';
 
 use Things::TieData;
 use base qw/Things::TieData/;
 use UUID;
+our $uuid;
+
+# ------------------------------------------------------------------------------
+## no critic (RequireArgUnpacking)
+sub uuid
+{
+    $uuid and return $uuid;
+    if ( !exists $_[0] or @_ > 1 or Scalar::Util::readonly $_[0] ) {
+        Carp::confess sprintf 'Usage: uuid my $uuid;';
+    }
+    bless \$_[0], __PACKAGE__;
+    tie $_[0], __PACKAGE__, UUID::uuid;
+    return $_[0];
+}
+
+# ------------------------------------------------------------------------------
+BEGIN {
+    uuid($uuid);
+}
 
 # ------------------------------------------------------------------------------
 use overload
@@ -36,18 +55,6 @@ use overload
     q{==}  => \&_eq,
     q{!=}  => \&_ne,
     ;
-
-# ------------------------------------------------------------------------------
-## no critic (RequireArgUnpacking)
-sub uuid
-{
-    if ( !exists $_[0] or @_ > 1 or Scalar::Util::readonly $_[0] ) {
-        Carp::confess sprintf 'Usage: uuid my $uuid;';
-    }
-    bless \$_[0], __PACKAGE__;
-    tie $_[0], __PACKAGE__, UUID::uuid;
-    return $_[0];
-}
 
 # ------------------------------------------------------------------------------
 sub _inc
@@ -86,14 +93,11 @@ __END__
  
 =head1 SYNOPSIS
  
-    use Things::UUID;
-    uuid my $uuid;
-    # OR
-    # my $uuid = uuid;
-    puts( $uuid );   # stringify $uuid
-    $uuid++;         # generate next UUID
+    use Things::UUID; # $uuid exported
+    puts( $uuid );    # stringify $uuid
+    $uuid++;          # generate next UUID
     puts( $uuid );
-    puts( ++$uuid ); # and next
+    puts( ++$uuid );  # and next
     # ...
 
 =cut
