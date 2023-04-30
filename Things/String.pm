@@ -3,8 +3,6 @@ package Things::String;
 # ------------------------------------------------------------------------------
 use strict;
 use warnings;
-use utf8::all;
-
 # ------------------------------------------------------------------------------
 use base qw/Exporter/;
 our @EXPORT  = qw/string/;
@@ -12,6 +10,7 @@ our $VERSION = 'v1.1';
 
 use Things::TieData;
 use base qw/Things::TieData/;
+
 # ------------------------------------------------------------------------------
 use overload
 
