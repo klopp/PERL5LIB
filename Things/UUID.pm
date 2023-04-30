@@ -3,8 +3,6 @@ package Things::UUID;
 # ------------------------------------------------------------------------------
 use strict;
 use warnings;
-use utf8::all;
-use English;
 
 # ------------------------------------------------------------------------------
 use base qw/Exporter/;
@@ -24,6 +22,7 @@ BEGIN {
 }
 
 # ------------------------------------------------------------------------------
+## no critic (RequireArgUnpacking)
 sub import
 {
     my ( $class, $export ) = @_;
@@ -31,11 +30,11 @@ sub import
         Carp::confess 'Only one name can be exported.';
     }
     if ($export) {
-        if ( $export !~ /^\$[a-z][\S]*$/ism ) {
+        if ( $export !~ /^\$[[:lower:]][\S]*$/ism ) {
             Carp::confess sprintf 'Name "%s" is incorrect.', $export;
         }
         no strict 'refs';
-        *{ __PACKAGE__ . '::' . ( substr $export, 1 ) } = \$uuid;
+        *{ __PACKAGE__ . q{::} . ( substr $export, 1 ) } = \$uuid;
     }
     else {
         $export = '$uuid';
