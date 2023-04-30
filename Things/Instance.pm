@@ -24,6 +24,7 @@ sub lock_instance
     if ( !sysopen $fh, $lockfile, O_RDWR | O_CREAT ) {
         return { reason => 'open', errno => $ERRNO, };
     }
+    binmode $fh;
     sysread $fh, $port, 64;
     $port and $port =~ s/^\s+|\s+$//gsm;
     if ( !$port || $port !~ /^\d+$/sm ) {
