@@ -32,7 +32,7 @@ sub lock_instance
         };
     }
     $fh->autoflush(1);
-    sysread $fh, $port, 16;
+    sysread $fh, $port, 64;
     trim($port);
     if ( !$port || $port !~ /^\d+$/sm ) {
         $port = empty_port();
@@ -41,7 +41,7 @@ sub lock_instance
         close $fh;
         return {
             errno => $ERRNO,
-            emsg  => sprintf 'Application locked on port %u!',
+            emsg  => sprintf 'Application already locked on port %u!',
             $port,
         };
     }
@@ -49,7 +49,7 @@ sub lock_instance
         close $fh;
         return {
             errno => $ERRNO,
-            emsg  => sprintf 'Error locking lock file "%s" (%s)!',
+            emsg  => sprintf 'Error locking file "%s" (%s)!',
             $lockfile, trim($ERRNO),
         };
     }
