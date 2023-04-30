@@ -11,7 +11,7 @@ our @EXPORT  = qw/lock_instance/;
 our $VERSION = 'v1.0';
 
 use English qw/-no_match_vars/;
-use Fcntl qw/:DEFAULT :flock SEEK_SET/;
+use Fcntl qw/:DEFAULT :flock/;
 use Lock::Socket qw/try_lock_socket/;
 use Net::EmptyPort qw/empty_port/;
 
@@ -22,7 +22,7 @@ sub lock_instance
 
     my ( $lock, $port, $fh );
     if ( !sysopen $fh, $lockfile, O_RDWR | O_CREAT ) {
-        return { errno => $ERRNO, };
+        return { reason => 'open', errno => $ERRNO, };
     }
     sysread $fh, $port, 64;
     $port and $port =~ s/^\s+|\s+$//gsm;
@@ -31,14 +31,12 @@ sub lock_instance
     }
     if ( !( $lock = try_lock_socket($port) ) ) {
         close $fh;
-        return { errno => $ERRNO, };
+        return { reason => 'lock', errno => $ERRNO, };
     }
-    if ( !flock $fh, LOCK_EX ) {
+    if ( !flock( $fh, LOCK_EX ) || !truncate( $fh, 0 ) || !syswrite( $fh, $port, length $port ) ) {
         close $fh;
-        return { errno => $ERRNO, };
+        return { reason => 'write', errno => $ERRNO, };
     }
-    sysseek $fh, 0, SEEK_SET;
-    syswrite $fh, $port, length $port;
     close $fh;
     return $lock;
 }
@@ -53,7 +51,8 @@ __END__
  
     use Things::Instance;
     my $rc = lock_instance( "/var/lock/$PROGRAM_NAME.lock" );
-    $rc->{errno} and Carp::confess $rc->{errno};
+    # $rc->{reason} => [ open, lock, write ]
+    $rc->{errno} and Carp::confess $rc->{reason} . '::' . $rc->{errno};
     # do something
     undef $rc;
 
