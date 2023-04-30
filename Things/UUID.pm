@@ -16,21 +16,9 @@ use UUID;
 our $uuid;
 
 # ------------------------------------------------------------------------------
-## no critic (RequireArgUnpacking)
-sub uuid
-{
-    $uuid and return $uuid;
-    if ( !exists $_[0] or @_ > 1 or Scalar::Util::readonly $_[0] ) {
-        Carp::confess sprintf 'Usage: uuid my $uuid;';
-    }
-    bless \$_[0], __PACKAGE__;
-    tie $_[0], __PACKAGE__, UUID::uuid;
-    return $_[0];
-}
-
-# ------------------------------------------------------------------------------
 BEGIN {
-    uuid($uuid);
+    bless \$uuid, __PACKAGE__;
+    tie $uuid, __PACKAGE__, UUID::uuid;
 }
 
 # ------------------------------------------------------------------------------
