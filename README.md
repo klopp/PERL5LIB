@@ -100,12 +100,11 @@
 
 ### [Things::UUID](Things/UUID.pm)
 
-Сахар для [UUID](https://metacpan.org/pod/UUID):
+Сахар для [UUID](https://metacpan.org/pod/UUID). Экспортирует синглтон `$uuid`:
 
 
 ```perl
     use Things::UUID;
-    uuid my $uuid;
     puts( $uuid );   # stringify $uuid
     $uuid++;         # generate next UUID
     puts( $uuid );
