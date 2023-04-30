@@ -16,8 +16,6 @@ use Fcntl qw/:DEFAULT :flock SEEK_SET/;
 use Lock::Socket qw/try_lock_socket/;
 use Net::EmptyPort qw/empty_port/;
 
-use Things::Trim;
-
 # ------------------------------------------------------------------------------
 sub lock_instance
 {
@@ -28,7 +26,7 @@ sub lock_instance
         return {
             errno => $ERRNO,
             emsg  => sprintf 'Error writing lock file "%s" (%s)!',
-            $lockfile, trim($ERRNO),
+            $lockfile, $ERRNO,
         };
     }
     $fh->autoflush(1);
@@ -50,7 +48,7 @@ sub lock_instance
         return {
             errno => $ERRNO,
             emsg  => sprintf 'Error locking file "%s" (%s)!',
-            $lockfile, trim($ERRNO),
+            $lockfile, $ERRNO,
         };
     }
     sysseek $fh, 0, SEEK_SET;
