@@ -1,4 +1,4 @@
-package Things::ConfigPP;
+package Things::Config::Perl;
 
 use strict;
 use warnings;

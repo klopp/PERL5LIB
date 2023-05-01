@@ -1,4 +1,4 @@
-package Things::ConfigStd;
+package Things::Config::Std;
 
 use strict;
 use warnings;
