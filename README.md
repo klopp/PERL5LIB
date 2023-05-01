@@ -143,26 +143,30 @@
 Проверка запущеного процесса и залочка его:
 
 ```perl
-    use Carp qw/confess/;
-    use Const::Fast;
-    use English qw/-no_match_vars/;
+    use Things::Instance qw/lock_or_croak/;
+    lock_or_croak($LOCKFILE);
+    #
+    # OR
+    #
+    use Things::Instance qw/lock_or_confess/;
+    lock_or_confess($LOCKFILE);
+    #
+    # OR
+    #
     use Things::Instance;
-
-    const my $LOCKFILE => '/var/lock/' . $PROGRAM_NAME . '.lock';
-
     my $lock = lock_instance($LOCKFILE);
     if ( $lock->{errno} ) {
         if ( $lock->{reason} eq 'open' ) {
-            confess sprintf 'Open file "%s" (%s)!', $LOCKFILE, $lock->{errno};
+            Carp::confess sprintf 'Open file "%s" (%s)!', $LOCKFILE, $lock->{errno};
         }
         elsif ( $lock->{reason} eq 'lock' ) {
-            confess sprintf 'Lock process on port %u (%s)!', $lock->{port}, $lock->{errno};
+            Carp::confess sprintf 'Lock process on port %u (%s)!', $lock->{port}, $lock->{errno};
         }
         elsif ( $lock->{reason} eq 'write' ) {
-            confess sprintf 'Write file "%s" (%s)!', $LOCKFILE, $lock->{errno};
+            Carp::confess sprintf 'Write file "%s" (%s)!', $LOCKFILE, $lock->{errno};
         }
         else {
-            confess sprintf 'Unknown error reason (%s)!', $lock->{errno};
+            Carp::confess sprintf 'Unknown error reason (%s)!', $lock->{errno};
         }
         exit 1;
     }
