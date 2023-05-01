@@ -3,15 +3,16 @@ package Things::Instance;
 # ------------------------------------------------------------------------------
 use strict;
 use warnings;
-use English qw/-no_match_vars/;
 
 # ------------------------------------------------------------------------------
 use base qw/Exporter/;
-our @EXPORT  = qw/lock_instance/;
-our $VERSION = 'v1.1';
+our @EXPORT      = qw/lock_instance/;
+our @EXPORT_OK   = qw/lock_instance lock_or_croak lock_or_confess/;
+our %EXPORT_TAGS = ( 'all' => \@EXPORT_OK );
+our $VERSION     = 'v1.1';
 
 use English qw/-no_match_vars/;
-use Fcntl qw/:DEFAULT :flock/;
+use Fcntl qw/:DEFAULT :flock SEEK_SET/;
 use Lock::Socket qw/try_lock_socket/;
 use Net::EmptyPort qw/empty_port/;
 
@@ -22,24 +23,63 @@ sub lock_instance
 
     my ( $lock, $port, $fh );
     if ( !sysopen $fh, $lockfile, O_RDWR | O_CREAT ) {
-        return { reason => 'open', errno => $ERRNO, };
+        return {
+            reason => 'open',
+            errno  => $ERRNO,
+            msg    => sprintf 'Can not open lockfile "%s" (%s).',
+            $lockfile, $ERRNO
+        };
     }
     binmode $fh;
-    sysread $fh, $port, 64;
-    $port and $port =~ s/^\s+|\s+$//gsm;
-    if ( !$port || $port !~ /^\d+$/sm ) {
+    sysread $fh, $port, 1024;
+    $port =~ s/^\s*(\d*).*/$1/gsm;
+    if ( $port !~ /^\d+$/sm ) {
         $port = empty_port();
     }
     if ( !( $lock = try_lock_socket($port) ) ) {
         close $fh;
-        return { port => $port, reason => 'lock', errno => $ERRNO, };
+        return {
+            port   => $port,
+            reason => 'lock',
+            errno  => $ERRNO,
+            msg    => sprintf 'Can not lock process on port %u (%s).',
+            $port, $ERRNO
+        };
     }
-    if ( !flock( $fh, LOCK_EX ) || !truncate( $fh, 0 ) || !syswrite( $fh, $port, length $port ) ) {
+    $port = "$port\n";
+    if (   !flock( $fh, LOCK_EX )
+        || !truncate( $fh, 0 )
+        || !sysseek( $fh, 0, SEEK_SET )
+        || !syswrite( $fh, $port, length $port ) )
+    {
         close $fh;
-        return { reason => 'write', errno => $ERRNO, };
+        return {
+            reason => 'write',
+            errno  => $ERRNO,
+            msg    => sprintf 'Can not write lockfile "%s" (%s).',
+            $lockfile, $ERRNO
+        };
     }
     close $fh;
     return $lock;
+}
+
+# ------------------------------------------------------------------------------
+sub lock_or_croak
+{
+    my ($lockfile) = @_;
+    my $lock = lock_instance($lockfile);
+    $lock->{errno} and Carp::croak $lock->{msg};
+    return;
+}
+
+# ------------------------------------------------------------------------------
+sub lock_or_confess
+{
+    my ($lockfile) = @_;
+    my $lock = lock_instance($lockfile);
+    $lock->{errno} and Carp::confess $lock->{msg};
+    return;
 }
 
 # ------------------------------------------------------------------------------
@@ -50,26 +90,30 @@ __END__
  
 =head1 SYNOPSIS
  
-    use Carp qw/confess/;
-    use Const::Fast;
-    use English qw/-no_match_vars/;
+    use Things::Instance qw/lock_or_croak/;
+    lock_or_croak($LOCKFILE);
+    #
+    # OR
+    #
+    use Things::Instance qw/lock_or_confess/;
+    lock_or_confess($LOCKFILE);
+    #
+    # OR
+    #
     use Things::Instance;
-
-    const my $LOCKFILE => '/var/lock/' . $PROGRAM_NAME . '.lock';
-
     my $lock = lock_instance($LOCKFILE);
     if ( $lock->{errno} ) {
         if ( $lock->{reason} eq 'open' ) {
-            confess sprintf 'Open file "%s" (%s)!', $LOCKFILE, $lock->{errno};
+            Carp::confess sprintf 'Open file "%s" (%s)!', $LOCKFILE, $lock->{errno};
         }
         elsif ( $lock->{reason} eq 'lock' ) {
-            confess sprintf 'Lock process on port %u (%s)!', $lock->{port}, $lock->{errno};
+            Carp::confess sprintf 'Lock process on port %u (%s)!', $lock->{port}, $lock->{errno};
         }
         elsif ( $lock->{reason} eq 'write' ) {
-            confess sprintf 'Write file "%s" (%s)!', $LOCKFILE, $lock->{errno};
+            Carp::confess sprintf 'Write file "%s" (%s)!', $LOCKFILE, $lock->{errno};
         }
         else {
-            confess sprintf 'Unknown error reason (%s)!', $lock->{errno};
+            Carp::confess sprintf 'Unknown error reason (%s)!', $lock->{errno};
         }
         exit 1;
     }
