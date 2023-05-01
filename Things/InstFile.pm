@@ -1,4 +1,4 @@
-package Things::Instance;
+package Things::InstFile;
 
 # ------------------------------------------------------------------------------
 use strict;
@@ -16,91 +16,92 @@ our %EXPORT_TAGS = (
 our $VERSION = 'v1.1';
 
 use English qw/-no_match_vars/;
+use Errno qw/:POSIX/;
 use Fcntl qw/:DEFAULT :flock SEEK_SET/;
-use Lock::Socket qw/try_lock_socket/;
-use Net::EmptyPort qw/empty_port/;
 
 # ------------------------------------------------------------------------------
 sub lock_instance
 {
-    my ($lockfile) = @_;
+    my ( $lockfile, $noclose ) = @_;
 
-    my ( $lock, $port, $fh );
+    my ( $pid, $fh );
     if ( !sysopen $fh, $lockfile, O_RDWR | O_CREAT ) {
         return {
             reason => 'open',
             errno  => $ERRNO,
             msg    => sprintf 'Can not open lockfile "%s" (%s)',
-            $lockfile, $ERRNO
+            $lockfile, $ERRNO,
         };
     }
     binmode $fh;
-    sysread $fh, $port, 1024;
-    $port =~ s/^\s*(\d*).*/$1/gsm;
-    if ( $port !~ /^\d+$/sm ) {
-        $port = empty_port();
-    }
-    if ( !( $lock = try_lock_socket($port) ) ) {
+    sysread $fh, $pid, 1024;
+    $pid =~ s/^\s*(\d*).*/$1/gsm;
+    if ( $pid =~ /^\d+$/sm and kill 0 => $pid ) {
         close $fh;
+        $ERRNO = EBUSY;
         return {
-            port   => $port,
+            pid    => $pid,
             reason => 'lock',
             errno  => $ERRNO,
-            msg    => sprintf 'Can not lock process on port %u (%s)',
-            $port, $ERRNO
+            msg    => sprintf 'Active instance (PID: %u) found',
+            $pid,
         };
     }
-    $port = "$port\n";
-    if (   !flock( $fh, LOCK_EX )
-        || !truncate( $fh, 0 )
-        || !sysseek( $fh, 0, SEEK_SET )
-        || !syswrite( $fh, $port, length $port ) )
-    {
+
+    my $rc;
+    if ($noclose) {
+        $rc = flock( $fh, LOCK_SH ) && truncate( $fh, 0 ) && sysseek( $fh, 0, SEEK_SET );
+    }
+    else {
+        $rc = flock( $fh, LOCK_SH ) && truncate( $fh, 0 ) && sysseek( $fh, 0, SEEK_SET ) && syswrite( $fh, "$PID\n" );
+    }
+    if ( !$rc ) {
         close $fh;
         return {
             reason => 'write',
             errno  => $ERRNO,
             msg    => sprintf 'Can not write lockfile "%s" (%s)',
-            $lockfile, $ERRNO
+            $lockfile, $ERRNO,
         };
     }
+    $noclose and return { fh => $fh, };
     close $fh;
-    return $lock;
+    return {};
 }
 
 # ------------------------------------------------------------------------------
 sub lock_and_carp
 {
-    my ($lockfile) = @_;
-    my $lock = lock_instance($lockfile);
-    $lock->{errno} and Carp::carp $lock->{msg};
+    my ( $lockfile, $noclose ) = @_;
+    my $lock = lock_instance( $lockfile, $noclose );
+    $lock->{errno} && Carp::carp $lock->{msg};
     return $lock;
 }
 
 # ------------------------------------------------------------------------------
 sub lock_and_cluck
 {
-    my ($lockfile) = @_;
-    my $lock = lock_instance($lockfile);
-    $lock->{errno} and Carp::cluck $lock->{msg};
+    my ( $lockfile, $noclose ) = @_;
+    my $lock = lock_instance( $lockfile, $noclose );
+    $lock->{errno} && Carp::cluck $lock->{msg};
     return $lock;
 }
 
 # ------------------------------------------------------------------------------
 sub lock_or_croak
 {
-    my ($lockfile) = @_;
-    my $lock = lock_instance($lockfile);
-    $lock->{errno} and Carp::croak $lock->{msg};
+    my ( $lockfile, $noclose ) = @_;
+    my $lock = lock_instance( $lockfile, $noclose );
+    $lock->{errno} && Carp::croak $lock->{msg};
     return $lock;
 }
 
 # ------------------------------------------------------------------------------
 sub lock_or_confess
 {
-    my ($lockfile) = @_;
-    my $lock = lock_instance($lockfile);
-    $lock->{errno} and Carp::confess $lock->{msg};
+    my ( $lockfile, $noclose ) = @_;
+    my $lock = lock_instance( $lockfile, $noclose );
+    $lock->{errno} && Carp::confess $lock->{msg};
     return $lock;
 }
 
@@ -122,18 +123,19 @@ __END__
     #    'warn' => qw/lock_and_cluck lock_and_carp/,
     # );
     #
-    use Things::Instance qw/lock_or_confess/;
+    use Things::InstFile qw/lock_or_confess/;
     lock_or_confess($LOCKFILE);
     #
-    # OR [, OR...]
+    # OR [, OR ...]
     #
-    use Things::Instance;
+    use Things::InstFile;
     my $lock = lock_instance($LOCKFILE);
     $lock->{errno} and Carp::croak $lock->{msg};
+    close $lock->{fh};
     #
-    # OR
+    # OR [, OR ...]
     #
-    use Things::Instance;
+    use Things::InstFile;
     my $lock = lock_instance($LOCKFILE);
     if ( $lock->{errno} ) {
         if ( $lock->{reason} eq 'open' ) {
@@ -150,6 +152,7 @@ __END__
         }
         exit 1;
     }
+    close $lock->{fh};
     #
     # do something
     #
