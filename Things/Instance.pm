@@ -7,9 +7,13 @@ use warnings;
 # ------------------------------------------------------------------------------
 use base qw/Exporter/;
 our @EXPORT      = qw/lock_instance/;
-our @EXPORT_OK   = qw/lock_instance lock_or_croak lock_or_confess/;
-our %EXPORT_TAGS = ( 'all' => \@EXPORT_OK );
-our $VERSION     = 'v1.1';
+our @EXPORT_OK   = qw/lock_instance lock_or_croak lock_or_confess lock_and_cluck lock_and_carp/;
+our %EXPORT_TAGS = (
+    'all'  => \@EXPORT_OK,
+    'die'  => qw/lock_or_croak lock_or_confess/,
+    'warn' => qw/lock_and_cluck lock_and_carp/,
+);
+our $VERSION = 'v1.1';
 
 use English qw/-no_match_vars/;
 use Fcntl qw/:DEFAULT :flock SEEK_SET/;
@@ -26,7 +30,7 @@ sub lock_instance
         return {
             reason => 'open',
             errno  => $ERRNO,
-            msg    => sprintf 'Can not open lockfile "%s" (%s).',
+            msg    => sprintf 'Can not open lockfile "%s" (%s)',
             $lockfile, $ERRNO
         };
     }
@@ -42,7 +46,7 @@ sub lock_instance
             port   => $port,
             reason => 'lock',
             errno  => $ERRNO,
-            msg    => sprintf 'Can not lock process on port %u (%s).',
+            msg    => sprintf 'Can not lock process on port %u (%s)',
             $port, $ERRNO
         };
     }
@@ -56,11 +60,29 @@ sub lock_instance
         return {
             reason => 'write',
             errno  => $ERRNO,
-            msg    => sprintf 'Can not write lockfile "%s" (%s).',
+            msg    => sprintf 'Can not write lockfile "%s" (%s)',
             $lockfile, $ERRNO
         };
     }
     close $fh;
+    return $lock;
+}
+
+# ------------------------------------------------------------------------------
+sub lock_and_carp
+{
+    my ($lockfile) = @_;
+    my $lock = lock_instance($lockfile);
+    $lock->{errno} and Carp::carp $lock->{msg};
+    return $lock;
+}
+
+# ------------------------------------------------------------------------------
+sub lock_and_cluck
+{
+    my ($lockfile) = @_;
+    my $lock = lock_instance($lockfile);
+    $lock->{errno} and Carp::cluck $lock->{msg};
     return $lock;
 }
 
@@ -90,15 +112,20 @@ __END__
  
 =head1 SYNOPSIS
  
-    use Things::Instance qw/lock_or_croak/;
-    lock_or_croak($LOCKFILE);
-    #
-    # OR
+    # our @EXPORT      = qw/lock_instance/;
+    # our @EXPORT_OK   = qw/ lock_instance 
+    #                        lock_or_croak lock_or_confess 
+    #                        lock_and_cluck lock_and_carp /;
+    # our %EXPORT_TAGS = (
+    #    'all'  => \@EXPORT_OK,
+    #    'die'  => qw/lock_or_croak lock_or_confess/,
+    #    'warn' => qw/lock_and_cluck lock_and_carp/,
+    # );
     #
     use Things::Instance qw/lock_or_confess/;
     lock_or_confess($LOCKFILE);
     #
-    # OR
+    # OR [, OR...]
     #
     use Things::Instance;
     my $lock = lock_instance($LOCKFILE);

@@ -142,15 +142,20 @@
 Проверка запущеного процесса и залочка его:
 
 ```perl
-    use Things::Instance qw/lock_or_croak/;
-    lock_or_croak($LOCKFILE);
-    #
-    # OR
+    # our @EXPORT      = qw/lock_instance/;
+    # our @EXPORT_OK   = qw/ lock_instance 
+    #                        lock_or_croak lock_or_confess 
+    #                        lock_and_cluck lock_and_carp /;
+    # our %EXPORT_TAGS = (
+    #    'all'  => \@EXPORT_OK,
+    #    'die'  => qw/lock_or_croak lock_or_confess/,
+    #    'warn' => qw/lock_and_cluck lock_and_carp/,
+    # );
     #
     use Things::Instance qw/lock_or_confess/;
     lock_or_confess($LOCKFILE);
     #
-    # OR
+    # OR [, OR...]
     #
     use Things::Instance;
     my $lock = lock_instance($LOCKFILE);
