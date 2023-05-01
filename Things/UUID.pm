@@ -33,7 +33,7 @@ sub import
     }
     $export or $export = $UUID;
     if ( $export ne $UUID ) {
-        if ( $export !~ /^\$[[:lower:]][\S]*$/ism ) {
+        if ( $export !~ /^\$[[:alpha:]][\S]*$/ism ) {
             Carp::confess sprintf 'Name "%s" is incorrect.', $export;
         }
         no strict 'refs';

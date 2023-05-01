@@ -136,6 +136,46 @@
 
 То же самое, но в случае одного аргумента пропускает произвольное значение.
 
+### [Things::Instance](Things/Instance.pm)
+
+#### sub lock_instance( FILE )
+
+Проверка запущеного процесса и залочка его:
+
+```perl
+    use Things::Instance qw/lock_or_croak/;
+    lock_or_croak($LOCKFILE);
+    #
+    # OR
+    #
+    use Things::Instance qw/lock_or_confess/;
+    lock_or_confess($LOCKFILE);
+    #
+    # OR
+    #
+    use Things::Instance;
+    my $lock = lock_instance($LOCKFILE);
+    if ( $lock->{errno} ) {
+        if ( $lock->{reason} eq 'open' ) {
+            Carp::confess sprintf 'Open file "%s" (%s)!', $LOCKFILE, $lock->{errno};
+        }
+        elsif ( $lock->{reason} eq 'lock' ) {
+            Carp::confess sprintf 'Lock process on port %u (%s)!', $lock->{port}, $lock->{errno};
+        }
+        elsif ( $lock->{reason} eq 'write' ) {
+            Carp::confess sprintf 'Write file "%s" (%s)!', $LOCKFILE, $lock->{errno};
+        }
+        else {
+            Carp::confess sprintf 'Unknown error reason (%s)!', $lock->{errno};
+        }
+        exit 1;
+    }
+    #
+    # do something
+    #
+    undef $lock;
+```
+
 ### [Things::Sqlite](Things/Sqlite.pm), [Things::Mysql](Things/Mysql.pm),  [Things::Pg](Things/Pg.pm)
 
 DBI-шные обёртки для разных БД, реализующий единый интерфейс. Поддерживают все методы DBI, плюс:
