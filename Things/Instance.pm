@@ -102,6 +102,12 @@ __END__
     #
     use Things::Instance;
     my $lock = lock_instance($LOCKFILE);
+    $lock->{errno} and Carp::croak $lock->{msg};
+    #
+    # OR
+    #
+    use Things::Instance;
+    my $lock = lock_instance($LOCKFILE);
     if ( $lock->{errno} ) {
         if ( $lock->{reason} eq 'open' ) {
             Carp::confess sprintf 'Open file "%s" (%s)!', $LOCKFILE, $lock->{errno};

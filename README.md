@@ -97,7 +97,6 @@
 
 Плюс перегружены некоторые операторы, включая `++` и `--`.
 
-
 ### [Things::UUID](Things/UUID.pm)
 
 Сахар для [UUID](https://metacpan.org/pod/UUID). Экспортирует синглтон `$uuid`:
@@ -150,6 +149,12 @@
     #
     use Things::Instance qw/lock_or_confess/;
     lock_or_confess($LOCKFILE);
+    #
+    # OR
+    #
+    use Things::Instance;
+    my $lock = lock_instance($LOCKFILE);
+    $lock->{errno} and Carp::croak $lock->{msg};
     #
     # OR
     #
