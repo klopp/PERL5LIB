@@ -13,7 +13,7 @@ our %EXPORT_TAGS = (
     'die'  => qw/lock_or_croak lock_or_confess/,
     'warn' => qw/lock_and_cluck lock_and_carp/,
 );
-our $VERSION = 'v1.1';
+our $VERSION = 'v1.2';
 
 use English qw/-no_match_vars/;
 use Fcntl qw/:DEFAULT :flock SEEK_SET/;

@@ -135,11 +135,11 @@
 
 То же самое, но в случае одного аргумента пропускает произвольное значение.
 
-### [Things::Instance](Things/Instance.pm)
+### [Things::InstSock](Things/InstSock.pm)
 
 #### sub lock_instance( FILE )
 
-Проверка запущеного процесса и залочка его:
+Проверка запущеного процесса и его блокировка. Возвращает либо хэш с описанием ошибки, либо ссылку на объект [Lock::Socket](https://metacpan.org/pod/Lock::Socket) (для снятия блокировки его нужно освободить):
 
 ```perl
     # our @EXPORT      = qw/lock_instance/;
@@ -184,6 +184,27 @@
     # do something
     #
     undef $lock;
+```
+
+### [Things::InstFile](Things/InstFile.pm)
+
+#### sub lock_instance( FILE [, BOOL] )
+
+То же самое, но сместо сокета используется отслеживание процесса по `PID`. Функции те же, в случае успеха возвращают либо пустой хэш (`{}`), либо, если задан второй аргумент:
+
+```perl
+    { fh => $lock_file_handle }
+```
+Это на тот случай, если процесс будет форкаться. В таком  случае необходимо записать в файл `PID` рабочего потомка и закрыть его, схематично:
+
+```perl
+    my $rc = lock_instance( $lockfile, 1 );
+    Carp::confess $rc->{msg} if $rc->{errno};
+    exit if fork();
+    exit if fork();
+    # лучше не забывать про \n:
+    syswrite $rc->{fh}, "$PID\n";
+    close $rc->{fh};
 ```
 
 ### [Things::Sqlite](Things/Sqlite.pm), [Things::Mysql](Things/Mysql.pm),  [Things::Pg](Things/Pg.pm)

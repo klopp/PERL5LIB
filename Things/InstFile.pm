@@ -22,7 +22,7 @@ use Fcntl qw/:DEFAULT :flock SEEK_SET/;
 # ------------------------------------------------------------------------------
 sub lock_instance
 {
-    my ($lockfile) = @_;
+    my ( $lockfile, $noclose ) = @_;
 
     my ( $pid, $fh );
     if ( !sysopen $fh, $lockfile, O_RDWR | O_CREAT ) {
@@ -47,12 +47,15 @@ sub lock_instance
             $pid,
         };
     }
-    if (   !flock( $fh, LOCK_SH )
-        || !truncate( $fh, 0 )
-        || !sysseek( $fh, 0, SEEK_SET )
-        || !syswrite( $fh, "$PID\n" )
-        || !sysseek( $fh, 0, SEEK_SET ) )
-    {
+
+    my $rc;
+    if ($noclose) {
+        $rc = flock( $fh, LOCK_SH ) && truncate( $fh, 0 ) && sysseek( $fh, 0, SEEK_SET );
+    }
+    else {
+        $rc = flock( $fh, LOCK_SH ) && truncate( $fh, 0 ) && sysseek( $fh, 0, SEEK_SET ) && syswrite( $fh, "$PID\n" );
+    }
+    if ( !$rc ) {
         close $fh;
         return {
             reason => 'write',
@@ -61,14 +64,16 @@ sub lock_instance
             $lockfile, $ERRNO,
         };
     }
-    return { fh => $fh, };
+    $noclose and return { fh => $fh, };
+    close $fh;
+    return {};
 }
 
 # ------------------------------------------------------------------------------
 sub lock_and_carp
 {
-    my ($lockfile) = @_;
-    my $lock = lock_instance($lockfile);
+    my ( $lockfile, $noclose ) = @_;
+    my $lock = lock_instance( $lockfile, $noclose );
     $lock->{errno} && Carp::carp $lock->{msg};
     return $lock;
 }
@@ -76,8 +81,8 @@ sub lock_and_carp
 # ------------------------------------------------------------------------------
 sub lock_and_cluck
 {
-    my ($lockfile) = @_;
-    my $lock = lock_instance($lockfile);
+    my ( $lockfile, $noclose ) = @_;
+    my $lock = lock_instance( $lockfile, $noclose );
     $lock->{errno} && Carp::cluck $lock->{msg};
     return $lock;
 }
@@ -85,8 +90,8 @@ sub lock_and_cluck
 # ------------------------------------------------------------------------------
 sub lock_or_croak
 {
-    my ($lockfile) = @_;
-    my $lock = lock_instance($lockfile);
+    my ( $lockfile, $noclose ) = @_;
+    my $lock = lock_instance( $lockfile, $noclose );
     $lock->{errno} && Carp::croak $lock->{msg};
     return $lock;
 }
@@ -94,8 +99,8 @@ sub lock_or_croak
 # ------------------------------------------------------------------------------
 sub lock_or_confess
 {
-    my ($lockfile) = @_;
-    my $lock = lock_instance($lockfile);
+    my ( $lockfile, $noclose ) = @_;
+    my $lock = lock_instance( $lockfile, $noclose );
     $lock->{errno} && Carp::confess $lock->{msg};
     return $lock;
 }
