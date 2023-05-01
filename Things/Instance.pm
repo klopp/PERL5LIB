@@ -70,7 +70,7 @@ sub lock_or_croak
     my ($lockfile) = @_;
     my $lock = lock_instance($lockfile);
     $lock->{errno} and Carp::croak $lock->{msg};
-    return;
+    return $lock;
 }
 
 # ------------------------------------------------------------------------------
@@ -79,7 +79,7 @@ sub lock_or_confess
     my ($lockfile) = @_;
     my $lock = lock_instance($lockfile);
     $lock->{errno} and Carp::confess $lock->{msg};
-    return;
+    return $lock;
 }
 
 # ------------------------------------------------------------------------------
