@@ -1,4 +1,4 @@
-package Things::Args;
+package Things::Xargs;
 
 # ------------------------------------------------------------------------------
 use strict;
@@ -7,23 +7,16 @@ use utf8::all;
 
 # ------------------------------------------------------------------------------
 use base qw/Exporter/;
-our @EXPORT  = qw/xargs hargs/;
+our @EXPORT  = qw/xargs/;
 our $VERSION = 'v1.0';
 
 use Things::Const qw/:types/;
 
 # ------------------------------------------------------------------------------
+## no critic (RequireArgUnpacking)
 sub xargs
 {
-    return shift if @_ == 1;
-    goto &hargs
-}
-
-# ------------------------------------------------------------------------------
-sub hargs
-{
     my $args;
-    ## no critic (RequireArgUnpacking)
     if ( @_ == 1 ) {
         if ( ref $_[0] eq $HASH ) {
             $args = shift;
