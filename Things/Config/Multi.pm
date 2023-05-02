@@ -67,7 +67,7 @@ sub _parse
             }
             next;
         }
-        if ( $line =~ /^(\S+)\s+(.+)$/ism ) {
+        if ( $line =~ /^(\S+)\s+(.+)$/sm ) {
             my ( $key, $value ) = ( $1, $2 );
             $key = lc $key if $opt->{nocase};
             try {
