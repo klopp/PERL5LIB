@@ -4,7 +4,7 @@ package Things::Config::Perl;
 use strict;
 use warnings;
 
-use Capture::Tiny qw/capture_stderr/;
+use Capture::Tiny qw/capture/;
 use English qw/-no_match_vars/;
 use Try::Tiny;
 
@@ -19,7 +19,7 @@ sub _parse
 {
     my ( $self, $opt ) = @_;
 
-    capture_stderr {
+    capture {
         my $cfg = do $opt->{file};
         if ( !$cfg ) {
             $self->{error} = $EVAL_ERROR ? $EVAL_ERROR : $ERRNO;
