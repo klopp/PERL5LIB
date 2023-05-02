@@ -48,7 +48,7 @@ sub new
 # ------------------------------------------------------------------------------
 sub _parse
 {
-    Carp::confess sprintf 'Method %s() must be overloaded';
+    Carp::confess sprintf 'Method %s() must be overloaded', (caller(0))[3];
 }
 
 # ------------------------------------------------------------------------------

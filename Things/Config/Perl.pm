@@ -8,18 +8,10 @@ use English qw/-no_match_vars/;
 use Try::Tiny;
 
 use Things::Const qw/:types/;
-use Things::Trim;
 
 use Things::Config::Base;
 use base qw/Things::Config::Base/;
 our $VERSION = 'v1.1';
-
-# ------------------------------------------------------------------------------
-sub new
-{
-    my ( $class, @args ) = @_;
-    return $class->SUPER::new(@args);
-}
 
 # ------------------------------------------------------------------------------
 sub _parse
@@ -28,7 +20,7 @@ sub _parse
 
     my $cfg = do $opt->{file};
     if ( !$cfg ) {
-        $self->{error} = $EVAL_ERROR ? trim($EVAL_ERROR) : trim($ERRNO);
+        $self->{error} = $EVAL_ERROR ? $EVAL_ERROR : $ERRNO;
     }
     else {
         $self->{_} = _multivals( $cfg, $opt );
