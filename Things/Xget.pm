@@ -30,7 +30,10 @@ sub xget
     # В обоих случаях получили 'c'.
 =cut    
 
-    my @parts  = grep {$_} trim( split( '/', $path ) );
+#    my @parts  = grep {$_} trim( split( '/', $path ) );
+    my @parts  = split( '/', $path );
+    trim( @parts, 1 );
+    @parts  = grep {$_} @parts;
     my $cursor = $src;
 
     for (@parts) {
