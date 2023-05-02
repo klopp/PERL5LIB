@@ -17,10 +17,10 @@ our $VERSION = 'v1.1';
 # ------------------------------------------------------------------------------
 sub _parse
 {
-    my ( $self, $opt ) = @_;
+    my ( $self, $file, $opt ) = @_;
 
     capture {
-        my $cfg = do $opt->{file};
+        my $cfg = do $file;
         if ( !$cfg ) {
             $self->{error} = $EVAL_ERROR ? $EVAL_ERROR : $ERRNO;
         }

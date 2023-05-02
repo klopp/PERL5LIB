@@ -17,9 +17,9 @@ our $VERSION = 'v1.1';
 # ------------------------------------------------------------------------------
 sub _parse
 {
-    my ( $self, $opt ) = @_;
+    my ( $self, $file, $opt ) = @_;
 
-    my @lines   = path( $opt->{file} )->lines;
+    my @lines   = path($file)->lines;
     my $lineno  = 0;
     my $section = \%{ $self->{_} };
     while ( my $line = shift @lines ) {

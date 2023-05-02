@@ -69,6 +69,8 @@
     Carp::confess $conf->{error} if $conf->{error};
     my $value = $conf->get( '/some/key' ); 
 ```
+Может искать конфиги по умолчанию ([Config::Find->find()](https://metacpan.org/pod/Config::Find)), если имя файла одно из: `?`, `def`, `default`, `find`, `search`. 
+
 
   * Ключи приводятся к нижнему регистру, если не `nocase`.
   * Скалярные значения декодируются в перловый `UTF8`.

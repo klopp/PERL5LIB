@@ -4,13 +4,22 @@ package Things::Config::Base;
 use strict;
 use warnings;
 
+use Config::Find;
 use Encode qw/decode_utf8/;
+use Path::ExpandTilde;
 use Try::Tiny;
 
 use Things::Const qw/:types/;
 use Things::Xargs;
 use Things::Xget;
 
+CORE::state %DEF_CONFIG = (
+    '?'       => 1,
+    'def'     => 1,
+    'default' => 1,
+    'find'    => 1,
+    'search'  => 1,
+);
 our $VERSION = 'v1.0';
 
 # ------------------------------------------------------------------------------
@@ -34,10 +43,17 @@ sub new
         return $self;
     }
 
+    if ( $DEF_CONFIG{ $opt->{file} } ) {
+        $opt->{file} = Config::Find->find;
+        if ( !$opt->{file} ) {
+            $self->{error} = 'Can not find DEFAULT config file';
+            return $self;
+        }
+    }
+
     try {
-        $self->_parse($opt);
-        if( ref $self->{_} ne $ARRAY && ref $self->{_} ne $HASH )
-        {
+        $self->_parse( expand_tilde( $opt->{file} ), $opt );
+        if ( ref $self->{_} ne $ARRAY && ref $self->{_} ne $HASH ) {
             Carp::croak sprintf 'Can not parse file "%s"', $opt->{file};
         }
     }
@@ -52,7 +68,7 @@ sub new
 # ------------------------------------------------------------------------------
 sub _parse
 {
-    Carp::confess sprintf 'Method %s() must be overloaded', (caller(0))[3];
+    Carp::confess sprintf 'Method %s() must be overloaded', ( caller(0) )[3];
 }
 
 # ------------------------------------------------------------------------------
