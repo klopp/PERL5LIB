@@ -42,7 +42,7 @@ sub _parse
             push @{ $section->{$key} }, unbackslash($value);
         }
         else {
-            Carp::confess sprintf 'Invalid config file "%s", line [%u]', $opt->{file}, $lineno;
+            Carp::croak sprintf 'Invalid config file "%s", line [%u]', $opt->{file}, $lineno;
         }
     }
     return $self->{_};
