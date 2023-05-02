@@ -4,29 +4,45 @@ package Things::Config::Multi;
 use strict;
 use warnings;
 
-use Things::Args;
-use Things::Const qw/:types/;
-use Things::Trim;
-use Things::Xget;
-
 use Encode qw/decode_utf8/;
 use Path::Tiny;
 use String::Escape qw/unbackslash/;
 use Try::Tiny;
-our $VERSION = 'v1.1';
+
+use Things::Args;
+use Things::Trim;
+use Things::Xget;
+
+our $VERSION = 'v1.0';
 
 # ------------------------------------------------------------------------------
 sub new
 {
     my ( $class, @args ) = @_;
 
-    my $opt = hargs(@args);
-    $opt->{file} or Carp::confess 'No required "file" parameter';
+    my $opt;
+    my $self = bless {}, $class;
 
-    my @lines = path( $opt->{file} )->lines;
+    try {
+        $opt = hargs(@args);
+    }
+    catch {
+        $self->{error} = $_;
+    };
+    $self->{error} and return $self;
+    if ( !$opt->{file} ) {
+        $self->{error} = 'No required "file" parameter';
+        return $self;
+    }
 
-    $opt->{_} = _parse( \@lines, $opt );
-    my $self = bless $opt, $class;
+    try {
+        my @lines = path( $opt->{file} )->lines;
+        $self->{_} = _parse( \@lines, $opt );
+    }
+    catch {
+        $self->{error} = $_;
+    };
+
     return $self;
 }
 
@@ -56,6 +72,7 @@ sub _parse
             try {
                 $value = decode_utf8 $value;
             };
+
             $value =~ s/^["]|["]$//gsm;
             push @{ $section->{$key} }, unbackslash($value);
         }
