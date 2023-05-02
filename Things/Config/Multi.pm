@@ -9,8 +9,8 @@ use Path::Tiny;
 use String::Escape qw/unbackslash/;
 use Try::Tiny;
 
-use Things::Xargs;
 use Things::Trim;
+use Things::Xargs;
 use Things::Xget;
 
 our $VERSION = 'v1.1';
@@ -30,6 +30,7 @@ sub new
         $self->{error} = $_;
     };
     $self->{error} and return $self;
+    
     if ( !$opt->{file} ) {
         $self->{error} = 'No required "file" parameter';
         return $self;
