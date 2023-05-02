@@ -27,9 +27,9 @@ sub new
 {
     my ( $class, @args ) = @_;
 
-    my $opt;
     my $self = bless {}, $class;
 
+    my $opt;
     try {
         $opt = xargs(@args);
     }
@@ -60,8 +60,10 @@ sub new
     catch {
         $self->{error} = $_;
     };
+    $self->{error} and return $self;
 
     _decode( $self->{_} );
+
     return $self;
 }
 
