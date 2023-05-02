@@ -40,7 +40,7 @@
 
 ### [Things::RandomLine](Things/RandomLine.pm)
 
-#### sub random_line( filename [, noempty] )
+#### sub random_line( filename [, noempty = BOOL] )
 
 Возвращает случайную строку файла (не пустую при `$noempty`)
 
@@ -50,9 +50,9 @@
 
 ### [Things::Trim](Things/Trim.pm)
 
-#### sub trim( data [, mod = BOOLEAN] )
+#### sub trim( data [, mod = BOOL] )
 
-Принимает хэш, массив или скаляр. Возвращает копию исходных данных, у которой удаляет конечные и начальные `\s` значений. Если `mod`, то все поля исходных данных (кроме `readonly`) также будут модифицированы.
+Принимает ссылку на хэш, ссылку на массив или скаляр. Возвращает копию исходных данных, у которой удаляет конечные и начальные `\s` значений. Если `mod`, то все поля исходных данных (кроме `readonly`) также будут модифицированы.
 
 ### [Things::Xget](Things/Xget.pm)
 
@@ -69,13 +69,15 @@
     Carp::confess $conf->{error} if $conf->{error};
     my $value = $conf->get( '/some/key' ); 
 ```
+Может искать конфиги по умолчанию ([Config::Find->find()](https://metacpan.org/pod/Config::Find)), если имя файла одно из: `?`, `def`, `default`, `find`, `search`. 
+
 
   * Ключи приводятся к нижнему регистру, если не `nocase`.
   * Скалярные значения декодируются в перловый `UTF8`.
   * Все значения будут преобразованы в массивы.
   * `get()` в скалярном контексте возвращает последнее значение ключа, в списковом - все.
 
-### [Things::ConfigStd](Things/Config/Std.pm)
+### [Things::Config::Std](Things/Config/Std.pm)
 
 Всё почти тоже самое, конфиг стандартный:
 
@@ -210,7 +212,7 @@
 
 ### [Things::InstFile](Things/InstFile.pm)
 
-#### sub lock_instance( FILE [, BOOL] )
+#### sub lock_instance( FILE [, close = BOOL] )
 
 То же самое, но сместо сокета используется отслеживание процесса по `PID`. Функции те же, в случае успеха возвращают либо пустой хэш (`{}`), либо, если задан второй аргумент:
 

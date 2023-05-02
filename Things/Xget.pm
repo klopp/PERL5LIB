@@ -32,7 +32,7 @@ sub xget
 
     my @parts  = split( '/', $path );
     trim( \@parts, 1 );
-    @parts  = grep {$_} @parts;
+    @parts  = grep { defined $_ && $_ ne q{} } @parts;
     my $cursor = $src;
 
     for (@parts) {
