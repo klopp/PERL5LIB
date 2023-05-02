@@ -60,6 +60,25 @@
 
 Возвращает значение из структуры по пути (например, `"/a/b/c/d/[2]"`). Предотвращает `autovification` при обращении к несуществующим значениям.
 
+### [Things::Config::Find](Things/Config/Find.pm)
+
+#### Things::Config::Find->find( )
+
+Ищет конфиг программ в (`$name` и `$DIR` берутся из `$PROGRAM_NAME`, у имени отсекается "расширение"):
+
+  * `$XDG_HOME_DIR/.$name + [.conf, .rc]`
+  * `$HOME/.$name + [.conf, .rc]`
+  * `$HOME/.config/$name + [.conf, .rc]`
+  * `$DIR/$name[.conf, .rc]`
+  * `/etc/$name[.conf, .rc]`
+  * `/etc/default/$name`
+  
+Возвращает имя первого найденного файла или `undef`.
+
+#### Things::Config::Find->tested_files( )
+
+Возвращает список просмотренных файлов на этапе `find()`.
+
 ### [Things::Config::Perl](Things/Config/Perl.pm)
 
 Использование в качестве конфига файла с перловыми данными (только чтение).
@@ -69,7 +88,7 @@
     Carp::confess $conf->{error} if $conf->{error};
     my $value = $conf->get( '/some/key' ); 
 ```
-Может искать конфиги по умолчанию ([Config::Find->find()](https://metacpan.org/pod/Config::Find)), если имя файла одно из: `?`, `def`, `default`, `find`, `search`. 
+Может искать конфиги по умолчанию ([Things::Config::Find->find()](https://metacpan.org/pod/Config::Find)), если имя файла одно из: `?`, `-`, `*`, `def`, `default`, `find`, `search`. 
 
 
   * Ключи приводятся к нижнему регистру, если не `nocase`.
@@ -147,17 +166,14 @@
 
 Перегрузка глобального оператора `=` в Perl *невозможна by design*. А вот базовый класс `Things::TieData` отслеживает и корректно обрабатывает такие ситуации.
 
-### [Things::Args](Things/Args.pm)
+### [Things::Xargs](Things/Xargs.pm)
 
 Проверка аргументов функций и методов.
 
-#### sub hargs(...)
+#### sub xargs(...)
 
 Проверяет что ей передана ссылка на хэш или хэш. Нет - бросает исключение. Да - возвращает ссылку на хэш.
 
-#### sub xargs(...)
-
-То же самое, но в случае одного аргумента пропускает произвольное значение.
 
 ### [Things::InstSock](Things/InstSock.pm)
 
