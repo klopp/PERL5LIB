@@ -1,24 +1,21 @@
-package Things::Sqlite;
+package Things::Db::Sqlite;
 
 use strict;
 use warnings;
-use Const::Fast;
 use Module::Filename;
 
 use DBI;
 
-use Things::Db;
-use base qw/Things::Db/;
+use Things::Db::Base;
+use base qw/Things::Db::Base/;
 
 our $VERSION = 'v1.0';
 
 # ------------------------------------------------------------------------------
-const my $DB_FILE => Module::Filename->new->filename(__PACKAGE__)->dir . '/../data/things.db';
-# ------------------------------------------------------------------------------
 sub new
 {
     my ( $class, $file, @dbargs ) = @_;
-    my $dbfile = $file || $DB_FILE;
+    my $dbfile = $file;
     return bless { db => DBI->connect( sprintf( 'dbi:SQLite:dbname=%s', $dbfile ), '', '', @dbargs ) }, $class;
 }
 

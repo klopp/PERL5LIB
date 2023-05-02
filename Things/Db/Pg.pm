@@ -1,11 +1,11 @@
-package Things::Pg;
+package Things::Db::Pg;
 
 use strict;
 use warnings;
 use DBI;
 
-use Things::Db;
-use base qw/Things::Db/;
+use Things::Db::Base;
+use base qw/Things::Db::Base/;
 
 our $VERSION = 'v1.0';
 

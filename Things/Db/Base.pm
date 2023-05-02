@@ -1,4 +1,4 @@
-package Things::Db;
+package Things::Db::Base;
 
 use strict;
 use warnings;
