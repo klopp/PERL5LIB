@@ -14,7 +14,7 @@ use Things::Xargs;
 use Things::Xget;
 
 CORE::state %DEF_CONFIG = (
-    '?'       => 1,
+    q{?}      => 1,
     'def'     => 1,
     'default' => 1,
     'find'    => 1,
@@ -70,7 +70,7 @@ sub new
 # ------------------------------------------------------------------------------
 sub _parse
 {
-    Carp::confess sprintf 'Method %s() must be overloaded', ( caller(0) )[3];
+    Carp::confess sprintf 'Method %s() must be overloaded', ( caller 0 )[3];
 }
 
 # ------------------------------------------------------------------------------
