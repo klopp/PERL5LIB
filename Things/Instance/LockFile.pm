@@ -1,4 +1,4 @@
-package Things::InstFile;
+package Things::Instance::LockFile;
 
 # ------------------------------------------------------------------------------
 use strict;

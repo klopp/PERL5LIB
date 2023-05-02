@@ -1,4 +1,4 @@
-package Things::InstSock;
+package Things::Instance::LockSock;
 
 # ------------------------------------------------------------------------------
 use strict;
