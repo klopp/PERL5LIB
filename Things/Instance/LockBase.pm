@@ -52,21 +52,21 @@ sub lock
     sysread $self->{fh}, $self->{data}, 1024;
     $self->{data} =~ s/^\s*(\d*).*/$1/gsm;
 
-    my $rc = $self->_try_lock($opt);
-    $rc->{errno} and return $rc;
+    my $lock = $self->_try_lock($opt);
+    $lock->{errno} and return $lock;
 
-    my $frc;
+    my $rc;
     if ( $opt->{noclose} ) {
-        $frc = flock( $self->{fh}, LOCK_SH ) && truncate( $self->{fh}, 0 ) && sysseek( $self->{fh}, 0, SEEK_SET );
+        $rc = flock( $self->{fh}, LOCK_SH ) && truncate( $self->{fh}, 0 ) && sysseek( $self->{fh}, 0, SEEK_SET );
     }
     else {
-        $frc
+        $rc
             = flock( $self->{fh}, LOCK_SH )
             && truncate( $self->{fh}, 0 )
             && sysseek( $self->{fh}, 0, SEEK_SET )
             && syswrite( $self->{fh}, $self->{data} . "\n" );
     }
-    if ( !$frc ) {
+    if ( !$rc ) {
         close $self->{fh};
         return {
             reason => 'write',
@@ -75,9 +75,9 @@ sub lock
             $opt->{file}, $ERRNO,
         };
     }
-    $rc->{fh} = $self->{fh};
+    $lock->{fh} = $self->{fh};
     $opt->{noclose} or close $self->{fh};
-    return $rc;
+    return $lock;
 }
 
 # ------------------------------------------------------------------------------

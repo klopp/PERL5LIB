@@ -23,8 +23,8 @@ sub _try_lock
         $self->{data} = empty_port();
     }
 
-    my $lock;
-    if ( !( $lock = try_lock_socket( $self->{data} ) ) ) {
+    my $lockh;
+    if ( !( $lockh = try_lock_socket( $self->{data} ) ) ) {
         close $self->{fh};
         return {
             port   => $self->{data},
@@ -34,7 +34,7 @@ sub _try_lock
             $self->{data}, $ERRNO,
         };
     }
-    return $lock;
+    return $lockh;
 }
 
 # ------------------------------------------------------------------------------
