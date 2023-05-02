@@ -6,7 +6,7 @@ use warnings;
 
 # ------------------------------------------------------------------------------
 use base qw/Exporter/;
-our @EXPORT = qw/random_line/;
+our @EXPORT  = qw/random_line/;
 our $VERSION = 'v1.0';
 
 use Things::Trim;
@@ -22,13 +22,11 @@ sub random_line
     seek( $fh, int( rand $filesize ), 0 );
     <$fh>;
     seek( $fh, 0, 0 ) if eof $fh;
-    my $line = <$fh>;
-    trim($line);
+    my $line = trim(<$fh>);
 
     while ($noempty) {
         last if $line;
-        $line = <$fh>;
-        trim($line);
+        $line = (<$fh>);
         seek( $fh, 0, 0 ) if eof $fh;
     }
     close $fh;
