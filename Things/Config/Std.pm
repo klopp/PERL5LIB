@@ -1,139 +1,104 @@
 package Things::Config::Std;
 
+# ------------------------------------------------------------------------------
 use strict;
 use warnings;
-use Things::Const qw/:types/;
-use Things::Trim;
 
 use Encode qw/decode_utf8/;
-use Config::Std;
-use List::Util qw/any/;
+use Path::Tiny;
+use String::Escape qw/unbackslash/;
 use Try::Tiny;
 
-our $VERSION = 'v1.0';
+use Things::Trim;
+use Things::Xargs;
+use Things::Xget;
+
+our $VERSION = 'v1.1';
 
 # ------------------------------------------------------------------------------
 sub new
 {
-    my ( $class, $file, @multikeys ) = @_;
+    my ( $class, @args ) = @_;
 
-    my %self;
-    if ( !$file ) {
-        $self{error} = 'File parameter required.';
+    my $opt;
+    my $self = bless {}, $class;
+
+    try {
+        $opt = xargs(@args);
     }
-    else {
-        try {
-            read_config $file => %self;
-        }
-        catch {
-            $self{error} = trim($_);
-        };
+    catch {
+        $self->{error} = $_;
+    };
+    $self->{error} and return $self;
 
-        if ( !$self{error} ) {
-
-            for my $section ( keys %self ) {
-                if ( !$section ) {
-                    $self{_} = $self{$section};
-                    delete $self{$section};
-                    $section = q{_};
-                }
-                _lowercase_section( $self{$section} );
-                my $all = any { $_ eq q{*} or /^all$/ism } @multikeys;
-                $all = undef if any { $_ eq '-' } @multikeys;
-                _multikeys( $self{$section}, $all, \@multikeys );
-                _decode( $self{$section} );
-            }
-        }
+    if ( !$opt->{file} ) {
+        $self->{error} = 'No required "file" parameter';
+        return $self;
     }
-    return bless \%self, $class;
+
+    try {
+        my @lines = path( $opt->{file} )->lines;
+        $self->{_} = _parse( \@lines, $opt );
+    }
+    catch {
+        $self->{error} = $_;
+    };
+
+    return $self;
 }
 
-#------------------------------------------------------------------------------
-sub _decode
+# ------------------------------------------------------------------------------
+sub _parse
 {
-    my ($hash) = @_;
-
-    for my $key ( keys %{$hash} ) {
-        if ( ref $hash->{$key} eq $ARRAY ) {
-            for ( @{ $hash->{$key} } ) {
-                try {
-                    $_ = decode_utf8 $_;
-                };
+    my ( $lines, $opt ) = @_;
+    my %data;
+    my $lineno  = 0;
+    my $section = \%data;
+    while ( my $line = shift @{$lines} ) {
+        ++$lineno;
+        trim( $line, 1 );
+        next unless $line;
+        next if $line =~ /^[;:#'\"]/sm;
+        if ( $line =~ /^\[(\S+)\]$/sm ) {
+            my @parts = split /\//, $1;
+            $section = \%data;
+            while ( my $part = shift @parts ) {
+                $section = \%{ $section->{$part} };
             }
-        }
-        else {
-            try {
-                $hash->{$key} = decode_utf8 $hash->{$key};
-            };
-        }
-    }
-    return $hash;
-}
-
-#------------------------------------------------------------------------------
-sub _multikeys
-{
-    my ( $hash, $all, $multikeys ) = @_;
-
-    for my $key ( keys %{$hash} ) {
-        if ($all) {
-            $hash->{$key} = [ $hash->{$key} ] unless ref $hash->{$key} eq $ARRAY;
             next;
         }
-        if ( any { $_ eq $key } @{$multikeys} ) {
-            $hash->{$key} = [ $hash->{$key} ] unless ref $hash->{$key} eq $ARRAY;
+        if ( $line =~ /^(\S+)\s+(.+)$/sm ) {
+            my ( $key, $value ) = ( $1, $2 );
+            $key = lc $key if $opt->{nocase};
+            try {
+                $value = decode_utf8 $value;
+            };
+            $value =~ s/^["]|["]$//gsm;
+            push @{ $section->{$key} }, unbackslash($value);
         }
         else {
-            $hash->{$key} = pop @{ $hash->{$key} } if ref $hash->{$key} eq $ARRAY;
+            Carp::confess sprintf 'Invalid config file "%s", line [%u]', $opt->{file}, $lineno;
         }
     }
-    return $hash;
+    return \%data;
 }
 
-#------------------------------------------------------------------------------
-sub _lowercase_section
+# ------------------------------------------------------------------------------
+sub get
 {
-    my ($hash) = @_;
-    for ( keys %{$hash} ) {
-        if ( !/^[[:lower:]]+$/sm ) {
-            my $lkey = lc;
-            if ( exists $hash->{$lkey} ) {
-                if ( ref $hash->{$lkey} ne $ARRAY ) {
-                    $hash->{$lkey} = [ $hash->{$lkey} ];
-                }
-                if ( ref $hash->{$_} eq $ARRAY ) {
-                    for my $value ( @{ $hash->{$_} } ) {
-                        push @{ $hash->{$lkey} }, $value;
-                    }
-                }
-                else {
-                    push @{ $hash->{$lkey} }, $hash->{$_};
-                }
-            }
-            else {
-                $hash->{$lkey} = $hash->{$_};
-            }
-            delete $hash->{$_};
-        }
-    }
-    return $hash;
+    my ( $self, $xpath ) = @_;
+    my $rc = xget( $self->{_}, $xpath );
+    $rc or return;
+    return wantarray ? @{$rc} : $rc->[-1];
 }
 
 # ------------------------------------------------------------------------------
 sub error
 {
     my ($self) = @_;
-    return $self->{error};
-}
-
-# ------------------------------------------------------------------------------
-sub get
-{
-    my ( $self, $section, $key ) = @_;
-    return $self->{$section}->{$key} if $key;
-    return $self->{$section}         if $section;
-    return $self;
+    return $self->{error_};
 }
 
 # ------------------------------------------------------------------------------
 1;
+__END__
