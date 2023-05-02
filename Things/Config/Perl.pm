@@ -23,15 +23,14 @@ sub new
 
     my $self;
     if ( !$file ) {
-        $self->{error_} = 'File parameter required.';
+        $self->{error} = 'File parameter required.';
     }
     else {
 
         my $cfg = do $file;
 
         if ( !$cfg ) {
-            $self->{error_} = $EVAL_ERROR ? $EVAL_ERROR : $ERRNO;
-            trim $self->{error_};
+            $self->{error} = $EVAL_ERROR ? trim($EVAL_ERROR) : trim($ERRNO);
         }
         else {
             $self = _lowercase_keys($cfg);
@@ -39,7 +38,6 @@ sub new
             $all = undef if any { $_ eq '-' } @multikeys;
             _multikeys( $self, $all, \@multikeys );
             $self = _decode($self);
-####            $self->{ data } = $self;
         }
     }
     return bless { _ => $self }, $class;
@@ -142,7 +140,7 @@ sub _lowercase_keys
 sub error
 {
     my ($self) = @_;
-    return $self->{error_};
+    return $self->{error};
 }
 
 # ------------------------------------------------------------------------------

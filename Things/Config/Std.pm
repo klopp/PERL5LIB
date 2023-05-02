@@ -19,14 +19,14 @@ sub new
 
     my %self;
     if ( !$file ) {
-        $self{error_} = 'File parameter required.';
+        $self{error} = 'File parameter required.';
     }
     else {
         try {
             read_config $file => %self;
         }
         catch {
-            $self{error} = trim $_;
+            $self{error} = trim($_);
         };
 
         if ( !$self{error} ) {
@@ -123,7 +123,7 @@ sub _lowercase_section
 sub error
 {
     my ($self) = @_;
-    return $self->{error_};
+    return $self->{error};
 }
 
 # ------------------------------------------------------------------------------

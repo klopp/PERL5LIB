@@ -72,7 +72,6 @@ sub _parse
             try {
                 $value = decode_utf8 $value;
             };
-
             $value =~ s/^["]|["]$//gsm;
             push @{ $section->{$key} }, unbackslash($value);
         }
@@ -90,6 +89,13 @@ sub get
     my $rc = xget( $self->{_}, $xpath );
     $rc or return;
     return wantarray ? @{$rc} : $rc->[-1];
+}
+
+# ------------------------------------------------------------------------------
+sub error
+{
+    my ($self) = @_;
+    return $self->{error_};
 }
 
 # ------------------------------------------------------------------------------
