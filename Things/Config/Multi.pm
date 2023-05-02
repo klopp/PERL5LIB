@@ -9,11 +9,11 @@ use Path::Tiny;
 use String::Escape qw/unbackslash/;
 use Try::Tiny;
 
-use Things::Args;
+use Things::Xargs;
 use Things::Trim;
 use Things::Xget;
 
-our $VERSION = 'v1.0';
+our $VERSION = 'v1.1';
 
 # ------------------------------------------------------------------------------
 sub new
@@ -24,7 +24,7 @@ sub new
     my $self = bless {}, $class;
 
     try {
-        $opt = hargs(@args);
+        $opt = xargs(@args);
     }
     catch {
         $self->{error} = $_;
@@ -59,7 +59,7 @@ sub _parse
         next unless $line;
         next if $line =~ /^[;#'\"$%\@]/sm;
         if ( $line =~ /^\[(.+)\]$/sm ) {
-            my @parts = split /[.]/, $1;
+            my @parts = split /\//, $1;
             $section = \%data;
             while ( my $part = shift @parts ) {
                 $section = \%{ $section->{$part} };
