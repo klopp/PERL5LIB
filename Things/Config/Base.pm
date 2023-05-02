@@ -36,7 +36,7 @@ sub new
 
     try {
         $self->_parse($opt);
-        if( ref $self->{_} ne $ARRAY || ref $self->{_} ne $HASH )
+        if( ref $self->{_} ne $ARRAY && ref $self->{_} ne $HASH )
         {
             Carp::croak sprintf 'Can not parse file "%s"', $opt->{file};
         }
