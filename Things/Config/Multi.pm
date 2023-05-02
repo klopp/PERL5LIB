@@ -30,7 +30,7 @@ sub new
         $self->{error} = $_;
     };
     $self->{error} and return $self;
-    
+
     if ( !$opt->{file} ) {
         $self->{error} = 'No required "file" parameter';
         return $self;
@@ -67,7 +67,7 @@ sub _parse
             }
             next;
         }
-        if ( $line =~ /^(\S+)[\s=]*(.*)$/ism ) {
+        if ( $line =~ /^(\S+)\s+(.+)$/ism ) {
             my ( $key, $value ) = ( $1, $2 );
             $key = lc $key if $opt->{nocase};
             try {
@@ -77,7 +77,7 @@ sub _parse
             push @{ $section->{$key} }, unbackslash($value);
         }
         else {
-            Carp::confess 'Invalid config file line [%u]', $lineno;
+            Carp::confess sprintf 'Invalid config file "%s", line [%u]', $opt->{file}, $lineno;
         }
     }
     return \%data;
