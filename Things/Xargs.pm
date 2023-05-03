@@ -7,8 +7,11 @@ use utf8::all;
 
 # ------------------------------------------------------------------------------
 use base qw/Exporter/;
-our @EXPORT  = qw/xargs/;
+our @EXPORT  = qw/xargs selfopt/;
 our $VERSION = 'v1.0';
+
+use Scalar::Util qw/blessed/;
+use Syntax::Keyword::Try;
 
 use Things::Const qw/:types/;
 
@@ -22,16 +25,32 @@ sub xargs
             $args = shift;
         }
         else {
-            Carp::confess 'Not a HASH reference!';
+            Carp::croak sprintf 'Not a %s reference!', $HASH;
         }
     }
     elsif ( @_ % 2 ) {
-        Carp::confess 'Not a HASH!';
+        Carp::croak sprintf 'Not a %s!', $HASH;
     }
     else {
         %{$args} = @_;
     }
     return $args;
+}
+
+# ------------------------------------------------------------------------------
+## no critic (RequireArgUnpacking)
+sub selfopt
+{
+    my ( $self, $opt ) = (shift);
+    try {
+        ( ref $self eq $HASH || blessed $self )
+            || Carp::croak sprintf 'First argument must be blessed or a %s reference!', $HASH;
+        $opt = xargs(@_);
+    }
+    catch ($e) {
+        $self->{error} = $e;
+    };
+    return ( $self, $opt );
 }
 
 # ------------------------------------------------------------------------------
