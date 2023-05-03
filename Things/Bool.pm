@@ -11,9 +11,25 @@ our @EXPORT = qw/
     true false True False TRUE FALSE
     parse_bool
     /;
-our $VERSION = 'v1.0';
+our @EXPORT_OK = ( @EXPORT, 'autodetect' );
+
+use Const::Fast;
 
 use Things::Const qw/:types/;
+
+const my %AUTODETECT => (
+    q{?}      => 1,
+    q{-}      => 1,
+    q{*}      => 1,
+    'auto'    => 1,
+    'def'     => 1,
+    'default' => 1,
+    'detect ' => 1,
+    'find'    => 1,
+    'search'  => 1,
+);
+
+our $VERSION = 'v1.0';
 
 # ------------------------------------------------------------------------------
 sub TRUE  {1}
@@ -22,6 +38,13 @@ sub true  {1}
 sub false {0}
 sub True  {1}
 sub False {0}
+
+# ------------------------------------------------------------------------------
+sub autodetect
+{
+## no critic (RequireArgUnpacking)
+    return exists $AUTODETECT{ $_[0] };
+}
 
 # ------------------------------------------------------------------------------
 sub parse_bool

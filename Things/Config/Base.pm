@@ -8,20 +8,12 @@ use Encode qw/decode_utf8/;
 use Path::ExpandTilde;
 use Syntax::Keyword::Try;
 
+use Things::Bool qw/autodetect/;
 use Things::Config::Find;
 use Things::Const qw/:types/;
 use Things::Xargs;
 use Things::Xget;
 
-CORE::state %DEF_CONFIG = (
-    q{?}      => 1,
-    q{-}      => 1,
-    q{*}      => 1,
-    'def'     => 1,
-    'default' => 1,
-    'find'    => 1,
-    'search'  => 1,
-);
 our $VERSION = 'v1.0';
 
 # ------------------------------------------------------------------------------
@@ -39,7 +31,7 @@ sub new
         return $self;
     }
 
-    if ( $DEF_CONFIG{ $opt->{file} } ) {
+    if ( autodetect( $opt->{file} ) ) {
         $opt->{file} = Things::Config::Find->find;
         if ( !$opt->{file} ) {
             $self->{error} = sprintf 'Can not find DEFAULT config file from: %s',
