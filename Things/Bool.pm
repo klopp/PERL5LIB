@@ -34,11 +34,13 @@ sub parse_bool
 # ------------------------------------------------------------------------------
 sub set_true
 {
+## no critic (RequireArgUnpacking)
     $_[1] = 1;
     goto &set_bool;
 }
 
 # ------------------------------------------------------------------------------
+## no critic (RequireArgUnpacking)
 sub set_false
 {
     $_[1] = 0;
@@ -46,6 +48,7 @@ sub set_false
 }
 
 # ------------------------------------------------------------------------------
+## no critic (RequireArgUnpacking)
 sub set_bool
 {
 
@@ -68,7 +71,7 @@ sub set_bool
         return;
     }
     if ( ref \$_[0] ne $SCALAR ) {
-        Carp::cluck sprintf 'Target argument must be SCALAR REF at %s()', ( caller 0 )[3];
+        Carp::cluck sprintf 'Target argument must be %s REF at %s()', $SCALAR, ( caller 0 )[3];
         return;
     }
     $_[0] = ( @_ == 1 || $_[1] ) ? 1 : undef;
