@@ -25,12 +25,14 @@ sub new
 sub lock
 {
     my ( $self, $opt ) = selfopt(@_);
-    $ERRNO = EINVAL;
-    $self->{error} and return {
-        reason => 'options',
-        errno  => $ERRNO,
-        msg    => $self->{error},
-    };
+    if ( $self->{error} ) {
+        $ERRNO = EINVAL;
+        return {
+            reason => 'options',
+            errno  => $ERRNO,
+            msg    => $ERRNO,
+        };
+    }
 
     $self->{file} = $opt->{file};
     if ( !$self->{file} ) {
