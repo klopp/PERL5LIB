@@ -6,7 +6,7 @@ use warnings;
 
 use Encode qw/decode_utf8/;
 use Path::ExpandTilde;
-use Try::Tiny;
+use Syntax::Keyword::Try;
 
 use Things::Config::Find;
 use Things::Const qw/:types/;
@@ -30,14 +30,8 @@ sub new
     my ( $class, @args ) = @_;
 
     my $self = bless {}, $class;
-
     my $opt;
-    try {
-        $opt = xargs(@args);
-    }
-    catch {
-        $self->{error} = $_;
-    };
+    ( $self, $opt ) = selfopt( $self, @args );
     $self->{error} and return $self;
 
     if ( !$opt->{file} ) {
@@ -60,9 +54,9 @@ sub new
             Carp::croak sprintf 'Can not parse file "%s"', $opt->{file};
         }
     }
-    catch {
-        $self->{error} = $_;
-    };
+    catch($e) {
+        $self->{error} = $e;
+    }
     $self->{error} and return $self;
 
     _decode( $self->{_} );
@@ -91,7 +85,8 @@ sub _decode
     else {
         try {
             $src = decode_utf8 $src;
-        };
+        }
+        catch{}
     }
     return $src;
 }

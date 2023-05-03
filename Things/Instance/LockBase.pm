@@ -5,9 +5,9 @@ use strict;
 use warnings;
 
 use English qw/-no_match_vars/;
+use Errno qw/:POSIX/;
 use File::Basename qw/basename/;
 use Fcntl qw/:DEFAULT :flock SEEK_SET/;
-use Try::Tiny;
 
 use Things::Xargs;
 
@@ -21,31 +21,30 @@ sub new
 }
 
 # ------------------------------------------------------------------------------
+## no critic (RequireArgUnpacking)
 sub lock
 {
-    my ( $self, @args ) = @_;
-
-    my $opt;
-    try {
-        $opt = xargs(@args);
-    }
-    catch {
-        $self->{error} = $_;
+    my ( $self, $opt ) = selfopt(@_);
+    $ERRNO = EINVAL;
+    $self->{error} and return {
+        reason => 'options',
+        errno  => $ERRNO,
+        msg    => $self->{error},
     };
-    $self->{error} and return $self;
 
-    if ( !$opt->{file} ) {
+    $self->{file} = $opt->{file};
+    if ( !$self->{file} ) {
         my $name = basename($PROGRAM_NAME);
         $name =~ s/^(.+)[.][^.]+$/$1/gsm;
-        $opt->{file} = sprintf '/var/lock/%s.lock', $name;
+        $self->{file} = sprintf '/var/lock/%s.lock', $name;
     }
 
-    if ( !sysopen $self->{fh}, $opt->{file}, O_RDWR | O_CREAT ) {
+    if ( !sysopen $self->{fh}, $self->{file}, O_RDWR | O_CREAT ) {
         return {
             reason => 'open',
             errno  => $ERRNO,
             msg    => sprintf 'Can not open lockfile "%s" (%s)',
-            $opt->{file}, $ERRNO,
+            $self->{file}, $ERRNO,
         };
     }
     binmode $self->{fh};
@@ -72,7 +71,7 @@ sub lock
             reason => 'write',
             errno  => $ERRNO,
             msg    => sprintf 'Can not write lockfile "%s" (%s)',
-            $opt->{file}, $ERRNO,
+            $self->{file}, $ERRNO,
         };
     }
     $lock->{fh} = $self->{fh};
@@ -130,32 +129,16 @@ __END__
  
 =head1 SYNOPSIS
  
-    # our @EXPORT      = qw/lock_instance/;
-    # our @EXPORT_OK   = qw/ lock_instance 
-    #                        lock_or_croak lock_or_confess 
-    #                        lock_and_cluck lock_and_carp /;
-    # our %EXPORT_TAGS = (
-    #    'all'  => \@EXPORT_OK,
-    #    'die'  => qw/lock_or_croak lock_or_confess/,
-    #    'warn' => qw/lock_and_cluck lock_and_carp/,
-    # );
-    #
-    use Things::InstSock qw/lock_or_confess/;
-    lock_or_confess($LOCKFILE);
+    use Things::Instance::LockSock;
+    my $locker = Things::Instance::LockSock->new;
+    my $lockh = $locker->lock;
+    $lockh->{errno} and Carp::croak $lockh->{msg};
     #
     # OR [, OR ...]
     #
-    use Things::InstSock;
-    my $lock = lock_instance($LOCKFILE);
-    $lock->{errno} and Carp::croak $lock->{msg};
-    #
-    # OR [, OR ...]
-    #
-    use Things::InstSock;
-    my $lock = lock_instance($LOCKFILE);
-    if ( $lock->{errno} ) {
-        if ( $lock->{reason} eq 'open' ) {
-            Carp::confess sprintf 'Open file "%s" (%s)!', $LOCKFILE, $lock->{errno};
+    if ( $lockh->{errno} ) {
+        if ( $lockh->{reason} eq 'open' ) {
+            Carp::confess sprintf 'Open file "%s" (%s)!', $LOCKFILE, $lockh->{errno};
         }
         elsif ( $lock->{reason} eq 'lock' ) {
             Carp::confess sprintf 'Lock process on port %u (%s)!', $lock->{port}, $lock->{errno};
