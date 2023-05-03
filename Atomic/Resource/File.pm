@@ -4,7 +4,7 @@ package Atomic::Resource::File;
 use Modern::Perl;
 
 use Path::Tiny;
-use Syntax::Keyword::Try;
+use Try::Catch;
 
 use Atomic::Resource::Base;
 use base qw/Atomic::Resource::Base/;
@@ -48,9 +48,9 @@ sub create_backup_copy
         $self->{backup} = Path::Tiny->tempfile( DIR => $self->{tempdir} );
         path( $self->{params}->{source} )->copy( $self->{backup} );
     }
-    catch($e) {
-        $error = sprintf 'File :: %s', $e;
-    }
+    catch {
+        $error = sprintf 'File :: %s', $_;
+    };
     return $error;
 }
 
@@ -73,9 +73,9 @@ sub create_work_copy
         $self->{work} = Path::Tiny->tempfile( DIR => $self->{tempdir} );
         path( $self->{params}->{source} )->copy( $self->{work} );
     }
-    catch($e) {
-        $error = sprintf 'File :: %s', $e;
-    }
+    catch {
+        $error = sprintf 'File :: %s', $_;
+    };
     return $error;
 }
 
@@ -97,9 +97,9 @@ sub commit
     try {
         $self->{work} and $self->{work}->move( $self->{params}->{source} );
     }
-    catch($e) {
-        $error = sprintf 'File :: "%s": %s', $self->{params}->{source}, $e;
-    }
+    catch {
+        $error = sprintf 'File :: "%s": %s', $self->{params}->{source}, $_;
+    };
     return $error;
 }
 
@@ -112,9 +112,9 @@ sub rollback
     try {
         $self->{backup} and $self->{backup}->move( $self->{params}->{source} );
     }
-    catch($e) {
-        $error = sprintf 'File :: "%s": %s', $self->{params}->{source}, $e;
-    }
+    catch {
+        $error = sprintf 'File :: "%s": %s', $self->{params}->{source}, $_;
+    };
     return $error;
 }
 

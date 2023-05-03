@@ -11,7 +11,7 @@ our @EXPORT  = qw/xargs selfopt/;
 our $VERSION = 'v1.0';
 
 use Scalar::Util qw/blessed/;
-use Syntax::Keyword::Try;
+use Try::Catch;
 
 use Things::Const qw/:types/;
 
@@ -36,7 +36,6 @@ sub xargs
     }
     return $args;
 }
-
 # ------------------------------------------------------------------------------
 ## no critic (RequireArgUnpacking)
 sub selfopt
@@ -47,8 +46,8 @@ sub selfopt
             || Carp::croak sprintf 'First argument must be blessed or a %s reference!', $HASH;
         $opt = xargs(@_);
     }
-    catch ($e) {
-        $self->{error} = $e;
+    catch {
+        $self->{error} = $_;
     };
     return ( $self, $opt );
 }

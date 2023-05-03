@@ -1,7 +1,7 @@
 package Mutex::Base;
 
 # ------------------------------------------------------------------------------
-use Syntax::Keyword::Try;
+use Try::Catch;
 
 our $VERSION = 'v1.0';
 
@@ -13,9 +13,9 @@ sub lock
     try {
         $self->{mutex}->lock;
     }
-    catch ($e) {
-        $error = $e;
-    }
+    catch {
+        $error = $_;
+    };
     return $error;
 }
 
@@ -25,8 +25,7 @@ sub unlock
     my ($self) = @_;
     try {
         $self->{mutex}->unlock;
-    }
-    catch { }
+    };
     return $self;
 }
 

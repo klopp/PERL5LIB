@@ -6,7 +6,7 @@ use warnings;
 
 use Encode qw/decode_utf8/;
 use Path::ExpandTilde;
-use Syntax::Keyword::Try;
+use Try::Catch;
 
 use Things::Bool qw/autodetect/;
 use Things::Config::Find;
@@ -46,9 +46,9 @@ sub new
             Carp::croak sprintf 'Can not parse file "%s"', $opt->{file};
         }
     }
-    catch($e) {
-        $self->{error} = $e;
-    }
+    catch {
+        $self->{error} = $_;
+    };
     $self->{error} and return $self;
 
     _decode( $self->{_} );
@@ -77,8 +77,7 @@ sub _decode
     else {
         try {
             $src = decode_utf8 $src;
-        }
-        catch{}
+        };
     }
     return $src;
 }
