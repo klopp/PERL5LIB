@@ -1,16 +1,16 @@
 package Atomic::Task;
 
 # ------------------------------------------------------------------------------
-use Modern::Perl;
+use strict;
+use warnings;
 
 use Array::Utils qw/intersect/;
-use Carp qw/cluck confess/;
 use Const::Fast;
 use Things::Trim;
 use UUID qw/uuid/;
 
-use lib q{..};
 use Atomic::Resource::Base;
+
 const my $ELOCK   => 1;
 const my $EWORK   => 2;
 const my $EEXEC   => 3;
@@ -28,7 +28,6 @@ const my %EMESSAGES => (
 );
 
 use Exporter;
-
 our @EXPORT  = qw/$ELOCK $EWORK $EEXEC $ECLOCK $EBACKUP $ECOMMIT/;
 our $VERSION = 'v2.0';
 
@@ -105,16 +104,16 @@ sub new
     my ( $class, $resources, $params ) = @_;
 
     $params //= {};
-    ref $params eq 'HASH'                          or confess 'Error: invalid {params} value';
-    ( ref $resources eq 'ARRAY' && @{$resources} ) or confess 'Error: invalid {resources} value';
+    ref $params eq 'HASH'                          or Carp::confess 'Error: invalid {params} value';
+    ( ref $resources eq 'ARRAY' && @{$resources} ) or Carp::confess 'Error: invalid {resources} value';
 
     if ( $params->{mutex} ) {
-        $params->{mutex}->can('lock')   or confess 'Error: {mutex} can not lock()!';
-        $params->{mutex}->can('unlock') or confess 'Error: {mutex} can not unlock()!';
+        $params->{mutex}->can('lock')   or Carp::confess 'Error: {mutex} can not lock()!';
+        $params->{mutex}->can('unlock') or Carp::confess 'Error: {mutex} can not unlock()!';
     }
     else {
         $params->{quiet}
-            or cluck 'Warning: no {mutex} in {params}, multi-threaded code may not be safe!';
+            or Carp::cluck 'Warning: no {mutex} in {params}, multi-threaded code may not be safe!';
     }
 
     my %data = (
@@ -125,7 +124,7 @@ sub new
     );
     my $self  = bless \%data, $class;
     my $error = $self->check_params;
-    $error and confess sprintf 'Error: invalid parameters: %s', $error;
+    $error and Carp::confess sprintf 'Error: invalid parameters: %s', $error;
     return $self;
 }
 

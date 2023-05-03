@@ -1,7 +1,8 @@
 package Atomic::Resource::XML;
 
 # ------------------------------------------------------------------------------
-use Modern::Perl;
+use strict;
+use warnings;
 
 use Try::Catch;
 use XML::Hash::XS;

@@ -1,13 +1,13 @@
 package Atomic::Task::Mojo;
 
 # ------------------------------------------------------------------------------
-use Modern::Perl;
-
-use lib q{..};
-use Atomic::TaskPool;
-use base qw/Atomic::TaskPool/;
+use strict;
+use warnings;
 
 use Mojo::IOLoop;
+
+use Atomic::TaskPool;
+use base qw/Atomic::TaskPool/;
 
 our $VERSION = 'v1.0';
 

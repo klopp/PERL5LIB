@@ -1,10 +1,11 @@
 package Atomic::TaskPool;
 
 # ------------------------------------------------------------------------------
-use Modern::Perl;
+use strict;
+use warnings;
+
 use Sys::Info;
 
-use lib q{..};
 use Atomic::Task;
 
 our $VERSION = 'v2.0';

@@ -1,7 +1,8 @@
 package Atomic::Resource::BSON;
 
 # ------------------------------------------------------------------------------
-use Modern::Perl;
+use strict;
+use warnings;
 
 use BSON;
 use Try::Catch;

@@ -3,7 +3,6 @@ package Things::Db::Base;
 use strict;
 use warnings;
 
-use Carp qw/confess/;
 use Const::Fast;
 use JSON::XS qw/decode_json encode_json/;
 use Try::Catch;
@@ -25,7 +24,7 @@ sub new
 sub get_object
 {
     my ($self) = @_;
-    $self->{db} or return confess sprintf 'Error: {db} field is empty in "%s()".', ( caller 1 )[3];
+    $self->{db} or return Carp::confess sprintf 'Error: {db} field is empty in "%s()".', ( caller 1 )[3];
     return $self->{db};
 }
 

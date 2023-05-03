@@ -1,7 +1,8 @@
 package Atomic::Resource::MemFile;
 
 # ------------------------------------------------------------------------------
-use Modern::Perl;
+use strict;
+use warnings;
 use utf8::all;
 use open qw/:std :utf8/;
 

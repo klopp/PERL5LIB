@@ -1,7 +1,8 @@
 package Atomic::Resource::Imager;
 
 # ------------------------------------------------------------------------------
-use Modern::Perl;
+use strict;
+use warnings;
 
 use Imager;
 

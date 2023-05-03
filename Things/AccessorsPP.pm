@@ -1,10 +1,10 @@
 package Things::AccessorsPP;
 
-use Modern::Perl;
+use strict;
+use warnings;
 
 use Array::Utils qw/intersect array_minus/;
 use autovivification;
-use Carp qw/cluck confess carp croak/;
 use Const::Fast;
 use Data::Lock qw/dlock dunlock/;
 use List::MoreUtils qw/any/;
@@ -41,7 +41,7 @@ sub import
             push @exports, $_;
         }
         else {
-            confess sprintf "Constructor only accepts a scalar and a hash reference.\n";
+            Carp::confess "Constructor only accepts a scalar and a hash reference.\n";
         }
     }
 
@@ -56,7 +56,7 @@ sub _check_ehandler
 
     return 1 if ref $OPT{$ehandler} eq 'CODE';
     return 1 if !ref $OPT{$ehandler} && Carp->can( $OPT{$ehandler} );
-    return confess sprintf "Invalid '%s' parameter value.\n", $ehandler;
+    return Carp::confess sprintf "Invalid '%s' parameter value.\n", $ehandler;
 }
 
 #------------------------------------------------------------------------------
@@ -65,17 +65,17 @@ sub _set_internal_data
     my ( $self, $opt ) = @_;
 
     my $caller_pkg = ( caller 0 )[0];
-    confess sprintf( '%s can deal with blessed references only', $caller_pkg )
+    Carp::confess sprintf( '%s can deal with blessed references only', $caller_pkg )
         unless blessed $self;
     no autovivification;
-    confess sprintf( "Accessors already created using %s() method.\n", $self->{$PRIVATE_DATA}->{OPT}->{METHOD} )
+    Carp::confess sprintf( "Accessors already created using %s() method.\n", $self->{$PRIVATE_DATA}->{OPT}->{METHOD} )
         if exists $self->{$PRIVATE_DATA}->{OPT}->{METHOD};
-    confess sprintf( "Can not set private data, field '%s' already exists in %s.\n", $PRIVATE_DATA, $caller_pkg )
+    Carp::confess sprintf( "Can not set private data, field '%s' already exists in %s.\n", $PRIVATE_DATA, $caller_pkg )
         if exists $self->{$PRIVATE_DATA};
     use autovivification;
 
     if ($opt) {
-        confess sprintf( '%s can receive option as hash reference only', $caller_pkg )
+        Carp::confess sprintf( '%s can receive option as hash reference only', $caller_pkg )
             if ref $opt ne 'HASH';
         %OPT = ( %OPT, %{$opt} );
     }
