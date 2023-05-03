@@ -6,7 +6,6 @@ use warnings;
 
 use Capture::Tiny qw/capture/;
 use English qw/-no_match_vars/;
-use Try::Tiny;
 
 use Things::Const qw/:types/;
 

@@ -6,7 +6,6 @@ use warnings;
 
 use Path::Tiny;
 use String::Escape qw/unbackslash/;
-use Try::Tiny;
 
 use Things::Trim;
 
