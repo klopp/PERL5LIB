@@ -25,13 +25,13 @@ CORE::state %DEF_CONFIG = (
 our $VERSION = 'v1.0';
 
 # ------------------------------------------------------------------------------
+## no critic (RequireArgUnpacking)
 sub new
 {
-    my ( $class, @args ) = @_;
+    my $class = shift;
 
     my $self = bless {}, $class;
-    my $opt;
-    ( $self, $opt ) = selfopt( $self, @args );
+    ( $self, my $opt ) = selfopt( $self, @_ );
     $self->{error} and return $self;
 
     if ( !$opt->{file} ) {

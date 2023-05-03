@@ -88,17 +88,17 @@
     Carp::confess $conf->{error} if $conf->{error};
     my $value = $conf->get( '/some/key' ); 
 ```
-Может искать конфиги по умолчанию ([Things::Config::Find->find()](https://metacpan.org/pod/Config::Find)), если имя файла одно из: `?`, `-`, `*`, `def`, `default`, `find`, `search`. 
 
+Может искать конфиги по умолчанию ([Things::Config::Find->find()](https://metacpan.org/pod/Config::Find)), если имя файла одно из: `?`, `-`, `*`, `def`, `default`, `find`, `search`. 
 
   * Ключи приводятся к нижнему регистру, если не `nocase`.
   * Скалярные значения декодируются в перловый `UTF8`.
-  * Все значения будут преобразованы в массивы.
+  * Все значения преобразуются в массивы.
   * `get()` в скалярном контексте возвращает последнее значение ключа, в списковом - все.
 
 ### [Things::Config::Std](Things/Config/Std.pm)
 
-Всё почти тоже самое, конфиг стандартный:
+Всё почти тоже самое, конфиг стандартный, но с вложенными секциями:
 
 ```ini
     # comment line, may start with [;] [:] ['] ["]
@@ -135,10 +135,11 @@
     # string my $string, 'abc';
     # или
     # string my $string => 'abc';
+    # say $string->ucfirst;
     # ...
 ```
 
-Плюс перегружены некоторые операторы, включая `++` и `--`.
+Плюс перегружены некоторые операторы, включая `++` (стандартный строковый инкремент), `--` (обратная процедура, чего нет в Perl), `+`, `+=`, `&`, `&=` (конкатенация), `*`  (аналогично `x`), etc.
 
 ### [Things::UUID](Things/UUID.pm)
 
@@ -157,14 +158,13 @@
     # ...
 ```
 
-**NB!** Зачем нужны пляски с `tie` здесь и в `Things::String`. Дело в том, что присвоения типа таких убивают объект и превращают его в банальный скаляр (или что там будет присвоено):
+**NB!** Зачем нужны пляски с `tie` в `Things::String` и `Things::UUID`. Дело в том, что такие присвоения:
 
 ```perl
     string my $string => 'xyz';
     $string = 'abc';
 ```
-
-Перегрузка глобального оператора `=` в Perl *невозможна by design*. А вот базовый класс `Things::TieData` отслеживает и корректно обрабатывает такие ситуации.
+ убивают объект и превращают его в банальный скаляр (или что там будет присвоено). Перегрузка глобального оператора `=` в Perl *невозможна by design*. А вот базовый класс `Things::TieData` отслеживает и корректно обрабатывает такие ситуации.
 
 ### [Things::Xargs](Things/Xargs.pm)
 
@@ -174,8 +174,20 @@
 
 Проверяет что ей передана ссылка на хэш или хэш. Нет - бросает исключение. Да - возвращает ссылку на хэш.
 
+#### sub selfopt(HASH or BLESSED, @ )
 
-### [Things::InstSock](Things/InstSock.pm)
+Выполняет все проверки из `xargs()` и выставляет `$self->{error}` в случае ошибок:
+
+```perl
+    sub new {
+        my $class = shift;
+        my $self = bless {}, $class;
+        ( $self, my $opt ) = selfopt( $self, @_ );
+        $self->{error} and return $self;
+    }  
+```
+
+### [Things::Instance::LockSock](Things/Instance/LockSock.pm)
 
 #### sub lock_instance( FILE )
 
@@ -192,18 +204,18 @@
     #    'warn' => qw/lock_and_cluck lock_and_carp/,
     # );
     #
-    use Things::Instance qw/lock_or_confess/;
+    use Things::Instance::LockSock qw/lock_or_confess/;
     lock_or_confess($LOCKFILE);
     #
     # OR [, OR...]
     #
-    use Things::Instance;
+    use Things::Instance::LockSock;
     my $lock = lock_instance($LOCKFILE);
     $lock->{errno} and Carp::croak $lock->{msg};
     #
     # OR
     #
-    use Things::Instance;
+    use Things::Instance::LockSock;
     my $lock = lock_instance($LOCKFILE);
     if ( $lock->{errno} ) {
         if ( $lock->{reason} eq 'open' ) {
@@ -226,7 +238,7 @@
     undef $lock;
 ```
 
-### [Things::InstFile](Things/InstFile.pm)
+### [Things::Instance::LockFile](Things/Instance/LockFile.pm)
 
 #### sub lock_instance( FILE [, close = BOOL] )
 
