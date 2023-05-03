@@ -3,7 +3,7 @@ package Atomic::Resource::XML;
 # ------------------------------------------------------------------------------
 use Modern::Perl;
 
-use Try::Tiny;
+use Syntax::Keyword::Try;
 use XML::Hash::XS;
 
 use Atomic::Resource::Data;
@@ -49,9 +49,9 @@ sub create_work_copy
     try {
         $self->{work} = xml2hash( $self->{work}, %{ $self->{params}->{xml} } );
     }
-    catch {
-        $error = sprintf 'XML :: %s', $_;
-    };
+    catch($e) {
+        $error = sprintf 'XML :: %s', $e;
+    }
     return $error;
 }
 
@@ -64,8 +64,8 @@ sub commit
     try {
         $self->{work} and $self->{work} = hash2xml( $self->{work}, %{ $self->{params}->{xml} } );
     }
-    catch {
-        $error = sprintf 'XML :: %s', $_;
+    catch($e) {
+        $error = sprintf 'XML :: %s', $e;
     };
     return $error ? $error : $self->SUPER::commit;
 }

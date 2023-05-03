@@ -5,7 +5,7 @@ use Modern::Perl;
 
 use Carp qw/confess cluck/;
 use JSON::XS;
-use Try::Tiny;
+use Syntax::Keyword::Try;
 
 use Atomic::Resource::Data;
 use base qw/Atomic::Resource::Data/;
@@ -46,8 +46,8 @@ sub new
             }
         }
     }
-    catch {
-        confess sprintf 'JSON :: %s', $_;
+    catch($e) {
+        confess sprintf 'JSON :: %s', $e;
     };
     return $self;
 }
@@ -62,9 +62,9 @@ sub create_work_copy
     try {
         $self->{work} = $self->{json}->decode( $self->{work} );
     }
-    catch {
-        $error = sprintf 'JSON :: %s', $_;
-    };
+    catch($e) {
+        $error = sprintf 'JSON :: %s', $e;
+    }
     return $error;
 }
 
@@ -77,9 +77,9 @@ sub commit
     try {
         $self->{work} and $self->{work} = $self->{json}->encode( $self->{work} );
     }
-    catch {
-        $error = sprintf 'JSON :: %s', $_;
-    };
+    catch($e) {
+        $error = sprintf 'JSON :: %s', $e;
+    }
     return $error ? $error : $self->SUPER::commit;
 }
 

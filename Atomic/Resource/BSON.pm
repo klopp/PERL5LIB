@@ -4,7 +4,7 @@ package Atomic::Resource::BSON;
 use Modern::Perl;
 
 use BSON;
-use Try::Tiny;
+use Syntax::Keyword::Try;
 
 use Atomic::Resource::Data;
 use base qw/Atomic::Resource::Data/;
@@ -47,9 +47,9 @@ sub create_work_copy
     try {
         $self->{work} = $self->{bson}->decode_one( $self->{work} );
     }
-    catch {
-        $error = sprintf 'BSON :: %s', $_;
-    };
+    catch($e) {
+        $error = sprintf 'BSON :: %s', $e;
+    }
     return $error;
 }
 
@@ -62,9 +62,9 @@ sub commit
     try {
         $self->{work} and $self->{work} = $self->{bson}->encode_one( $self->{work} );
     }
-    catch {
-        $error = sprintf 'BSON :: %s', $_;
-    };
+    catch($e) {
+        $error = sprintf 'BSON :: %s', $e;
+    }
     return $error ? $error : $self->SUPER::commit;
 }
 

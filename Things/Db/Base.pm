@@ -6,7 +6,7 @@ use warnings;
 use Carp qw/confess/;
 use Const::Fast;
 use JSON::XS qw/decode_json encode_json/;
-use Try::Tiny;
+use Syntax::Keyword::Try;
 
 use Things::Autoload;
 use base qw/Things::Autoload/;
@@ -102,7 +102,7 @@ sub cjget
     }
     catch {
         undef $rc;
-    };
+    }
     return $rc;
 }
 

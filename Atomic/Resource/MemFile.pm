@@ -6,7 +6,7 @@ use utf8::all;
 use open qw/:std :utf8/;
 
 use Path::Tiny;
-use Try::Tiny;
+use Syntax::Keyword::Try;
 
 use Atomic::Resource::Base;
 use base qw/Atomic::Resource::Base/;
@@ -50,9 +50,9 @@ sub create_backup_copy
     try {
         $self->{backup} = path( $self->{params}->{source} )->slurp( $self->{_filemode} );
     }
-    catch {
-        $error = sprintf 'MemFile :: %s', $_;
-    };
+    catch($e) {
+        $error = sprintf 'MemFile :: %s', $e;
+    }
     return $error;
 }
 
@@ -73,9 +73,9 @@ sub create_work_copy
     try {
         $self->{work} = path( $self->{params}->{source} )->slurp( $self->{_filemode} );
     }
-    catch {
-        $error = sprintf 'MemFile :: %s', $_;
-    };
+    catch($e) {
+        $error = sprintf 'MemFile :: %s', $e;
+    }
     return $error;
 }
 
@@ -96,9 +96,9 @@ sub commit
     try {
         $self->{work} and path( $self->{params}->{source} )->spew( $self->{_filemode}, $self->{work} );
     }
-    catch {
-        $error = sprintf 'MemFile :: "%s" (%s)', $self->{params}->{source}, $_
-    };
+    catch($e)) {
+        $error = sprintf 'MemFile :: "%s" (%s)', $self->{params}->{source}, $e;
+    }
     return $error;
 }
 
@@ -111,9 +111,9 @@ sub rollback
     try {
         $self->{backup} and path( $self->{params}->{source} )->spew( $self->{_filemode}, $self->{backup} );
     }
-    catch {
-        $error = sprintf 'MemFile :: "%s" (%s)', $self->{params}->{source}, $_;
-    };
+    catch($e) {
+        $error = sprintf 'MemFile :: "%s" (%s)', $self->{params}->{source}, $e;
+    }
     return $error;
 }
 

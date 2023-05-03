@@ -4,7 +4,6 @@ package Atomic::Resource::Imager;
 use Modern::Perl;
 
 use Imager;
-use Try::Tiny;
 
 use Atomic::Resource::Base;
 use base qw/Atomic::Resource::Base/;
