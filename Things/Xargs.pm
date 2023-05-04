@@ -36,15 +36,17 @@ sub xargs
     }
     return $args;
 }
+
 # ------------------------------------------------------------------------------
 ## no critic (RequireArgUnpacking)
 sub selfopt
 {
-    my ( $self, $opt ) = (shift);
+    my ( $self, @args, $opt ) = ( shift, @_ );
+
     try {
         ( ref $self eq $HASH || blessed $self )
             || Carp::croak sprintf 'First argument must be blessed or a %s reference!', $HASH;
-        $opt = xargs(@_);
+        $opt = xargs(@args);
     }
     catch {
         $self->{error} = $_;
