@@ -4,8 +4,6 @@ package Things::Inotify;
 use threads;
 use threads::shared;
 
-#use DDP;
-
 # ------------------------------------------------------------------------------
 use utf8::all;
 use open qw/:std :utf8/;
@@ -15,20 +13,15 @@ use warnings;
 # ------------------------------------------------------------------------------
 use Array::Utils qw/array_minus/;
 use Const::Fast;
-use Switch;
-
 use File::Which;
 use IPC::Open2;
+use Switch;
 use Time::HiRes qw/usleep/;
 use Time::Local qw/timelocal_posix/;
 use Time::Out qw/timeout/;
 
-use Things::Bool;
-use Things::Const qw/:types/;
-use Things::Xargs;
-
 # ------------------------------------------------------------------------------
-our $VERSION = 'v1.05';
+our $VERSION = 'v1.01';
 
 const my @ALL_EVENTS => qw/
     access modify attrib
@@ -37,8 +30,8 @@ const my @ALL_EVENTS => qw/
     move moved_to moved_from move_self
     unmount
     /;
-const my $DEF_TIMEOUT => 10;              # 10 sec
-const my $DEF_SLEEP   => 1000;            # 1 sec
+const my $DEF_READ_TO => 10;              # 10 sec
+const my $DEF_POLL_TO => 1000;            # 1 sec
 const my $I_BIN       => 'inotifywait';
 const my $I_CMD       =>
     '%s -q -m __I_REC__ __I_MOD__ __I_EVT__ --timefmt="%%Y-%%m-%%d %%X" --format="%%T %%w%%f [%%e]" "__I_DIR__"';
@@ -52,9 +45,18 @@ sub new
     my $class = shift;
 
     my $self = bless {}, $class;
-    ( $self, my $opt ) = selfopt( $self, @_ );
-    $self->{error} and return $self;
+    my $opt;
+    if ( @_ == 1 ) {
+        $opt = shift;
+    }
+    elsif ( @_ % 2 ) {
+        return $self->_hash_required();
+    }
+    else {
+        %{$opt} = @_;
+    }
 
+    ref $opt eq 'HASH' or return $self->_hash_required();
     $self->{inotify} = which $I_BIN;
     if ( !$self->{inotify} ) {
         $self->{error} = sprintf 'No required "%s" executable found!', $I_BIN;
@@ -62,16 +64,16 @@ sub new
     }
 
     $self->{events}  = $self->{recurse} = q{};
-    $self->{timeout} = $DEF_TIMEOUT;
-    $self->{sleep}   = $DEF_SLEEP;
+    $self->{read_to} = $DEF_READ_TO;
+    $self->{poll_to} = $DEF_POLL_TO;
 
     while ( my ( $key, $value ) = each %{$opt} ) {
         switch ($key) {
-            case /^dir$/i     { $self->_parse_dir($value)     or return $self; }
-            case /^mode$/i    { $self->_parse_mode($value)    or return $self; }
-            case /^events$/i  { $self->_parse_events($value)  or return $self; }
-            case /^recurse$/i { $self->_parse_recurse($value) or return $self; }
-            $self->{error} = sprintf 'Unknown parameter "%s"', $key;
+            case /^dir$/i     { $self->_parse_dir($value) or return $self; }
+            case /^mode$/i    { $self->_parse_mode($value) or return $self; }
+            case /^events$/i  { $self->_parse_events($value) or return $self; }
+            case /^recurse$/i { $self->{recurse} = $value ? '-r' : q{}; }
+            $self->{error} = sprintf 'Unknown parameter "%s".', $key;
             return $self;
         }
     }
@@ -101,7 +103,7 @@ sub run
             use sigtrap 'handler' => sub { }, 'ALRM';
 
             while (1) {
-                while ( $_ = timeout $self->{timeout} => sub { $stdout->getline } ) {
+                while ( $_ = timeout $self->{read_to} => sub { $stdout->getline } ) {
                     if (m{^
             $RX_DATE
             \s+
@@ -113,12 +115,22 @@ sub run
         }xsm
                         )
                     {
-                        lock( $self->{events_data} );
-                        my $data = &share( {} );
-                        push @{ $self->{events_data} }, $data;
+                        my @events = split /[,\s]+/, $8;
+                        my $data   = &share( {} );
+                        $data->{is_dir} = 0;
+                        $data->{events} = &share( [] );
+                        for (@events) {
+                            if ( $_ eq 'ISDIR' ) {
+                                $data->{is_dir} = 1;
+                            }
+                            else {
+                                push @{ $data->{events} }, $_;
+                            }
+                        }
                         $data->{path}   = $7;
-                        $data->{events} = $8;
                         $data->{tstamp} = timelocal_posix( $6, $5, $4, $3, $2 - 1, $1 - 1900 );
+                        lock $self->{events_data};
+                        push @{ $self->{events_data} }, $data;
                     }
                 }
             }
@@ -137,16 +149,17 @@ sub has_events
 sub wait_for_events
 {
     my ($self) = @_;
-    
-    while ( !@{ $self->{events_data} } ) {
-        usleep $self->{sleep};
-    }
-    lock( @{ $self->{events_data} } );
 
+    while ( !@{ $self->{events_data} } ) {
+        usleep $self->{poll_to};
+    }
+
+    lock @{ $self->{events_data} };
     my @events;
     while ( @{ $self->{events_data} } ) {
         push @events, pop @{ $self->{events_data} };
     }
+
     return @events;
 }
 
@@ -158,10 +171,18 @@ sub DESTROY
 }
 
 # ------------------------------------------------------------------------------
+sub _hash_required
+{
+    my ($self) = @_;
+    $self->{error} = 'HASH or HASH reference required.';
+    return $self;
+}
+
+# ------------------------------------------------------------------------------
 sub _invalid_param
 {
     my ( $self, $param ) = @_;
-    $self->{error} = sprintf 'Invalid parameter "%s"', $param;
+    $self->{error} = sprintf 'Invalid parameter "%s".', $param;
     return;
 }
 
@@ -169,7 +190,7 @@ sub _invalid_param
 sub _no_param
 {
     my ( $self, $param ) = @_;
-    $self->{error} = sprintf 'No required parameter "%s"', $param;
+    $self->{error} = sprintf 'No required parameter "%s".', $param;
     return;
 }
 
@@ -208,20 +229,12 @@ sub _parse_mode
 }
 
 # ------------------------------------------------------------------------------
-sub _parse_recurse
-{
-    my ( $self, $recurse ) = @_;
-    $self->{recurse} = parse_bool($recurse) ? '-r' : q{};
-    return $self;
-}
-
-# ------------------------------------------------------------------------------
 sub _parse_events
 {
     my ( $self, $inevents ) = @_;
 
     my @events;
-    if ( ref $inevents eq $ARRAY ) {
+    if ( ref $inevents eq 'ARRAY' ) {
         @events = map {lc} @{$inevents};
     }
     elsif ( !ref $inevents ) {
