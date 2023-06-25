@@ -31,11 +31,12 @@ const my @ALL_EVENTS => qw/
     move moved_to moved_from move_self
     unmount
     /;
-const my $DEF_READ_TO => 10;              # 10 sec
-const my $DEF_POLL_TO => 500;             # 0.5 sec
+const my $DEF_READ_TO => 10;
+const my $DEF_POLL_TO => 500;
 const my $I_BIN       => 'inotifywait';
-const my $I_CMD       =>
-    '%s -q -m __I_REC__ __I_MOD__ __I_EVT__ --timefmt="%%Y-%%m-%%d %%X" --format="%%T %%w%%f [%%e]" "__I_DIR__"';
+const my $I_CMD       => '%s -q -m __I_REC__ __I_MOD__ __I_EVT__ '
+    . '--timefmt="%%Y-%%m-%%d %%X" '
+    . '--format="%%T %%w%%f [%%e]" "__I_DIR__"';
 const my $RX_DATE => '(\d{4})[-](\d\d)[-](\d\d)';
 const my $RX_TIME => '(\d\d):(\d\d):(\d\d)';
 
@@ -119,9 +120,13 @@ sub run
                                 \s+
                                 \[(.+)\]
                             }xsm;
-                my @events = split /[,\s]+/sm, $8;
-                my $data   = shared_clone { events => [], is_dir => 0 };
-                for (@events) {
+                my $data = shared_clone {
+                    events => [],
+                    is_dir => 0,
+                    path   => $7,
+                    tstamp => timelocal_posix( $6, $5, $4, $3, $2 - 1, $1 - 1900 ),
+                };
+                for ( split /[,\s]+/sm, $8 ) {
                     if ( $_ eq 'ISDIR' ) {
                         $data->{is_dir} = 1;
                     }
@@ -129,8 +134,6 @@ sub run
                         push @{ $data->{events} }, $_;
                     }
                 }
-                $data->{path}   = $7;
-                $data->{tstamp} = timelocal_posix( $6, $5, $4, $3, $2 - 1, $1 - 1900 );
                 lock $self->{events_data};
                 push @{ $self->{events_data} }, $data;
             }
@@ -280,17 +283,19 @@ __END__
     my $watcher = Things::Inotify->new (
         dir     => '/tmp/',       # REQUIRED
         mode    => 'i',           # REQUIRED (i, inotify OR f, fanotify)
-        events  => LIST,          # OR comma-separated values
+        events  => [LIST],        # OR comma-separated values
         recurse => BOOL,
         read_to => SECONDS,
         poll_to => MILLISECONDS,
     );
     $watcher->run;
     while( my @events = $whatcher->wait_for_events ) {
-        say $_->{path};
-        say $_->{is_dir};
-        say $_->{tstamp};
-        say join q{,}, @{$_->{events});
+        for( @events ) {
+            say $_->{path};
+            say $_->{is_dir};
+            say $_->{tstamp};
+            say join q{,}, @{$_->{events});
+        }
     } 
 
 =head1 LICENSE AND COPYRIGHT
