@@ -1,15 +1,12 @@
 package Things::Inotify;
 
 # ------------------------------------------------------------------------------
-#use forks;
-#use forks::shared;
 use threads;
 use threads::shared;
 
 #use DDP;
 
 # ------------------------------------------------------------------------------
-#use v5.14;
 use utf8::all;
 use open qw/:std :utf8/;
 use strict;
@@ -47,8 +44,6 @@ const my $I_CMD       =>
     '%s -q -m __I_REC__ __I_MOD__ __I_EVT__ --timefmt="%%Y-%%m-%%d %%X" --format="%%T %%w%%f [%%e]" "__I_DIR__"';
 const my $RX_DATE => '(\d{4})[-](\d\d)[-](\d\d)';
 const my $RX_TIME => '(\d\d):(\d\d):(\d\d)';
-
-my @events : shared;
 
 # ------------------------------------------------------------------------------
 ## no critic (RequireArgUnpacking)
@@ -97,7 +92,8 @@ sub run
     $icmd =~ s/__I_REC__/$self->{recurse}/gsm;
 
     my $ipid = open2( my $stdout, undef, $icmd );
-    printf "0. %s\n", $icmd;
+
+    $self->{events_data} = &share( [] );
 
     threads->new(
         sub {
@@ -117,11 +113,11 @@ sub run
         }xsm
                         )
                     {
-                        lock(@events);
+                        lock( $self->{events_data} );
                         my $data = &share( {} );
-                        push @events, $data;
-                        $data->{e}      = $8;
+                        push @{ $self->{events_data} }, $data;
                         $data->{path}   = $7;
+                        $data->{events} = $8;
                         $data->{tstamp} = timelocal_posix( $6, $5, $4, $3, $2 - 1, $1 - 1900 );
                     }
                 }
@@ -134,22 +130,24 @@ sub run
 sub has_events
 {
     my ($self) = @_;
-    return scalar @events;
+    return scalar @{ $self->{events_data} };
 }
 
 # ------------------------------------------------------------------------------
 sub wait_for_events
 {
     my ($self) = @_;
-    my @e;
-    while ( !@events ) {
+    
+    while ( !@{ $self->{events_data} } ) {
         usleep $self->{sleep};
     }
-    lock(@events);
-    while (@events) {
-        push @e, pop @events;
+    lock( @{ $self->{events_data} } );
+
+    my @events;
+    while ( @{ $self->{events_data} } ) {
+        push @events, pop @{ $self->{events_data} };
     }
-    return @e;
+    return @events;
 }
 
 # ------------------------------------------------------------------------------
