@@ -267,3 +267,33 @@ sub _parse_events
 # ------------------------------------------------------------------------------
 1;
 __END__
+
+=head1 SYNOPSIS
+
+    my $watcher = Things::Inotify->new (
+        dir     => '/tmp/',       # REQUIRED
+        mode    => 'i',           # REQUIRED (i, inotify OR f, fanotify)
+        events  => LIST,          # OR comma-separated values
+        recurse => BOOL,
+        read_to => SECONDS,
+        poll_to => MILLISECONDS,
+    );
+    $watcher->run;
+    while( my @events = $whatcher->wait_for_events ) {
+        say $_->{path};
+        say $_->{is_dir};
+        say $_->{tstamp};
+        say join q{,}, @{$_->{events});
+    } 
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright (C) 2023 Vsevolod Lutovinov.
+
+This program is free software; you can redistribute it and/or modify it under 
+the same terms as Perl itself. The full text of this license can be found in 
+the LICENSE file included with this module.
+
+=head1 AUTHOR
+
+Contact the author at kloppspb@bk.ru
