@@ -15,6 +15,8 @@ use Array::Utils qw/array_minus/;
 use Const::Fast;
 use File::Which;
 use IPC::Open2;
+use POSIX qw/:sys_wait_h/;
+use Proc::Killfam;
 use Time::HiRes qw/usleep/;
 use Time::Local qw/timelocal_posix/;
 use Time::Out qw/timeout/;
@@ -30,7 +32,7 @@ const my @ALL_EVENTS => qw/
     unmount
     /;
 const my $DEF_READ_TO => 10;              # 10 sec
-const my $DEF_POLL_TO => 1000;            # 1 sec
+const my $DEF_POLL_TO => 500;             # 0.5 sec
 const my $I_BIN       => 'inotifywait';
 const my $I_CMD       =>
     '%s -q -m __I_REC__ __I_MOD__ __I_EVT__ --timefmt="%%Y-%%m-%%d %%X" --format="%%T %%w%%f [%%e]" "__I_DIR__"';
@@ -72,7 +74,7 @@ sub new
         events  => sub { $self->_parse_events(shift); },
         recurse => sub { $self->{recurse} = shift ? '-r' : q{}; },
         read_to => sub { $self->{read_to} = $self->_parse_to( shift, 'read_to' ); },
-        poll_to => sub { $self->{read_to} = $self->_parse_to( shift, 'poll_to' ); },
+        poll_to => sub { $self->{poll_to} = $self->_parse_to( shift, 'poll_to' ); },
         _       => sub {
             $self->{error} = sprintf 'Unknown parameter "%s".', shift;
         },
@@ -82,6 +84,7 @@ sub new
         $key = lc $key;
         $param_handlers{$key} ? $param_handlers{$key}->($value) : $param_handlers{_}->($key);
     }
+    $self->{poll_to} *= 1000;
 
     $self->{error} or ( $self->_check_param('dir') and $self->_check_param('mode') );
     return $self;
@@ -98,10 +101,9 @@ sub run
     $icmd =~ s/__I_MOD__/$self->{mode}/gsm;
     $icmd =~ s/__I_REC__/$self->{recurse}/gsm;
 
-    my $ipid = open2( my $stdout, undef, $icmd );
+    $self->{ipid} = open2( my $stdout, undef, $icmd );
 
     $self->{events_data} = shared_clone [];
-
     threads->new(
         sub {
             use sigtrap 'handler' => sub { threads->exit }, qw/normal-signals error-signals USR1 USR2/;
@@ -156,9 +158,8 @@ sub wait_for_events
     lock @{ $self->{events_data} };
     my @events;
     while ( @{ $self->{events_data} } ) {
-        push @events, pop @{ $self->{events_data} };
+        push @events, shift @{ $self->{events_data} };
     }
-
     return @events;
 }
 
@@ -167,6 +168,12 @@ sub DESTROY
 {
     my ($self) = @_;
     threads->exit;
+    if ( $self->{ipid} ) {
+        killfam 'TERM', ( $self->{ipid} );
+        while ( ( my $kidpid = waitpid -1, WNOHANG ) > 0 ) {
+            sleep 1;
+        }
+    }
     return $self;
 }
 
