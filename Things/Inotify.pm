@@ -15,7 +15,6 @@ use Array::Utils qw/array_minus/;
 use Const::Fast;
 use File::Which;
 use IPC::Open2;
-use Switch;
 use Time::HiRes qw/usleep/;
 use Time::Local qw/timelocal_posix/;
 use Time::Out qw/timeout/;
@@ -67,18 +66,24 @@ sub new
     $self->{read_to} = $DEF_READ_TO;
     $self->{poll_to} = $DEF_POLL_TO;
 
+    CORE::state %param_handlers = (
+        dir     => sub { $self->_parse_dir(shift); },
+        mode    => sub { $self->_parse_mode(shift); },
+        events  => sub { $self->_parse_events(shift); },
+        recurse => sub { $self->{recurse} = shift ? '-r' : q{}; },
+        read_to => sub { $self->{read_to} = $self->_parse_to( shift, 'read_to' ); },
+        poll_to => sub { $self->{read_to} = $self->_parse_to( shift, 'poll_to' ); },
+        _       => sub {
+            $self->{error} = sprintf 'Unknown parameter "%s".', shift;
+        },
+    );
+
     while ( my ( $key, $value ) = each %{$opt} ) {
-        switch ($key) {
-            case /^dir$/i     { $self->_parse_dir($value) or return $self; }
-            case /^mode$/i    { $self->_parse_mode($value) or return $self; }
-            case /^events$/i  { $self->_parse_events($value) or return $self; }
-            case /^recurse$/i { $self->{recurse} = $value ? '-r' : q{}; }
-            $self->{error} = sprintf 'Unknown parameter "%s".', $key;
-            return $self;
-        }
+        $key = lc $key;
+        $param_handlers{$key} ? $param_handlers{$key}->($value) : $param_handlers{_}->($key);
     }
 
-    $self->_check_param('dir') and $self->_check_param('mode');
+    $self->{error} or ( $self->_check_param('dir') and $self->_check_param('mode') );
     return $self;
 }
 
@@ -95,47 +100,41 @@ sub run
 
     my $ipid = open2( my $stdout, undef, $icmd );
 
-    $self->{events_data} = &share( [] );
+    $self->{events_data} = shared_clone [];
 
     threads->new(
         sub {
             use sigtrap 'handler' => sub { threads->exit }, qw/normal-signals error-signals USR1 USR2/;
             use sigtrap 'handler' => sub { }, 'ALRM';
 
-            while (1) {
-                while ( $_ = timeout $self->{read_to} => sub { $stdout->getline } ) {
-                    if (m{^
-            $RX_DATE
-            \s+
-            $RX_TIME
-            \s+
-            (.*)
-            \s+
-            \[(.+)\]
-        }xsm
-                        )
-                    {
-                        my @events = split /[,\s]+/, $8;
-                        my $data   = &share( {} );
-                        $data->{is_dir} = 0;
-                        $data->{events} = &share( [] );
-                        for (@events) {
-                            if ( $_ eq 'ISDIR' ) {
-                                $data->{is_dir} = 1;
-                            }
-                            else {
-                                push @{ $data->{events} }, $_;
-                            }
-                        }
-                        $data->{path}   = $7;
-                        $data->{tstamp} = timelocal_posix( $6, $5, $4, $3, $2 - 1, $1 - 1900 );
-                        lock $self->{events_data};
-                        push @{ $self->{events_data} }, $data;
+            while ( $_ = timeout $self->{read_to} => sub { $stdout->getline } ) {
+                next unless m{^
+                                $RX_DATE
+                                \s+
+                                $RX_TIME
+                                \s+
+                                (.*)
+                                \s+
+                                \[(.+)\]
+                            }xsm;
+                my @events = split /[,\s]+/sm, $8;
+                my $data   = shared_clone { events => [], is_dir => 0 };
+                for (@events) {
+                    if ( $_ eq 'ISDIR' ) {
+                        $data->{is_dir} = 1;
+                    }
+                    else {
+                        push @{ $data->{events} }, $_;
                     }
                 }
+                $data->{path}   = $7;
+                $data->{tstamp} = timelocal_posix( $6, $5, $4, $3, $2 - 1, $1 - 1900 );
+                lock $self->{events_data};
+                push @{ $self->{events_data} }, $data;
             }
         }
     )->detach;
+    return $self;
 }
 
 # ------------------------------------------------------------------------------
@@ -168,6 +167,7 @@ sub DESTROY
 {
     my ($self) = @_;
     threads->exit;
+    return $self;
 }
 
 # ------------------------------------------------------------------------------
@@ -203,6 +203,15 @@ sub _check_param
 }
 
 # ------------------------------------------------------------------------------
+sub _parse_to
+{
+    my ( $self, $to, $param ) = @_;
+    $to =~ /^\d+$/sm or return $self->_invalid_param($param);
+    $to > 0          or return $self->_invalid_param($param);
+    return $to;
+}
+
+# ------------------------------------------------------------------------------
 sub _parse_dir
 {
     my ( $self, $dir ) = @_;
@@ -216,10 +225,10 @@ sub _parse_mode
 {
     my ( $self, $mode ) = @_;
 
-    if ( $mode =~ /^i|inotify$/i ) {
+    if ( $mode =~ /^i|inotify$/ism ) {
         $self->{mode} = '-I';
     }
-    elsif ( $mode =~ /^f|fanotify$/i ) {
+    elsif ( $mode =~ /^f|fanotify$/ism ) {
         $self->{mode} = '-F';
     }
     else {
@@ -238,7 +247,7 @@ sub _parse_events
         @events = map {lc} @{$inevents};
     }
     elsif ( !ref $inevents ) {
-        @events = map {lc} split /[,\s]+/, $inevents;
+        @events = map {lc} split /[,\s]+/sm, $inevents;
     }
     else {
         return $self->_param_error('events');
