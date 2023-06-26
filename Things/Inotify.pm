@@ -33,9 +33,9 @@ const my @ALL_EVENTS => qw/
 const my $DEF_READ_TO => 10;
 const my $DEF_POLL_TO => 500;
 const my $I_BIN       => 'inotifywait';
-const my $I_CMD       => '%s -q -m __I_REC__ __I_MOD__ __I_EVT__ '
+const my $I_CMD       => '%s -q -m __I_REC__ __I_MOD__ __I_EVT__ __I_SYM__ '
     . '--timefmt="%%Y-%%m-%%d %%X" '
-    . '--format="%%T %%w%%f [%%e]" "__I_DIR__"';
+    . '--format="%%T %%w%%f [%%e]" "__I_PATH__"';
 const my $RX_DATE => '(\d{4})[-](\d\d)[-](\d\d)';
 const my $RX_TIME => '(\d\d):(\d\d):(\d\d)';
 
@@ -64,18 +64,19 @@ sub new
         return $self;
     }
 
-    $self->{events}  = $self->{recurse} = q{};
+    $self->{events}  = $self->{recurse} = $self->{symlinks} = q{};
     $self->{read_to} = $DEF_READ_TO;
     $self->{poll_to} = $DEF_POLL_TO;
 
     CORE::state %param_handlers = (
-        dir     => sub { $self->_parse_dir(shift); },
-        mode    => sub { $self->_parse_mode(shift); },
-        events  => sub { $self->_parse_events(shift); },
-        recurse => sub { $self->{recurse} = shift ? '-r' : q{}; },
-        read_to => sub { $self->{read_to} = $self->_parse_to( shift, 'read_to' ); },
-        poll_to => sub { $self->{poll_to} = $self->_parse_to( shift, 'poll_to' ); },
-        _       => sub {
+        path     => sub { $self->_parse_path(shift); },
+        mode     => sub { $self->_parse_mode(shift); },
+        events   => sub { $self->_parse_events(shift); },
+        recurse  => sub { $self->{recurse} = shift ? '-r' : q{}; },
+        read_to  => sub { $self->_parse_to( shift, 'read_to' ); },
+        poll_to  => sub { $self->_parse_to( shift, 'poll_to' ); },
+        symlinks => sub { $self->{symlinks} = shift ? q{} : '-P'; },
+        _        => sub {
             $self->{error} = sprintf 'Unknown parameter "%s".', shift;
         },
     );
@@ -83,10 +84,11 @@ sub new
     while ( my ( $key, $value ) = each %{$opt} ) {
         $key = lc $key;
         $param_handlers{$key} ? $param_handlers{$key}->($value) : $param_handlers{_}->($key);
+        $self->{error} and last;
     }
     $self->{poll_to} *= 1000;
 
-    $self->{error} or ( $self->_check_param('dir') and $self->_check_param('mode') );
+    $self->{error} or ( $self->_check_param('path') and $self->_check_param('mode') );
     return $self;
 }
 
@@ -95,10 +97,13 @@ sub run
 {
     my ($self) = @_;
 
+    return if $self->{error};
+
     my $icmd = sprintf $I_CMD, $self->{inotify};
-    $icmd =~ s/__I_DIR__/$self->{dir}/gsm;
-    $icmd =~ s/__I_EVT__/$self->{events}/gsm;
+    $icmd =~ s/__I_PATH__/$self->{path}/gsm;
+    $icmd =~ s/__I_SYM__/$self->{symlinks}/gsm;
     $icmd =~ s/__I_MOD__/$self->{mode}/gsm;
+    $icmd =~ s/__I_EVT__/$self->{events}/gsm;
     $icmd =~ s/__I_REC__/$self->{recurse}/gsm;
 
     $self->{ipid} = open2( my $stdout, undef, $icmd );
@@ -145,7 +150,14 @@ sub run
 sub list_events
 {
     my @events = sort @ALL_EVENTS;
-    return wantarray ? @events : \@events; 
+    return wantarray ? @events : \@events;
+}
+
+# ------------------------------------------------------------------------------
+sub error
+{
+    my ($self) = @_;
+    return $self->{error};
 }
 
 # ------------------------------------------------------------------------------
@@ -169,7 +181,7 @@ sub wait_for_events
     while ( @{ $self->{events_data} } ) {
         push @events, shift @{ $self->{events_data} };
     }
-    return @events;
+    return wantarray ? @events : \@events;
 }
 
 # ------------------------------------------------------------------------------
@@ -222,17 +234,19 @@ sub _check_param
 sub _parse_to
 {
     my ( $self, $to, $param ) = @_;
-    ( $to =~ /^\d+$/sm && $to > 0 ) and return $to;
-    $self->_invalid_param($param);
-    return 0;
+    if ( $to =~ /^\d+$/sm && $to > 0 ) {
+        $self->{$param} = $to;
+        return $self;
+    }
+    return $self->_invalid_param($param);
 }
 
 # ------------------------------------------------------------------------------
-sub _parse_dir
+sub _parse_path
 {
-    my ( $self, $dir ) = @_;
-    -d $dir or return $self->_invalid_param('dir');
-    $self->{dir} = $dir;
+    my ( $self, $path ) = @_;
+    -e $path or return $self->_invalid_param('path');
+    $self->{path} = $path;
     return $self;
 }
 
@@ -284,16 +298,13 @@ sub _parse_events
 1;
 __END__
 
+=head1 DESCRIPTION
+
+Watch for changes to files and directories using L<inotifywait|https://manpages.org/inotifywait>.
+
 =head1 SYNOPSIS
 
-    my $watcher = Things::Inotify->new (
-        dir     => '/tmp/',       # REQUIRED
-        mode    => 'i',           # REQUIRED (i, inotify OR f, fanotify)
-        events  => [LIST],        # OR comma-separated values
-        recurse => BOOL,
-        read_to => SECONDS,
-        poll_to => MILLISECONDS,
-    );
+    my $watcher = Things::Inotify->new( path => '/tmp', mode => 'i' );
     $watcher->run;
     while( my @events = $whatcher->wait_for_events ) {
         for( @events ) {
@@ -303,6 +314,99 @@ __END__
             say join q{,}, @{$_->{events});
         }
     } 
+
+=head1 CONFIGURATION AND ENVIRONMENT
+
+    my $whatcher = Things::Inotify->new( HASH );
+
+OR
+
+    my $whatcher = Things::Inotify->new( HASH REF );
+
+=head2 Required C<new> arguments:
+
+=over
+
+=item C<path>
+
+Path to watch.
+
+=item C<mode>
+
+Use C<inotify> (C<i>) or C<fanotify> (C<f>).
+
+=back 
+
+=head2 Optional C<new> arguments:
+
+=over
+
+=item C<events>
+
+=item C<symlinks>
+
+=item C<recurse>
+
+=item C<read_to>
+
+=item C<poll_to>
+
+=back 
+
+=head1 SUBROUTINES/METHODS
+
+=over
+
+=item run()
+
+Start watching.
+
+=item error()
+
+Get last error string.
+
+=item list_events()
+
+Return array or array ref with valid event names. Call anytime, as object method or without object.
+
+=item has_events()
+
+Return number of events available, use after C<run()>. 
+
+=item wait_for_events()
+
+Block watcher until it sees events, and then return them as a list or list reference.
+
+=back
+
+=head1 DIAGNOSTICS
+
+C<Things::Inotify::error()> method return last error string or C<undef>.
+
+
+=head1 DEPENDENCIES 
+
+=over
+
+=item L<Array::Utils>
+
+=item L<Const::Fast>
+
+=item L<File::Which>
+
+=item L<IPC::Open2>
+
+=item L<POSIX>
+
+=item L<Proc::Killfam>
+
+=item L<Time::HiRes>
+
+=item L<Time::Local>
+
+=item L<Time::Out>
+
+=back
 
 =head1 LICENSE AND COPYRIGHT
 
