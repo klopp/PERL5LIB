@@ -25,11 +25,10 @@ use Time::Out qw/timeout/;
 our $VERSION = 'v1.01';
 
 const my @ALL_EVENTS => qw/
-    access modify attrib
+    access modify attrib unmount
     close_write close_nowrite close
     open create delete delete_self
     move moved_to moved_from move_self
-    unmount
     /;
 const my $DEF_READ_TO => 10;
 const my $DEF_POLL_TO => 500;
@@ -143,6 +142,13 @@ sub run
 }
 
 # ------------------------------------------------------------------------------
+sub list_events
+{
+    my @events = sort @ALL_EVENTS;
+    return wantarray ? @events : \@events; 
+}
+
+# ------------------------------------------------------------------------------
 sub has_events
 {
     my ($self) = @_;
@@ -170,13 +176,13 @@ sub wait_for_events
 sub DESTROY
 {
     my ($self) = @_;
-    threads->exit;
     if ( $self->{ipid} ) {
         killfam 'TERM', ( $self->{ipid} );
         while ( ( my $kidpid = waitpid -1, WNOHANG ) > 0 ) {
             sleep 1;
         }
     }
+    threads->exit;
     return $self;
 }
 
@@ -216,9 +222,9 @@ sub _check_param
 sub _parse_to
 {
     my ( $self, $to, $param ) = @_;
-    $to =~ /^\d+$/sm or return $self->_invalid_param($param);
-    $to > 0          or return $self->_invalid_param($param);
-    return $to;
+    ( $to =~ /^\d+$/sm && $to > 0 ) and return $to;
+    $self->_invalid_param($param);
+    return 0;
 }
 
 # ------------------------------------------------------------------------------
