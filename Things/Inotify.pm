@@ -46,18 +46,16 @@ sub new
     my $class = shift;
 
     my $self = bless {}, $class;
-    my $opt;
-    if ( @_ == 1 ) {
-        $opt = shift;
+
+    my $opt = {};
+    if ( @_ > 0 ) {
+        $opt = @_ == 1 ? shift : {@_};
     }
-    elsif ( @_ % 2 ) {
-        return $self->_hash_required();
-    }
-    else {
-        %{$opt} = @_;
+    if ( ref $opt ne 'HASH' ) {
+        $self->{error} = 'HASH or HASH reference required.';
+        return $self;
     }
 
-    ref $opt eq 'HASH' or return $self->_hash_required();
     $self->{inotify} = which $I_BIN;
     if ( !$self->{inotify} ) {
         $self->{error} = sprintf 'No required "%s" executable found!', $I_BIN;
@@ -198,14 +196,6 @@ sub DESTROY
         }
     }
     threads->exit;
-    return $self;
-}
-
-# ------------------------------------------------------------------------------
-sub _hash_required
-{
-    my ($self) = @_;
-    $self->{error} = 'HASH or HASH reference required.';
     return $self;
 }
 
