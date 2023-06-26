@@ -106,12 +106,11 @@ sub run
 
     my $stdout;
     try {
-        $self->{ipid} = open2( $stdout, undef, $icmd );
+        $self->{ipid} = open2( $stdout, undef, $icmd . 'z' );
     }
     catch {
         $self->{error} = $_;
     };
-
     return if $self->{error};
 
     $self->{events_data} = shared_clone [];

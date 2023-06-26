@@ -25,7 +25,8 @@ sub unlock
     my ($self) = @_;
     try {
         $self->{mutex}->unlock;
-    };
+    }
+    catch { };
     return $self;
 }
 
