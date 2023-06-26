@@ -34,10 +34,10 @@ const my @ALL_EVENTS => qw/
 const my $DEF_READ_TO => 10;
 const my $DEF_POLL_TO => 500;
 const my $I_BIN       => 'inotifywait';
-const my $I_CMD       => '%s -q -m __I_REC__ __I_MOD__ __I_EVT__ __I_SYM__ '
-    . '--timefmt="%%Y-%%m-%%d %%X" ' . '--format="%%T %%w%%f [%%e]" "__I_PATH__"';
-const my $RX_DATE => '(\d{4})[-](\d\d)[-](\d\d)';
-const my $RX_TIME => '(\d\d):(\d\d):(\d\d)';
+const my $RX_DATE     => '(\d{4})[-](\d\d)[-](\d\d)';
+const my $RX_TIME     => '(\d\d):(\d\d):(\d\d)';
+
+my @IEXEC = ( '-q', '-m', '--timefmt="%Y-%m-%d %X"', '--format="%T %w%f [%e]"', );
 
 # ------------------------------------------------------------------------------
 ## no critic (RequireArgUnpacking)
@@ -64,7 +64,6 @@ sub new
         return $self;
     }
 
-    $self->{events}  = $self->{recurse} = $self->{symlinks} = q{};
     $self->{read_to} = $DEF_READ_TO;
     $self->{poll_to} = $DEF_POLL_TO;
 
@@ -72,10 +71,10 @@ sub new
         path     => sub { $self->_parse_path(shift); },
         mode     => sub { $self->_parse_mode(shift); },
         events   => sub { $self->_parse_events(shift); },
-        recurse  => sub { $self->{recurse} = shift ? '-r' : q{}; },
+        recurse  => sub { shift and unshift @IEXEC, '-r'; },
         read_to  => sub { $self->_parse_to( shift, 'read_to' ); },
         poll_to  => sub { $self->_parse_to( shift, 'poll_to' ); },
-        symlinks => sub { $self->{symlinks} = shift ? q{} : '-P'; },
+        symlinks => sub { shift or unshift @IEXEC, '-P'; },
         _        => sub {
             $self->{error} = sprintf 'Unknown parameter "%s".', shift;
         },
@@ -88,7 +87,7 @@ sub new
     }
     $self->{poll_to} *= 1000;
 
-    $self->{error} or ( $self->_check_param('path') and $self->_check_param('mode') );
+    $self->{error} or $self->_check_param('path');
     return $self;
 }
 
@@ -97,16 +96,13 @@ sub run
 {
     my ($self) = @_;
 
-    my $icmd = sprintf $I_CMD, $self->{inotify};
-    $icmd =~ s/__I_PATH__/$self->{path}/gsm;
-    $icmd =~ s/__I_SYM__/$self->{symlinks}/gsm;
-    $icmd =~ s/__I_MOD__/$self->{mode}/gsm;
-    $icmd =~ s/__I_EVT__/$self->{events}/gsm;
-    $icmd =~ s/__I_REC__/$self->{recurse}/gsm;
+    unshift @IEXEC, $self->{inotify};
+    push @IEXEC, q{"} . $self->{path} . q{"};
+    my $icmd = join q{ }, @IEXEC;
 
     my $stdout;
     try {
-        $self->{ipid} = open2( $stdout, undef, $icmd . 'z' );
+        $self->{ipid} = open2( $stdout, undef, $icmd );
     }
     catch {
         $self->{error} = $_;
@@ -263,10 +259,10 @@ sub _parse_mode
     my ( $self, $mode ) = @_;
 
     if ( $mode =~ /^i|inotify$/ism ) {
-        $self->{mode} = '-I';
+        unshift @IEXEC, '-I';
     }
     elsif ( $mode =~ /^f|fanotify$/ism ) {
-        $self->{mode} = '-F';
+        unshift @IEXEC, '-F';
     }
     else {
         return $self->_invalid_param('mode');
@@ -297,7 +293,7 @@ sub _parse_events
         @events = @ALL_EVENTS;
     }
 
-    $self->{events} = join q{ }, map {"-e $_"} @events;
+    unshift @IEXEC, map {"-e $_"} @events;
     return $self;
 }
 
