@@ -20,6 +20,7 @@ use Proc::Killfam;
 use Time::HiRes qw/usleep/;
 use Time::Local qw/timelocal_posix/;
 use Time::Out qw/timeout/;
+use Try::Catch;
 
 # ------------------------------------------------------------------------------
 our $VERSION = 'v1.01';
@@ -34,8 +35,7 @@ const my $DEF_READ_TO => 10;
 const my $DEF_POLL_TO => 500;
 const my $I_BIN       => 'inotifywait';
 const my $I_CMD       => '%s -q -m __I_REC__ __I_MOD__ __I_EVT__ __I_SYM__ '
-    . '--timefmt="%%Y-%%m-%%d %%X" '
-    . '--format="%%T %%w%%f [%%e]" "__I_PATH__"';
+    . '--timefmt="%%Y-%%m-%%d %%X" ' . '--format="%%T %%w%%f [%%e]" "__I_PATH__"';
 const my $RX_DATE => '(\d{4})[-](\d\d)[-](\d\d)';
 const my $RX_TIME => '(\d\d):(\d\d):(\d\d)';
 
@@ -97,8 +97,6 @@ sub run
 {
     my ($self) = @_;
 
-    return if $self->{error};
-
     my $icmd = sprintf $I_CMD, $self->{inotify};
     $icmd =~ s/__I_PATH__/$self->{path}/gsm;
     $icmd =~ s/__I_SYM__/$self->{symlinks}/gsm;
@@ -106,7 +104,15 @@ sub run
     $icmd =~ s/__I_EVT__/$self->{events}/gsm;
     $icmd =~ s/__I_REC__/$self->{recurse}/gsm;
 
-    $self->{ipid} = open2( my $stdout, undef, $icmd );
+    my $stdout;
+    try {
+        $self->{ipid} = open2( $stdout, undef, $icmd );
+    }
+    catch {
+        $self->{error} = $_;
+    };
+
+    return if $self->{error};
 
     $self->{events_data} = shared_clone [];
     threads->new(
@@ -164,6 +170,7 @@ sub error
 sub has_events
 {
     my ($self) = @_;
+    return if $self->{error} || !$self->{ipid};
     return scalar @{ $self->{events_data} };
 }
 
@@ -171,6 +178,7 @@ sub has_events
 sub wait_for_events
 {
     my ($self) = @_;
+    return if $self->{error} || !$self->{ipid};
 
     while ( !@{ $self->{events_data} } ) {
         usleep $self->{poll_to};
@@ -405,6 +413,8 @@ C<Things::Inotify::error()> method return last error string or C<undef>.
 =item L<Time::Local>
 
 =item L<Time::Out>
+
+=item L<Try::Catch>
 
 =back
 
