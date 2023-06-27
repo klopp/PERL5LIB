@@ -3,6 +3,7 @@ package Things::Config::Perl;
 # ------------------------------------------------------------------------------
 use strict;
 use warnings;
+use self;
 
 use Capture::Tiny qw/capture/;
 use English qw/-no_match_vars/;
@@ -16,7 +17,7 @@ our $VERSION = 'v1.1';
 # ------------------------------------------------------------------------------
 sub _parse
 {
-    my ( $self, $file, $opt ) = @_;
+    my ( $file, $opt ) = @args;
 
     capture {
         my $cfg = do $file;

@@ -9,6 +9,7 @@ use utf8::all;
 use open qw/:std :utf8/;
 use strict;
 use warnings;
+use self;
 
 # ------------------------------------------------------------------------------
 use Array::Utils qw/array_minus/;
@@ -45,14 +46,12 @@ my @IEXEC = ( '-q', '-m', '--timefmt="%Y-%m-%d %X"', '--format="%T %w%f [%e]"', 
 ## no critic (RequireArgUnpacking)
 sub new
 {
-    my $class = shift;
-
-    my $self = bless {
+    $self = bless {
         read_to => $DEF_READ_TO,
         poll_to => $DEF_POLL_TO,
-    }, $class;
+    }, $self;
 
-    my $opt = selfopt( $self, @_ );
+    my $opt = selfopt( $self, @args );
 
     $self->{inotify} = which $I_BIN;
     if ( !$self->{inotify} ) {
@@ -87,8 +86,6 @@ sub new
 # ------------------------------------------------------------------------------
 sub run
 {
-    my ($self) = @_;
-
     unshift @IEXEC, $self->{inotify};
     push @IEXEC, $self->{path};
     my $icmd = join q{ }, @IEXEC;
@@ -150,14 +147,12 @@ sub list_events
 # ------------------------------------------------------------------------------
 sub error
 {
-    my ($self) = @_;
     return $self->{error};
 }
 
 # ------------------------------------------------------------------------------
 sub has_events
 {
-    my ($self) = @_;
     return if $self->{error} || !$self->{ipid};
     return scalar @{ $self->{events_data} };
 }
@@ -165,7 +160,6 @@ sub has_events
 # ------------------------------------------------------------------------------
 sub wait_for_events
 {
-    my ($self) = @_;
     return if $self->{error} || !$self->{ipid};
 
     while ( !@{ $self->{events_data} } ) {
@@ -183,7 +177,6 @@ sub wait_for_events
 # ------------------------------------------------------------------------------
 sub DESTROY
 {
-    my ($self) = @_;
     if ( $self->{ipid} ) {
         killfam 'TERM', ( $self->{ipid} );
         while ( ( my $kidpid = waitpid -1, WNOHANG ) > 0 ) {
@@ -197,7 +190,7 @@ sub DESTROY
 # ------------------------------------------------------------------------------
 sub _invalid_param
 {
-    my ( $self, $param ) = @_;
+    my ( $param ) = @args;
     $self->{error} = sprintf 'Invalid parameter "%s".', $param;
     return;
 }
@@ -205,7 +198,7 @@ sub _invalid_param
 # ------------------------------------------------------------------------------
 sub _no_param
 {
-    my ( $self, $param ) = @_;
+    my ( $param ) = @args;
     $self->{error} = sprintf 'No required parameter "%s".', $param;
     return;
 }
@@ -213,7 +206,7 @@ sub _no_param
 # ------------------------------------------------------------------------------
 sub _check_param
 {
-    my ( $self, $param ) = @_;
+    my ( $param ) = @args;
     $self->{$param} or return $self->_no_param($param);
     return $self;
 }
@@ -221,7 +214,7 @@ sub _check_param
 # ------------------------------------------------------------------------------
 sub _parse_to
 {
-    my ( $self, $to, $param ) = @_;
+    my ( $to, $param ) = @args;
     if ( $to =~ /^\d+$/sm && $to > 0 ) {
         $self->{$param} = $to;
         return $self;
@@ -232,7 +225,7 @@ sub _parse_to
 # ------------------------------------------------------------------------------
 sub _parse_path
 {
-    my ( $self, $path ) = @_;
+    my ( $path ) = @args;
     -e $path or return $self->_invalid_param('path');
     $self->{path} = $path;
     return $self;
@@ -241,7 +234,7 @@ sub _parse_path
 # ------------------------------------------------------------------------------
 sub _parse_mode
 {
-    my ( $self, $mode ) = @_;
+    my ( $mode ) = @args;
 
     if ( $mode =~ /^i|inotify$/ism ) {
         unshift @IEXEC, '-I';
@@ -258,7 +251,7 @@ sub _parse_mode
 # ------------------------------------------------------------------------------
 sub _parse_events
 {
-    my ( $self, $inevents ) = @_;
+    my ( $inevents ) = @args;
 
     my @events;
     if ( ref $inevents eq 'ARRAY' ) {

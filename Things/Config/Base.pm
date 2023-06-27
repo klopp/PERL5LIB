@@ -3,6 +3,7 @@ package Things::Config::Base;
 # ------------------------------------------------------------------------------
 use strict;
 use warnings;
+use self;
 
 use Encode qw/decode_utf8/;
 use Path::ExpandTilde;
@@ -20,10 +21,8 @@ our $VERSION = 'v1.0';
 ## no critic (RequireArgUnpacking)
 sub new
 {
-    my $class = shift;
-
-    my $self = bless {}, $class;
-    ( $self, my $opt ) = selfopt( $self, @_ );
+    $self = bless {}, $self;
+    ( $self, my $opt ) = selfopt( $self, @args );
     $self->{error} and return $self;
 
     if ( !$opt->{file} ) {
@@ -59,7 +58,7 @@ sub new
 # ------------------------------------------------------------------------------
 sub _parse
 {
-    Carp::confess sprintf 'Method %s() must be overloaded', ( caller 0 )[3];
+    return Carp::confess sprintf 'Method %s() must be overloaded', ( caller 0 )[3];
 }
 
 # ------------------------------------------------------------------------------
@@ -85,14 +84,13 @@ sub _decode
 # ------------------------------------------------------------------------------
 sub error
 {
-    my ($self) = @_;
     return $self->{error};
 }
 
 # ------------------------------------------------------------------------------
 sub get
 {
-    my ( $self, $xpath ) = @_;
+    my ( $xpath ) = @args;
     my $rc = xget( $self->{_}, $xpath );
     $rc or return;
     return wantarray ? @{$rc} : $rc->[-1];

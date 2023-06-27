@@ -36,7 +36,7 @@ sub find
 # ------------------------------------------------------------------------------
 sub tested_files
 {
-    return wantarray ? @tested_files : [@tested_files];
+    return wantarray ? @tested_files : \@tested_files;
 }
 
 # ------------------------------------------------------------------------------

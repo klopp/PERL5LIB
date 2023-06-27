@@ -3,6 +3,7 @@ package Things::Config::Std;
 # ------------------------------------------------------------------------------
 use strict;
 use warnings;
+use self;
 
 use Path::Tiny;
 use String::Escape qw/unbackslash/;
@@ -16,7 +17,7 @@ our $VERSION = 'v1.1';
 # ------------------------------------------------------------------------------
 sub _parse
 {
-    my ( $self, $file, $opt ) = @_;
+    my ( $file, $opt ) = @args;
 
     my @lines   = path($file)->lines;
     my $lineno  = 0;
