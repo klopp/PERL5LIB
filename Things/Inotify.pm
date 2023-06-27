@@ -52,7 +52,7 @@ sub new
         poll_to => $DEF_POLL_TO,
     }, $class;
 
-    ( $self, my $opt ) = selfopt( $self, @_ );
+    my $opt = selfopt( $self, @_ );
 
     $self->{inotify} = which $I_BIN;
     if ( !$self->{inotify} ) {
