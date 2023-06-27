@@ -3,6 +3,7 @@ package Things::Instance::LockSock;
 # ------------------------------------------------------------------------------
 use strict;
 use warnings;
+use self;
 
 # ------------------------------------------------------------------------------
 use English qw/-no_match_vars/;
@@ -12,13 +13,11 @@ use Net::EmptyPort qw/empty_port/;
 use Things::Instance::LockBase;
 use base qw/Things::Instance::LockBase/;
 
-our $VERSION = 'v1.2';
+our $VERSION = 'v2.0';
 
 # ------------------------------------------------------------------------------
 sub _try_lock
 {
-    my ( $self, $opt ) = @_;
-
     if ( $self->{data} !~ /^\d+$/sm || $self->{data} >= 0xFFFF ) {
         $self->{data} = empty_port();
     }
@@ -26,15 +25,19 @@ sub _try_lock
     my $lockh;
     if ( !( $lockh = try_lock_socket( $self->{data} ) ) ) {
         close $self->{fh};
-        return {
-            port   => $self->{data},
-            reason => 'lock',
-            errno  => $ERRNO,
-            msg    => sprintf 'Can not lock process on port %u (%s)',
-            $self->{data}, $ERRNO,
-        };
+        $self->{errno} = $ERRNO;
+        $self->{error} = sprintf 'Can not lock process on port %u (%s)', $self->{data}, $ERRNO,;
     }
-    return $lockh;
+    else {
+        $self->{lockh} = $lockh;
+    }
+    return $self;
+}
+
+# ------------------------------------------------------------------------------
+sub DESTROY
+{
+    return $self;
 }
 
 # ------------------------------------------------------------------------------

@@ -22,6 +22,8 @@ use Time::Local qw/timelocal_posix/;
 use Time::Out qw/timeout/;
 use Try::Catch;
 
+use Things::Xargs;
+
 # ------------------------------------------------------------------------------
 our $VERSION = 'v1.01';
 
@@ -45,25 +47,18 @@ sub new
 {
     my $class = shift;
 
-    my $self = bless {}, $class;
+    my $self = bless {
+        read_to => $DEF_READ_TO,
+        poll_to => $DEF_POLL_TO,
+    }, $class;
 
-    my $opt = {};
-    if ( @_ > 0 ) {
-        $opt = @_ == 1 ? shift : {@_};
-    }
-    if ( ref $opt ne 'HASH' ) {
-        $self->{error} = 'HASH or HASH reference required.';
-        return $self;
-    }
+    ( $self, my $opt ) = selfopt( $self, @_ );
 
     $self->{inotify} = which $I_BIN;
     if ( !$self->{inotify} ) {
         $self->{error} = sprintf 'No required "%s" executable found!', $I_BIN;
-        return $self;
     }
-
-    $self->{read_to} = $DEF_READ_TO;
-    $self->{poll_to} = $DEF_POLL_TO;
+    $self->{error} and return $self;
 
     CORE::state %param_handlers = (
         path     => sub { $self->_parse_path(shift); },
@@ -95,7 +90,7 @@ sub run
     my ($self) = @_;
 
     unshift @IEXEC, $self->{inotify};
-    push @IEXEC, q{"} . $self->{path} . q{"};
+    push @IEXEC, $self->{path};
     my $icmd = join q{ }, @IEXEC;
 
     my $stdout;
