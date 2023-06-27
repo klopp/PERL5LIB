@@ -134,28 +134,20 @@ __END__
     use Things::Instance::LockSock;
     my $locker = Things::Instance::LockSock->new;
     my $lockh = $locker->lock;
-    $lockh->{errno} and Carp::croak $lockh->{msg};
-    #
-    # OR [, OR ...]
-    #
-    if ( $lockh->{errno} ) {
-        if ( $lockh->{reason} eq 'open' ) {
-            Carp::confess sprintf 'Open file "%s" (%s)!', $LOCKFILE, $lockh->{errno};
-        }
-        elsif ( $lock->{reason} eq 'lock' ) {
-            Carp::confess sprintf 'Lock process on port %u (%s)!', $lock->{port}, $lock->{errno};
-        }
-        elsif ( $lock->{reason} eq 'write' ) {
-            Carp::confess sprintf 'Write file "%s" (%s)!', $LOCKFILE, $lock->{errno};
-        }
-        else {
-            Carp::confess sprintf 'Unknown error reason (%s)!', $lock->{errno};
-        }
-        exit 1;
-    }
+    $lockh->{errno} and Carp::confess $lockh->{msg};
     #
     # do something
     #
+    undef $lock;
+
+    use Things::Instance::LockFile;
+    my $locker = Things::Instance::LockFile->new;
+    my $lockh = $locker->lock;
+    $lockh->{errno} and Carp::confess $lockh->{msg};
+    #
+    # do something
+    #
+    close $lock->{fh};
     undef $lock;
 =cut
 
