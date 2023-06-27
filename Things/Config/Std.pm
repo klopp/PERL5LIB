@@ -12,7 +12,7 @@ use Things::Trim;
 
 use Things::Config::Base;
 use base qw/Things::Config::Base/;
-our $VERSION = 'v1.1';
+our $VERSION = 'v2.0';
 
 # ------------------------------------------------------------------------------
 sub _parse

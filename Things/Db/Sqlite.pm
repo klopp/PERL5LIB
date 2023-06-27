@@ -10,7 +10,7 @@ use Module::Filename;
 use Things::Db::Base;
 use base qw/Things::Db::Base/;
 
-our $VERSION = 'v1.0';
+our $VERSION = 'v2.0';
 
 # ------------------------------------------------------------------------------
 sub new

@@ -12,7 +12,7 @@ use Things::Autoload;
 use base qw/Things::Autoload/;
 
 const my $CONFIG_TABLE => 'config';
-our $VERSION = 'v1.0';
+our $VERSION = 'v2.0';
 
 # ------------------------------------------------------------------------------
 sub new

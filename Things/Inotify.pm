@@ -26,7 +26,7 @@ use Try::Catch;
 use Things::Xargs;
 
 # ------------------------------------------------------------------------------
-our $VERSION = 'v1.01';
+our $VERSION = 'v2.00';
 
 const my @ALL_EVENTS => qw/
     access modify attrib unmount
