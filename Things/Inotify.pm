@@ -90,6 +90,7 @@ sub run
     push @IEXEC, $self->{path};
     my $icmd = join q{ }, @IEXEC;
 
+    $self->{running} = 1;
     my $stdout;
     try {
         $self->{ipid} = open2( $stdout, undef, $icmd );
@@ -102,7 +103,6 @@ sub run
     $self->{events_data} = shared_clone [];
     threads->new(
         sub {
-            use sigtrap 'handler' => sub { threads->exit }, qw/normal-signals error-signals USR1 USR2/;
             use sigtrap 'handler' => sub { }, 'ALRM';
 
             while ( $_ = timeout $self->{read_to} => sub { $stdout->getline } ) {
@@ -175,22 +175,31 @@ sub wait_for_events
 }
 
 # ------------------------------------------------------------------------------
+sub _term
+{
+    if ( $self->{running} ) {
+        if ( $self->{ipid} ) {
+            killfam 'TERM', ( $self->{ipid} );
+            while ( ( my $kidpid = waitpid -1, WNOHANG ) > 0 ) {
+                sleep 1;
+            }
+        }
+        threads->exit;
+        delete $self->{running};
+    }
+    return $self;
+}
+
+# ------------------------------------------------------------------------------
 sub DESTROY
 {
-    if ( $self->{ipid} ) {
-        killfam 'TERM', ( $self->{ipid} );
-        while ( ( my $kidpid = waitpid -1, WNOHANG ) > 0 ) {
-            sleep 1;
-        }
-    }
-    threads->exit;
-    return $self;
+    $self->{term};
 }
 
 # ------------------------------------------------------------------------------
 sub _invalid_param
 {
-    my ( $param ) = @args;
+    my ($param) = @args;
     $self->{error} = sprintf 'Invalid parameter "%s".', $param;
     return;
 }
@@ -198,7 +207,7 @@ sub _invalid_param
 # ------------------------------------------------------------------------------
 sub _no_param
 {
-    my ( $param ) = @args;
+    my ($param) = @args;
     $self->{error} = sprintf 'No required parameter "%s".', $param;
     return;
 }
@@ -206,7 +215,7 @@ sub _no_param
 # ------------------------------------------------------------------------------
 sub _check_param
 {
-    my ( $param ) = @args;
+    my ($param) = @args;
     $self->{$param} or return $self->_no_param($param);
     return $self;
 }
@@ -225,7 +234,7 @@ sub _parse_to
 # ------------------------------------------------------------------------------
 sub _parse_path
 {
-    my ( $path ) = @args;
+    my ($path) = @args;
     -e $path or return $self->_invalid_param('path');
     $self->{path} = $path;
     return $self;
@@ -234,7 +243,7 @@ sub _parse_path
 # ------------------------------------------------------------------------------
 sub _parse_mode
 {
-    my ( $mode ) = @args;
+    my ($mode) = @args;
 
     if ( $mode =~ /^i|inotify$/ism ) {
         unshift @IEXEC, '-I';
@@ -251,7 +260,7 @@ sub _parse_mode
 # ------------------------------------------------------------------------------
 sub _parse_events
 {
-    my ( $inevents ) = @args;
+    my ($inevents) = @args;
 
     my @events;
     if ( ref $inevents eq 'ARRAY' ) {
