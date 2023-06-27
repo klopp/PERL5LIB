@@ -2,6 +2,7 @@ package Things::Db::Base;
 
 use strict;
 use warnings;
+use self;
 
 use Const::Fast;
 use JSON::XS qw/decode_json encode_json/;
@@ -16,14 +17,12 @@ our $VERSION = 'v1.0';
 # ------------------------------------------------------------------------------
 sub new
 {
-    my ($class) = @_;
-    return bless { db => undef }, $class;
+    return bless { db => undef }, $self;
 }
 
 # ------------------------------------------------------------------------------
 sub get_object
 {
-    my ($self) = @_;
     $self->{db} or return Carp::confess sprintf 'Error: {db} field is empty in "%s()".', ( caller 1 )[3];
     return $self->{db};
 }
@@ -31,7 +30,7 @@ sub get_object
 # ------------------------------------------------------------------------------
 sub select_field
 {
-    my ( $self, $select, $field, $attrs, @bind ) = @_;
+    my ( $select, $field, $attrs, @bind ) = @args;
     my $rc = $self->selectrow_hashref( $select, $attrs || {}, @bind );
     $rc or return;
     return $rc->{$field};
@@ -40,7 +39,7 @@ sub select_field
 # ------------------------------------------------------------------------------
 sub select_fields
 {
-    my ( $self, $select, $field, @attrs ) = @_;
+    my ( $select, $field, @attrs ) = @args;
     my $rc = $self->selectall_arrayref( $select, { Slice => {} }, @attrs );
     $rc or return;
     my @fields = map { $_->{$field} } @{$rc};
@@ -59,7 +58,7 @@ sub upsert
     }
 =cut
 
-    my ( $self, $table, $key, $data ) = @_;
+    my ( $table, $key, $data ) = @args;
 
     my ( @fields, @values, @placeholders );
 
@@ -79,7 +78,7 @@ sub upsert
 # ------------------------------------------------------------------------------
 sub cget
 {
-    my ( $self, $name ) = @_;
+    my ( $name ) = @args;
     return $self->select_field( sprintf( 'SELECT value FROM %s WHERE name = ?', $CONFIG_TABLE ), 'value', undef,
         $name );
 }
@@ -87,14 +86,14 @@ sub cget
 # ------------------------------------------------------------------------------
 sub cset
 {
-    my ( $self, $name, $value ) = @_;
+    my ( $name, $value ) = @args;
     return $self->upsert( $CONFIG_TABLE, 'name', { name => $name, value => $value } );
 }
 
 # ------------------------------------------------------------------------------
 sub cjget
 {
-    my ( $self, $name ) = @_;
+    my ( $name ) = @args;
     my $rc = $self->cget($name);
     try {
         $rc and $rc = decode_json $rc;
@@ -108,7 +107,7 @@ sub cjget
 # ------------------------------------------------------------------------------
 sub cjset
 {
-    my ( $self, $name, $value ) = @_;
+    my ( $name, $value ) = @args;
     try {
         $value = encode_json $value;
     }
@@ -121,7 +120,6 @@ sub cjset
 # ------------------------------------------------------------------------------
 sub DESTROY
 {
-    my ($self) = @_;
     return $self->{db}->disconnect;
 }
 
