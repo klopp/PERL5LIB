@@ -6,7 +6,6 @@ use warnings;
 
 # ------------------------------------------------------------------------------
 use English qw/-no_match_vars/;
-####use Fcntl qw/:DEFAULT :flock SEEK_SET/;
 use Lock::Socket qw/try_lock_socket/;
 use Net::EmptyPort qw/empty_port/;
 

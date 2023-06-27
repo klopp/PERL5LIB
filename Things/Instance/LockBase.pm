@@ -132,7 +132,7 @@ __END__
 =head1 SYNOPSIS
  
     use Things::Instance::LockSock;
-    my $locker = Things::Instance::LockSock->new;
+    my $locker = Things::Instance::LockSock->new( file => '/run/myinstance.lock' );
     my $lockh = $locker->lock;
     $lockh->{errno} and Carp::confess $lockh->{msg};
     #
