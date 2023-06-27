@@ -15,7 +15,7 @@ use Things::Const qw/:types/;
 use Things::Xargs;
 use Things::Xget;
 
-our $VERSION = 'v1.0';
+our $VERSION = 'v2.0';
 
 # ------------------------------------------------------------------------------
 ## no critic (RequireArgUnpacking)

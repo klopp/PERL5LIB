@@ -2,6 +2,7 @@ package Things::AccessorsPP;
 
 use strict;
 use warnings;
+use self;
 
 use Array::Utils qw/intersect array_minus/;
 use autovivification;
@@ -30,8 +31,6 @@ BEGIN {
 #------------------------------------------------------------------------------
 sub import
 {
-    my $self = shift;
-
     my @exports;
     for (@_) {
         if ( ref $_ eq 'HASH' ) {
@@ -52,7 +51,7 @@ sub import
 #------------------------------------------------------------------------------
 sub _check_ehandler
 {
-    my ($ehandler) = @_;
+    my ($ehandler) = @args;
 
     return 1 if ref $OPT{$ehandler} eq 'CODE';
     return 1 if !ref $OPT{$ehandler} && Carp->can( $OPT{$ehandler} );
@@ -62,7 +61,7 @@ sub _check_ehandler
 #------------------------------------------------------------------------------
 sub _set_internal_data
 {
-    my ( $self, $opt ) = @_;
+    my ( $opt ) = @args;
 
     my $caller_pkg = ( caller 0 )[0];
     Carp::confess sprintf( '%s can deal with blessed references only', $caller_pkg )
@@ -89,9 +88,9 @@ sub _set_internal_data
     $OPT{lock}    //= 1;
     $OPT{emethod} //= $EMETHOD;
     $OPT{eaccess} //= $EACCESS;
-    _check_ehandler('emethod');
-    _check_ehandler('eaccess');
-    _check_ehandler('etype') if $OPT{etype};
+    $self->_check_ehandler('emethod');
+    $self->_check_ehandler('eaccess');
+    $self->_check_ehandler('etype') if $OPT{etype};
 
     %{ $self->{$PRIVATE_DATA}->{OPT} } = ( %OPT, %{$opt} );
 
@@ -118,7 +117,8 @@ sub _set_internal_data
 #------------------------------------------------------------------------------
 sub _access_error
 {
-    my ( $self, $field ) = @_;
+    my ( $field ) = @args;
+    
     my $eaccess = $self->{$PRIVATE_DATA}->{OPT}->{eaccess};
     if ( ref $eaccess eq 'CODE' ) {
         $eaccess->( $self, $field );
@@ -133,7 +133,8 @@ sub _access_error
 #------------------------------------------------------------------------------
 sub _method_error
 {
-    my ( $self, $method ) = @_;
+    my ( $method ) = @args;
+    
     my $emethod = $self->{$PRIVATE_DATA}->{OPT}->{emethod};
     if ( ref $emethod eq 'CODE' ) {
         $emethod->( $self, $method );
@@ -148,7 +149,7 @@ sub _method_error
 #------------------------------------------------------------------------------
 sub _check_etype
 {
-    my ( $self, $from, $to ) = @_;
+    my ( $from, $to ) = @args;
 
     my $etype = $self->{$PRIVATE_DATA}->{OPT}->{etype};
     return 1 unless $etype;
@@ -174,7 +175,8 @@ sub _check_etype
 #------------------------------------------------------------------------------
 sub create_accessors
 {
-    my ( $self, $params ) = @_;
+    my ( $params ) = @args;
+    
     my $package = ref $self;
     my ( $opt, $fields ) = _set_internal_data( $self, $params );
 
@@ -208,7 +210,7 @@ sub create_accessors
 #------------------------------------------------------------------------------
 sub create_property
 {
-    my ( $self, $params ) = @_;
+    my ( $params ) = @args;
     my $package = ref $self;
     my ( $opt, $fields ) = _set_internal_data( $self, $params );
     my $property = $opt->{property} || $PROP_METHOD;
@@ -246,7 +248,7 @@ sub create_property
 #------------------------------------------------------------------------------
 sub create_get_set
 {
-    my ( $self, $params ) = @_;
+    my ( $params ) = @args;
     my $package = ref $self;
     my ( $opt, $fields ) = _set_internal_data( $self, $params );
 

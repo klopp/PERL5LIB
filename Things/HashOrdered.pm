@@ -3,7 +3,7 @@ package Things::HashOrdered;
 use strict;
 use warnings;
 use self;
-our $VERSION = 'v1.0';
+our $VERSION = 'v2.0';
 
 # ------------------------------------------------------------------------------
 use Hash::Ordered;
