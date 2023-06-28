@@ -10,19 +10,20 @@ use Things::Trim;
 use Const::Fast;
 use English qw/-no_match_vars/;
 use POSIX qw/strftime/;
+use Time::HiRes qw/gettimeofday/;
 
 use Exporter qw/import/;
 our @EXPORT = qw/$LOG_EMERG $LOG_ALERT $LOG_CRIT $LOG_ERROR $LOG_WARN $LOG_NOTICE $LOG_INFO $LOG_DEBUG $LOG_TRACE/;
 
-const my $LOG_EMERG  => 0;
-const my $LOG_ALERT  => 1;
-const my $LOG_CRIT   => 2;
-const my $LOG_ERROR  => 3;
-const my $LOG_WARN   => 4;
-const my $LOG_NOTICE => 5;
-const my $LOG_INFO   => 6;
-const my $LOG_DEBUG  => 7;
-const my $LOG_TRACE  => 8;
+const our $LOG_EMERG  => 0;
+const our $LOG_ALERT  => 1;
+const our $LOG_CRIT   => 2;
+const our $LOG_ERROR  => 3;
+const our $LOG_WARN   => 4;
+const our $LOG_NOTICE => 5;
+const our $LOG_INFO   => 6;
+const our $LOG_DEBUG  => 7;
+const our $LOG_TRACE  => 8;
 
 const my %METHODS => (
     'EMERGENCY' => $LOG_EMERG,
@@ -44,7 +45,7 @@ const my %METHODS => (
     'TRC'       => $LOG_TRACE,
 );
 
-our $VERSION = 'v1.00';
+our $VERSION = 'v1.20';
 
 # ------------------------------------------------------------------------------
 sub new
@@ -73,7 +74,8 @@ sub new
 # ------------------------------------------------------------------------------
 sub _t
 {
-    return strftime '%F %X', localtime $self->{log}->{tstamp};
+    # $self => seconds
+    return strftime '%F %X', localtime $self;
 }
 
 # ------------------------------------------------------------------------------
@@ -86,12 +88,17 @@ sub _msg
         $self->{comments} or return;
         $msg =~ s/^[';#]+//sm;
     }
+    my ( $sec, $microsec ) = gettimeofday;
     my $method = $self->{methods}->{$level};
-    $self->{log}->{tstamp}            = time;
     $self->{log}->{pid}               = $PID;
     $self->{log}->{level}             = $method;
     $self->{log}->{ $self->{prefix} } = $msg;
-    return sprintf "%s %u %s %s", $self->_t, $PID, $method, $msg;
+    if ( $self->{microsec} ) {
+        $self->{log}->{tstamp} = $sec * 1_000_000 + $microsec;
+        return sprintf "%s.%6u %u %s %s", _t($sec), $microsec, $PID, $method, $msg;
+    }
+    $self->{log}->{tstamp} = $sec;
+    return sprintf "%s %u %s %s", _t($sec), $PID, $method, $msg;
 }
 
 # ------------------------------------------------------------------------------
@@ -115,3 +122,17 @@ sub _print
 # ------------------------------------------------------------------------------
 1;
 __END__
+
+=head1 SYNOPSIS
+
+    my $logger = Things::Log::XXX->new(
+        prefix => 'log', 
+        microsec => 1, 
+        level => $LOG_INFO, 
+        comments => 1 
+    );
+
+=cut
+
+# ------------------------------------------------------------------------------
+
