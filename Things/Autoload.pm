@@ -21,9 +21,9 @@ sub AUTOLOAD
     my $object = $self->get_object;
     {
         no strict 'refs';
-        *{$AUTOLOAD} = sub { shift; return $object->$method(@args); };
+        *{$AUTOLOAD} = sub { shift; return $object->$method(@_); };
     }
-    return $object->$method(@_);
+    return $object->$method(@args);
 }
 
 # ------------------------------------------------------------------------------
