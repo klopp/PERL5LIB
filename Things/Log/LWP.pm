@@ -8,6 +8,7 @@ use self;
 use HTTP::Request;
 use LWP::UserAgent;
 use URI::Encode qw/uri_encode/;
+# use URI::Escape qw/uri_escape/;
 
 use Things::Trim;
 
@@ -94,44 +95,14 @@ sub _print
 }
 
 # ------------------------------------------------------------------------------
-
-=for comment
-
-use LWP::UserAgent;
-$ua = LWP::UserAgent->new;
- 
-my $req = HTTP::Request->new(
-    POST => 'https://rt.cpan.org/Public/Dist/Display.html');
-$req->content_type('application/x-www-form-urlencoded');
-$req->content('Status=Active&Name=libwww-perl');
- 
-my $res = $ua->request($req);
-
-use LWP::UserAgent;
-$ua = LWP::UserAgent->new;
-$ua->agent("$0/0.1 " . $ua->agent);
-# $ua->agent("Mozilla/8.0") # pretend we are very capable browser
- 
-$req = HTTP::Request->new(
-   GET => 'http://search.cpan.org/dist/libwww-perl/');
-$req->header('Accept' => 'text/html');
- 
-# send request
-$res = $ua->request($req);
-
-=cut
-
-# ------------------------------------------------------------------------------
 1;
 __END__
 
 =head1 SYNOPSIS
 
-    my $logger = Things::Log::LWP->new( comments => 1 );  
-    # STDERR redirect:
-    # die    => $logger->emergency() + die
-    # warn   => $logger->warn()
-    # STDERR => $logger->notice()
+    my $logger = Things::Log::LWP->new( method => 'get', url => 'http://localhost/' );
+    # param:   LWP::UserAgent methods with data
+    # prefix:  data prefix (default: "log=...") 
 =cut
 
 # ------------------------------------------------------------------------------
