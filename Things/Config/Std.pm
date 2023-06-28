@@ -3,21 +3,21 @@ package Things::Config::Std;
 # ------------------------------------------------------------------------------
 use strict;
 use warnings;
+use self;
 
 use Path::Tiny;
 use String::Escape qw/unbackslash/;
-use Try::Tiny;
 
 use Things::Trim;
 
 use Things::Config::Base;
 use base qw/Things::Config::Base/;
-our $VERSION = 'v1.1';
+our $VERSION = 'v2.0';
 
 # ------------------------------------------------------------------------------
 sub _parse
 {
-    my ( $self, $file, $opt ) = @_;
+    my ( $file, $opt ) = @args;
 
     my @lines   = path($file)->lines;
     my $lineno  = 0;

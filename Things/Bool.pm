@@ -11,9 +11,25 @@ our @EXPORT = qw/
     true false True False TRUE FALSE
     parse_bool
     /;
-our $VERSION = 'v1.0';
+our @EXPORT_OK = ( @EXPORT, 'autodetect' );
+
+use Const::Fast;
 
 use Things::Const qw/:types/;
+
+const my %AUTODETECT => (
+    q{?}      => 1,
+    q{-}      => 1,
+    q{*}      => 1,
+    'auto'    => 1,
+    'def'     => 1,
+    'default' => 1,
+    'detect ' => 1,
+    'find'    => 1,
+    'search'  => 1,
+);
+
+our $VERSION = 'v1.0';
 
 # ------------------------------------------------------------------------------
 sub TRUE  {1}
@@ -22,6 +38,13 @@ sub true  {1}
 sub false {0}
 sub True  {1}
 sub False {0}
+
+# ------------------------------------------------------------------------------
+sub autodetect
+{
+## no critic (RequireArgUnpacking)
+    return exists $AUTODETECT{ $_[0] };
+}
 
 # ------------------------------------------------------------------------------
 sub parse_bool
@@ -34,11 +57,13 @@ sub parse_bool
 # ------------------------------------------------------------------------------
 sub set_true
 {
+## no critic (RequireArgUnpacking)
     $_[1] = 1;
     goto &set_bool;
 }
 
 # ------------------------------------------------------------------------------
+## no critic (RequireArgUnpacking)
 sub set_false
 {
     $_[1] = 0;
@@ -46,6 +71,7 @@ sub set_false
 }
 
 # ------------------------------------------------------------------------------
+## no critic (RequireArgUnpacking)
 sub set_bool
 {
 
@@ -68,7 +94,7 @@ sub set_bool
         return;
     }
     if ( ref \$_[0] ne $SCALAR ) {
-        Carp::cluck sprintf 'Target argument must be SCALAR REF at %s()', ( caller 0 )[3];
+        Carp::cluck sprintf 'Target argument must be %s REF at %s()', $SCALAR, ( caller 0 )[3];
         return;
     }
     $_[0] = ( @_ == 1 || $_[1] ) ? 1 : undef;

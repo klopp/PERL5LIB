@@ -1,9 +1,10 @@
 package Atomic::Resource::XmlFile;
 
 # ------------------------------------------------------------------------------
-use Modern::Perl;
+use strict;
+use warnings;
 
-use Try::Tiny;
+use Try::Catch;
 use XML::Hash::XS;
 
 use Atomic::Resource::MemFile;

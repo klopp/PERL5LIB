@@ -3,41 +3,26 @@ package Things::Config::Base;
 # ------------------------------------------------------------------------------
 use strict;
 use warnings;
+use self;
 
 use Encode qw/decode_utf8/;
 use Path::ExpandTilde;
-use Try::Tiny;
+use Try::Catch;
 
+use Things::Bool qw/autodetect/;
 use Things::Config::Find;
 use Things::Const qw/:types/;
 use Things::Xargs;
 use Things::Xget;
 
-CORE::state %DEF_CONFIG = (
-    q{?}      => 1,
-    q{-}      => 1,
-    q{*}      => 1,
-    'def'     => 1,
-    'default' => 1,
-    'find'    => 1,
-    'search'  => 1,
-);
-our $VERSION = 'v1.0';
+our $VERSION = 'v2.0';
 
 # ------------------------------------------------------------------------------
+## no critic (RequireArgUnpacking)
 sub new
 {
-    my ( $class, @args ) = @_;
-
-    my $self = bless {}, $class;
-
-    my $opt;
-    try {
-        $opt = xargs(@args);
-    }
-    catch {
-        $self->{error} = $_;
-    };
+    $self = bless {}, $self;
+    ( $self, my $opt ) = selfopt( $self, @args );
     $self->{error} and return $self;
 
     if ( !$opt->{file} ) {
@@ -45,7 +30,7 @@ sub new
         return $self;
     }
 
-    if ( $DEF_CONFIG{ $opt->{file} } ) {
+    if ( autodetect( $opt->{file} ) ) {
         $opt->{file} = Things::Config::Find->find;
         if ( !$opt->{file} ) {
             $self->{error} = sprintf 'Can not find DEFAULT config file from: %s',
@@ -73,7 +58,7 @@ sub new
 # ------------------------------------------------------------------------------
 sub _parse
 {
-    Carp::confess sprintf 'Method %s() must be overloaded', ( caller 0 )[3];
+    return Carp::confess sprintf 'Method %s() must be overloaded', ( caller 0 )[3];
 }
 
 # ------------------------------------------------------------------------------
@@ -99,14 +84,13 @@ sub _decode
 # ------------------------------------------------------------------------------
 sub error
 {
-    my ($self) = @_;
     return $self->{error};
 }
 
 # ------------------------------------------------------------------------------
 sub get
 {
-    my ( $self, $xpath ) = @_;
+    my ( $xpath ) = @args;
     my $rc = xget( $self->{_}, $xpath );
     $rc or return;
     return wantarray ? @{$rc} : $rc->[-1];

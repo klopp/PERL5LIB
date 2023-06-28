@@ -1,11 +1,11 @@
 package Atomic::Resource::JSON;
 
 # ------------------------------------------------------------------------------
-use Modern::Perl;
+use strict;
+use warnings;
 
-use Carp qw/confess cluck/;
 use JSON::XS;
-use Try::Tiny;
+use Try::Catch;
 
 use Atomic::Resource::Data;
 use base qw/Atomic::Resource::Data/;
@@ -42,12 +42,12 @@ sub new
             }
             else {
                 $params->{quiet}
-                    or cluck sprintf 'JSON :: %s() is not defined in JSON!', $method;
+                    or Carp::cluck sprintf 'JSON :: %s() is not defined in JSON!', $method;
             }
         }
     }
     catch {
-        confess sprintf 'JSON :: %s', $_;
+        Carp::confess sprintf 'JSON :: %s', $_;
     };
     return $self;
 }

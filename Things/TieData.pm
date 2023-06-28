@@ -20,7 +20,7 @@ sub STORE
     my ( $self, $data ) = @_;
 
     my $ref = ref $data;
-    if( !$ref or $ref =~/^$ARRAY|$HASH$/sm or blessed $ref ) {
+    if( !$ref || $ref =~/^$ARRAY|$HASH$/sm || blessed $ref ) {
         $self->{data} = $data;
     }
     return $self;

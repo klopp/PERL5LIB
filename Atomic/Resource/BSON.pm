@@ -1,10 +1,11 @@
 package Atomic::Resource::BSON;
 
 # ------------------------------------------------------------------------------
-use Modern::Perl;
+use strict;
+use warnings;
 
 use BSON;
-use Try::Tiny;
+use Try::Catch;
 
 use Atomic::Resource::Data;
 use base qw/Atomic::Resource::Data/;

@@ -1,10 +1,11 @@
 package Atomic::Resource::File;
 
 # ------------------------------------------------------------------------------
-use Modern::Perl;
+use strict;
+use warnings;
 
 use Path::Tiny;
-use Try::Tiny;
+use Try::Catch;
 
 use Atomic::Resource::Base;
 use base qw/Atomic::Resource::Base/;

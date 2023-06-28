@@ -2,7 +2,8 @@ package Things::HashOrdered;
 
 use strict;
 use warnings;
-our $VERSION = 'v1.0';
+use self;
+our $VERSION = 'v2.0';
 
 # ------------------------------------------------------------------------------
 use Hash::Ordered;
@@ -21,7 +22,7 @@ use overload
 
 sub new
 {
-    return shift->SUPER::new(@_);
+    return $self->SUPER::new(@args);
 }
 
 # ------------------------------------------------------------------------------

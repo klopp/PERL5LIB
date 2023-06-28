@@ -1,19 +1,21 @@
-package Things::Pg;
+package Things::Db::Pg;
 
 use strict;
 use warnings;
+use self;
+
 use DBI;
 
-use Things::Db;
-use base qw/Things::Db/;
+use Things::Db::Base;
+use base qw/Things::Db::Base/;
 
-our $VERSION = 'v1.0';
+our $VERSION = 'v2.0';
 
 # ------------------------------------------------------------------------------
 sub new
 {
-    my ( $class, $base, $user, $password, @dbargs ) = @_;
-    return bless { db => DBI->connect( sprintf( 'dbi:Pg:dbname=%s', $base ), $user, $password, @dbargs ) }, $class;
+    my ( $base, $user, $password, @dbargs ) = @args;
+    return bless { db => DBI->connect( sprintf( 'dbi:Pg:dbname=%s', $base ), $user, $password, @dbargs ) }, $self;
 }
 
 # ------------------------------------------------------------------------------
@@ -28,7 +30,7 @@ sub upsert
     }
 =cut
 
-    my ( $self, $table, $key, $data ) = @_;
+    my ( $table, $key, $data ) = @args;
 
     my ( @fields, @values, @set, @placeholders );
 

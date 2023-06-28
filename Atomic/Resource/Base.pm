@@ -1,9 +1,9 @@
 package Atomic::Resource::Base;
 
 # ------------------------------------------------------------------------------
-use Modern::Perl;
+use strict;
+use warnings;
 
-use Carp qw/confess/;
 use Things::Bool;
 use UUID qw/uuid/;
 
@@ -39,8 +39,8 @@ sub new
 
     my ( $class, $params ) = @_;
     $params //= {};
-    ref $params eq 'HASH' or confess 'Error: invalid {params} value.';
-    $params->{source}     or confess 'Error: no {source} in {params}.';
+    ref $params eq 'HASH' or Carp::confess 'Error: invalid {params} value.';
+    $params->{source}     or Carp::confess 'Error: no {source} in {params}.';
 
     my %data = (
         params   => $params,
@@ -52,7 +52,7 @@ sub new
 
     my $self  = bless \%data, $class;
     my $error = $self->check_params;
-    $error and confess sprintf 'Error: invalid parameters: %s', $error;
+    $error and Carp::confess sprintf 'Error: invalid parameters: %s', $error;
     return $self;
 }
 
@@ -81,7 +81,7 @@ sub is_modified
 sub _emethod
 {
     my ($self) = @_;
-    return confess sprintf 'Error: method "error = %s()" must be overloaded.', ( caller 1 )[3];
+    return Carp::confess sprintf 'Error: method "error = %s()" must be overloaded.', ( caller 1 )[3];
 }
 
 # ------------------------------------------------------------------------------

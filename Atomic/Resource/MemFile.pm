@@ -1,12 +1,13 @@
 package Atomic::Resource::MemFile;
 
 # ------------------------------------------------------------------------------
-use Modern::Perl;
+use strict;
+use warnings;
 use utf8::all;
 use open qw/:std :utf8/;
 
 use Path::Tiny;
-use Try::Tiny;
+use Try::Catch;
 
 use Atomic::Resource::Base;
 use base qw/Atomic::Resource::Base/;
@@ -97,7 +98,7 @@ sub commit
         $self->{work} and path( $self->{params}->{source} )->spew( $self->{_filemode}, $self->{work} );
     }
     catch {
-        $error = sprintf 'MemFile :: "%s" (%s)', $self->{params}->{source}, $_
+        $error = sprintf 'MemFile :: "%s" (%s)', $self->{params}->{source}, $_;
     };
     return $error;
 }

@@ -88,17 +88,17 @@
     Carp::confess $conf->{error} if $conf->{error};
     my $value = $conf->get( '/some/key' ); 
 ```
-Может искать конфиги по умолчанию ([Things::Config::Find->find()](https://metacpan.org/pod/Config::Find)), если имя файла одно из: `?`, `-`, `*`, `def`, `default`, `find`, `search`. 
 
+Может искать конфиги по умолчанию ([Things::Config::Find->find()](https://metacpan.org/pod/Config::Find)), если имя файла одно из: `?`, `-`, `*`, `def`, `default`, `find`, `search`. 
 
   * Ключи приводятся к нижнему регистру, если не `nocase`.
   * Скалярные значения декодируются в перловый `UTF8`.
-  * Все значения будут преобразованы в массивы.
+  * Все значения преобразуются в массивы.
   * `get()` в скалярном контексте возвращает последнее значение ключа, в списковом - все.
 
 ### [Things::Config::Std](Things/Config/Std.pm)
 
-Всё почти тоже самое, конфиг стандартный:
+Всё почти тоже самое, конфиг стандартный, но с вложенными секциями:
 
 ```ini
     # comment line, may start with [;] [:] ['] ["]
@@ -135,10 +135,11 @@
     # string my $string, 'abc';
     # или
     # string my $string => 'abc';
+    # say $string->ucfirst;
     # ...
 ```
 
-Плюс перегружены некоторые операторы, включая `++` и `--`.
+Плюс перегружены некоторые операторы, включая `++` (стандартный строковый инкремент), `--` (обратная процедура, чего нет в Perl), `+`, `+=`, `&`, `&=` (конкатенация), `*`  (аналогично `x`), etc.
 
 ### [Things::UUID](Things/UUID.pm)
 
@@ -157,14 +158,13 @@
     # ...
 ```
 
-**NB!** Зачем нужны пляски с `tie` здесь и в `Things::String`. Дело в том, что присвоения типа таких убивают объект и превращают его в банальный скаляр (или что там будет присвоено):
+**NB!** Зачем нужны пляски с `tie` в `Things::String` и `Things::UUID`. Дело в том, что такие присвоения:
 
 ```perl
     string my $string => 'xyz';
     $string = 'abc';
 ```
-
-Перегрузка глобального оператора `=` в Perl *невозможна by design*. А вот базовый класс `Things::TieData` отслеживает и корректно обрабатывает такие ситуации.
+ убивают объект и превращают его в банальный скаляр (или что там будет присвоено). Перегрузка глобального оператора `=` в Perl *невозможна by design*. А вот базовый класс `Things::TieData` отслеживает и корректно обрабатывает такие ситуации.
 
 ### [Things::Xargs](Things/Xargs.pm)
 
@@ -174,78 +174,109 @@
 
 Проверяет что ей передана ссылка на хэш или хэш. Нет - бросает исключение. Да - возвращает ссылку на хэш.
 
+#### sub selfopt(HASH or BLESSED, @ )
 
-### [Things::InstSock](Things/InstSock.pm)
-
-#### sub lock_instance( FILE )
-
-Проверка запущеного процесса и его блокировка. Возвращает либо хэш с описанием ошибки, либо ссылку на объект [Lock::Socket](https://metacpan.org/pod/Lock::Socket) (для снятия блокировки его нужно освободить):
+Выполняет все проверки из `xargs()` и выставляет `$self->{error}` в случае ошибок:
 
 ```perl
-    # our @EXPORT      = qw/lock_instance/;
-    # our @EXPORT_OK   = qw/ lock_instance 
-    #                        lock_or_croak lock_or_confess 
-    #                        lock_and_cluck lock_and_carp /;
-    # our %EXPORT_TAGS = (
-    #    'all'  => \@EXPORT_OK,
-    #    'die'  => qw/lock_or_croak lock_or_confess/,
-    #    'warn' => qw/lock_and_cluck lock_and_carp/,
-    # );
-    #
-    use Things::Instance qw/lock_or_confess/;
-    lock_or_confess($LOCKFILE);
-    #
-    # OR [, OR...]
-    #
-    use Things::Instance;
-    my $lock = lock_instance($LOCKFILE);
-    $lock->{errno} and Carp::croak $lock->{msg};
-    #
-    # OR
-    #
-    use Things::Instance;
-    my $lock = lock_instance($LOCKFILE);
-    if ( $lock->{errno} ) {
-        if ( $lock->{reason} eq 'open' ) {
-            Carp::confess sprintf 'Open file "%s" (%s)!', $LOCKFILE, $lock->{errno};
-        }
-        elsif ( $lock->{reason} eq 'lock' ) {
-            Carp::confess sprintf 'Lock process on port %u (%s)!', $lock->{port}, $lock->{errno};
-        }
-        elsif ( $lock->{reason} eq 'write' ) {
-            Carp::confess sprintf 'Write file "%s" (%s)!', $LOCKFILE, $lock->{errno};
-        }
-        else {
-            Carp::confess sprintf 'Unknown error reason (%s)!', $lock->{errno};
-        }
-        exit 1;
-    }
-    #
-    # do something
-    #
-    undef $lock;
+    sub new {
+        my $class = shift;
+        my $self = bless {}, $class;
+        my $opt = selfopt( $self, @_ );
+        $self->{error} and return $self;
+    }  
 ```
 
-### [Things::InstFile](Things/InstFile.pm)
+### [Things::Instance::LockSock](Things/Instance/LockSock.pm)
 
-#### sub lock_instance( FILE [, close = BOOL] )
+Проверка запущеного процесса и его блокировка. Использует [Lock::Socket](https://metacpan.org/pod/Lock::Socket):
 
-То же самое, но сместо сокета используется отслеживание процесса по `PID`. Функции те же, в случае успеха возвращают либо пустой хэш (`{}`), либо, если задан второй аргумент:
+#### sub new( FILE )
 
 ```perl
-    { fh => $lock_file_handle }
+    use Things::Instance::LockSock;
+    my $locker = Things::Instance::LockSock->new( '/run/myinstance.lock' );
+    $locker->error and Carp::confess $locker->error;
+    $locker->lock;
+    $locker->error and Carp::confess $locker->error;
 ```
-Это на тот случай, если процесс будет форкаться. В таком  случае необходимо записать в файл `PID` рабочего потомка и закрыть его, схематично:
+
+### sub lock()
+### sub lock_and_carp()
+### sub lock_and_cluck()
+### sub lock_or_cluck()
+### sub lock_or_confess()
+
+### [Things::Instance::LockFile](Things/Instance/LockFile.pm)
+
+#### sub new( FILE [, noclose = BOOL] )
+
+То же самое, но сместо сокета используется отслеживание процесса по `PID`. Методы те же.
+
+Второй аргумент на случай, если процесс будет форкаться. В таком  случае необходимо записать в файл `PID` рабочего потомка и закрыть его, схематично:
 
 ```perl
-    my $rc = lock_instance( $lockfile, 1 );
-    Carp::confess $rc->{msg} if $rc->{errno};
+    use Things::Instance::LockFile;
+    my $locker = Things::Instance::LockFile->new( '/run/myinstance.lock', 1 );
+    $locker->error and Carp::confess $locker->error;
+    $locker->lock;
+    $locker->error and Carp::confess $locker->error;
     exit if fork();
     exit if fork();
     # лучше не забывать про \n:
-    syswrite $rc->{fh}, "$PID\n";
-    close $rc->{fh};
+    syswrite $locker->{fh}, "$PID\n";
+    close $locker->{fh};
 ```
+
+### [Things::Log](Things/Log)
+
+Ну как же без логгера. Базовый конструктор:
+
+#### sub new( level => [$LOG_INFO], microsec => BOOL, comments => BOOL, ... )
+
+Все необязательные. Методы принимают формат `printf()`:
+
+##### emergency(), emerg()
+##### alert()
+##### critical(), crit()
+##### error(), err()
+##### warning(), warn()
+##### notice(), not()
+##### info(), inf()
+##### debug(), dbg()
+##### trace(), trc()
+
+В строке лога: время, PID, уровень, сообщение:
+
+```
+2023-06-28 22:09:08 391634 INFO ляляля    
+```
+
+Если задано `microsec`, то к времени добавляются микросекунды:
+
+```
+2023-06-28 22:09:08.562396 391634 INFO ляляля    
+```
+
+Строки, начинающиеся с символов `'`, `#` и `:` считаются комментариями и выводятся в лог только если `comments => TRUE`.
+
+#### [Things::Log::File](Things/Log/File.pm)
+
+Лог в файл. Имя файла в конструкторе:
+
+```perl
+    my $logger = Things::Log::File->new( file => '/var/log/my.log' );
+    Carp::confess $logger->{error} if $logger->{error};
+    $logger->info( 'Hello from %s!', $PROGRAM_NAME );  
+```
+
+#### [Things::Log::Std](Things/Log/Std.pm)
+  
+Лог в `STDOUT`. При этом перехватывается вывод в `STDERR` (`$logger->notice()`), перловые `warn` (`$logger->warn()`) и `die()` (`$logger->emergency()` + `die`).
+
+#### [Things::Log::LWP](Things/Log/LWP.pm)
+
+#### [Things::Log::Db](Things/Log/Db.pm)
 
 ### [Things::Sqlite](Things/Sqlite.pm), [Things::Mysql](Things/Mysql.pm),  [Things::Pg](Things/Pg.pm)
 

@@ -1,20 +1,22 @@
-package Things::Mysql;
+package Things::Db::Mysql;
 
 use strict;
 use warnings;
+use self;
+
 use DBI;
 
-use Things::Db;
-use base qw/Things::Db/;
+use Things::Db::Base;
+use base qw/Things::Db::Base/;
 
-our $VERSION = 'v1.0';
+our $VERSION = 'v2.0';
 
 # ------------------------------------------------------------------------------
 sub new
 {
-    my ( $class, $base, $user, $password, @dbargs ) = @_;
+    my ( $base, $user, $password, @dbargs ) = @args;
     return bless { db => DBI->connect( sprintf( 'dbi:mysql:dbname=%s', $base ), $user, $password, @dbargs ) },
-        $class;
+        $self;
 }
 
 # ------------------------------------------------------------------------------

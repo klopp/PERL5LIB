@@ -15,11 +15,13 @@ use Things::Const qw/:types/;
 use Scalar::Util qw/readonly/;
 
 # ------------------------------------------------------------------------------
+## no critic (RequireArgUnpacking)
 sub trim
 {
+    my ( $src, $mod ) = @_;
+
     CORE::state $TRIM_RX = qr{^\s+|\s+$};
 
-    my ( $src, $mod ) = @_;
     my $dest;
 
     if ( ref $src eq $ARRAY ) {

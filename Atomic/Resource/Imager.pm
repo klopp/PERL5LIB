@@ -1,10 +1,10 @@
 package Atomic::Resource::Imager;
 
 # ------------------------------------------------------------------------------
-use Modern::Perl;
+use strict;
+use warnings;
 
 use Imager;
-use Try::Tiny;
 
 use Atomic::Resource::Base;
 use base qw/Atomic::Resource::Base/;

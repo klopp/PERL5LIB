@@ -2,30 +2,28 @@ package Things::Autoload;
 
 use strict;
 use warnings;
+use self;
 
 # ------------------------------------------------------------------------------
 our $AUTOLOAD;
-our $VERSION = 'v1.0';
+our $VERSION = 'v2.0';
 
 #------------------------------------------------------------------------------
 sub get_object
 {
-    my ($self) = @_;
     return $self;
 }
 
 #------------------------------------------------------------------------------
 sub AUTOLOAD
 {
-    my $self = shift;
-
     ( my $method = $AUTOLOAD ) =~ s/.*:://gsm;
     my $object = $self->get_object;
     {
         no strict 'refs';
         *{$AUTOLOAD} = sub { shift; return $object->$method(@_); };
     }
-    return $object->$method(@_);
+    return $object->$method(@args);
 }
 
 # ------------------------------------------------------------------------------

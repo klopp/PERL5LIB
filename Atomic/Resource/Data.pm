@@ -1,9 +1,9 @@
 package Atomic::Resource::Data;
 
 # ------------------------------------------------------------------------------
-use Modern::Perl;
+use strict;
+use warnings;
 
-use Carp qw/cluck/;
 use Clone qw/clone/;
 use Scalar::Util qw/blessed/;
 
@@ -36,7 +36,7 @@ sub new
     my $blessed = blessed ${ $params->{source} };
     if ( $blessed && !$blessed->can('clone') ) {
         $params->{quiet}
-            or cluck sprintf 'Data :: %s->clone() is not defined, object cloning may be inaccurate!', $blessed;
+            or Carp::cluck sprintf 'Data :: %s->clone() is not defined, object cloning may be inaccurate!', $blessed;
     }
     return $class->SUPER::new($params);
 }
