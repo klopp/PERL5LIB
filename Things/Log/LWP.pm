@@ -8,6 +8,7 @@ use self;
 use HTTP::Request;
 use LWP::UserAgent;
 use URI::Encode qw/uri_encode/;
+
 # use URI::Escape qw/uri_escape/;
 
 use Things::Trim;
@@ -39,7 +40,8 @@ sub new
 
     $self->{ua} = LWP::UserAgent->new;
     while ( my ( $key, $value ) = each %{ $self->{param} } ) {
-        if ( $self->{ua}->can($key) ) {
+        if ( my $method = $self->{ua}->can($key) ) {
+            $self->{ua}->$method($value);
         }
     }
 
@@ -87,7 +89,7 @@ sub _post
 sub _print
 {
     my ($msg) = @args;
-    $msg = $self->{prefix} . q{=} . uri_encode(trim($msg));
+    $msg = $self->{prefix} . q{=} . uri_encode( trim($msg) );
     if ( $self->{method} eq 'POST' ) {
         return $self->_post($msg);
     }
