@@ -6,13 +6,14 @@ use warnings;
 use self;
 
 use English qw/-no_match_vars/;
-
 use Tie::STDERR \&_std_notice;
+
 use Things::Trim;
 
 use Things::Log::File;
 use base qw/Things::Log::File/;
 
+# ------------------------------------------------------------------------------
 our $VERSION = 'v1.00';
 CORE::state $std;
 
