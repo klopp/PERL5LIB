@@ -11,24 +11,37 @@ use Const::Fast;
 use English qw/-no_match_vars/;
 use POSIX qw/strftime/;
 
-const my %LEVELS => (
-    'EMERGENCY' => 0,
-    'EMERG'     => 0,
-    'ALERT'     => 1,
-    'CRITICAL'  => 2,
-    'CRIT'      => 2,
-    'ERROR'     => 3,
-    'ERR'       => 3,
-    'WARNING'   => 4,
-    'WARN'      => 4,
-    'NOTICE'    => 5,
-    'NOT'       => 5,
-    'INFO'      => 6,
-    'INF'       => 6,
-    'DEBUG'     => 7,
-    'DBG'       => 7,
-    'TRACE'     => 8,
-    'TRC'       => 8,
+use Exporter qw/import/;
+our @EXPORT = qw/$LOG_EMERG $LOG_ALERT $LOG_CRIT $LOG_ERROR $LOG_WARN $LOG_NOTICE $LOG_INFO $LOG_DEBUG $LOG_TRACE/;
+
+const my $LOG_EMERG  => 0;
+const my $LOG_ALERT  => 1;
+const my $LOG_CRIT   => 2;
+const my $LOG_ERROR  => 3;
+const my $LOG_WARN   => 4;
+const my $LOG_NOTICE => 5;
+const my $LOG_INFO   => 6;
+const my $LOG_DEBUG  => 7;
+const my $LOG_TRACE  => 8;
+
+const my %METHODS => (
+    'EMERGENCY' => $LOG_EMERG,
+    'EMERG'     => $LOG_EMERG,
+    'ALERT'     => $LOG_ALERT,
+    'CRITICAL'  => $LOG_CRIT,
+    'CRIT'      => $LOG_CRIT,
+    'ERROR'     => $LOG_ERROR,
+    'ERR'       => $LOG_CRIT,
+    'WARNING'   => $LOG_WARN,
+    'WARN'      => $LOG_WARN,
+    'NOTICE'    => $LOG_NOTICE,
+    'NOT'       => $LOG_NOTICE,
+    'INFO'      => $LOG_INFO,
+    'INF'       => $LOG_INFO,
+    'DEBUG'     => $LOG_DEBUG,
+    'DBG'       => $LOG_DEBUG,
+    'TRACE'     => $LOG_TRACE,
+    'TRC'       => $LOG_TRACE,
 );
 
 our $VERSION = 'v1.00';
@@ -38,16 +51,19 @@ sub new
 {
     $self = bless {@args}, $self;
 
-    if ( !$self->{level} || !exists $LEVELS{ $self->{level} } ) {
-        $self->{level} = 'INFO';
+    if ( !$self->{level} || !exists $METHODS{ $self->{level} } ) {
+        $self->{level} = $LOG_INFO;
     }
+    $self->{prefix} ||= 'log';
 
     my $package = ref $self;
-    while ( my ($key) = each %LEVELS ) {
-        my $method = lc $key;
+    for my $method ( sort { length $b <=> length $a } keys %METHODS ) {
+        my $level = $METHODS{$method};
+        $self->{methods}->{$level} = $method;
+        $method = lc $method;
         no strict 'refs';
         *{"$package\::$method"} = sub {
-            return shift->_log( $key, @_ );
+            return shift->_log( $level, @_ );
         }
     }
 
@@ -70,11 +86,12 @@ sub _msg
         $self->{comments} or return;
         $msg =~ s/^[';#]+//sm;
     }
+    my $method = $self->{methods}->{$level};
     $self->{log}->{tstamp}            = time;
     $self->{log}->{pid}               = $PID;
-    $self->{log}->{level}             = $level;
+    $self->{log}->{level}             = $method;
     $self->{log}->{ $self->{prefix} } = $msg;
-    return sprintf "%s %u %s %s", $self->_t, $PID, $level, $msg;
+    return sprintf "%s %u %s %s", $self->_t, $PID, $method, $msg;
 }
 
 # ------------------------------------------------------------------------------
@@ -82,7 +99,7 @@ sub _log
 {
     my ( $level, $fmt, @data ) = @args;
 
-    if ( $LEVELS{$level} <= $LEVELS{ $self->{level} } ) {
+    if ( $level <= $self->{level} ) {
         my $msg = $self->_msg( $level, $fmt, @data );
         $msg and $self->_print($msg);
     }

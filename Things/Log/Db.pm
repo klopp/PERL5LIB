@@ -23,7 +23,6 @@ sub new
         $self->{error} = 'No required "table" parameter.';
         return $self;
     }
-    $self->{prefix} ||= 'log';
     return $self;
 }
 

@@ -31,7 +31,6 @@ sub new
         $self->{error} = 'No required "url" parameter.';
         return $self;
     }
-    $self->{prefix} ||= 'log';
 
     $self->{ua} = LWP::UserAgent->new;
     while ( my ( $key, $value ) = each %{ $self->{params} } ) {
