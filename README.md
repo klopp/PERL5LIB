@@ -258,6 +258,7 @@
 2023-06-28 22:09:08.562396 391634 INFO ляляля    
 ```
 
+
 Строки, начинающиеся с символов `'`, `#` и `;` считаются комментариями и выводятся в лог только если `comments => TRUE`.
 
 ### [Things::Log::File](Things/Log/File.pm)
@@ -273,6 +274,7 @@
 #### [Things::Log::Std](Things/Log/Std.pm)
   
 Лог в `STDOUT`. При этом перехватывается вывод в `STDERR` (`$logger->notice()`), перловые `warn` (`$logger->warn()`) и `die()` (`$logger->emergency()` + `die`).
+
 
 ### [Things::Log::LWP](Things/Log/LWP.pm)
 
