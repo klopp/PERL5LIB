@@ -48,3 +48,14 @@ $SIG{__DIE__}  = sub {
 
 1;
 __END__
+
+=head1 SYNOPSIS
+
+    my $logger = Things::Log::Std->new( comments => 1 );  
+    # STDERR redirect:
+    # die    => $logger->emergency() + die
+    # warn   => $logger->warn()
+    # STDERR => $logger->notice()
+=cut
+
+# ------------------------------------------------------------------------------

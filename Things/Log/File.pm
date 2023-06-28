@@ -19,13 +19,18 @@ sub new
 {
     $self = $self->SUPER::new(@args);
 
-    $self->{file} or Carp::croak 'No required "file" parameter.';
+    if ( !$self->{file} ) {
+        $self->{error} = 'No required "file" parameter.';
+        return $self;
+    }
     if ( $self->{file} eq q{-} ) {
         $self->{fh} = *STDOUT;
     }
     else {
-        open( $self->{fh}, '>>', $self->{file} )
-            or Carp::croak sprintf 'Can not open log file "%s" (%s)', $self->{file}, $ERRNO;
+        if ( !open $self->{fh}, '>>', $self->{file} ) {
+            $self->{error} = sprintf 'Can not open file "%s" (%s)', $self->{file}, $ERRNO;
+            return $self;
+        }
     }
     $self->{fh}->autoflush(1);
 
@@ -55,3 +60,12 @@ sub DESTROY
 # ------------------------------------------------------------------------------
 1;
 __END__
+
+=head1 SYNOPSIS
+
+    my $logger = Things::Log::File->new( file => '/var/log/my.log', comments => 1 );
+    # file => '-' # use STDOUT    
+
+=cut
+
+# ------------------------------------------------------------------------------

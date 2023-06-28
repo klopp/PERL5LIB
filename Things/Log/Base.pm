@@ -64,16 +64,18 @@ sub _msg
     my ( $level, $fmt, @data ) = @args;
 
     my $msg = sprintf $fmt, @data;
-    if ( $msg =~ /^\s*?[';#\/]/sm ) {
+    if ( $msg =~ /^\s*[';#]/sm ) {
         $self->{comments} or return;
-        $msg =~ s/^\s*?[';#\/]+\s*//sm;
+        $msg =~ s/^\s*[';#]+//sm;
     }
-    return sprintf "%s %u %s %s\n", $self->_t, $PID, $level, $msg;
+    return sprintf "%s %u %s %s\n", _t(), $PID, $level, $msg;
 }
 
 # ------------------------------------------------------------------------------
 sub _log
 {
+    return $self if $self->{error};
+    
     my ( $level, $fmt, @data ) = @args;
 
     if ( $LEVELS{$level} <= $LEVELS{ $self->{level} } ) {
