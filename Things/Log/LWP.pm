@@ -40,6 +40,9 @@ sub new
 
     $self->{ua} = LWP::UserAgent->new;
     while ( my ( $key, $value ) = each %{ $self->{params} } ) {
+
+        # skip default_headers(), default_header():
+        next if $key =~ /header/ism;
         if ( my $method = $self->{ua}->can($key) ) {
             $self->{ua}->$method($value);
         }
@@ -54,37 +57,40 @@ sub new
 # ------------------------------------------------------------------------------
 sub _get
 {
-    my ($msg) = @args;
+    my ($form) = @args;
 
+    my $query = $self->{prefix} . q{=} . $form->{ $self->{prefix} };
+    if ( $self->{split} ) {
+        $query
+            = 'pid='
+            . $form->{pid}
+            . '&level='
+            . $form->{level}
+            . '&tstamp='
+            . $form->{tstamp} . q{&}
+            . $self->{prefix} . q{=}
+            . $form->{ $self->{prefix} };
+    }
     my $url = $self->{url};
     if ( -1 == index $url, q{?} ) {
-        $url .= q{?} . $msg;
+        $url .= q{?} . $query;
     }
     else {
-        $url .= q{&} . $msg;
+        $url .= q{&} . $query;
     }
-    my $rq = HTTP::Request->new( GET => $url );
-    my $rc = $self->{ua}->request($rq);
+    my $rc = $self->{ua}->get($url);
 
-    #if (!$response->is_success) {
-    #die $response->status_line;
-    #}
+    #if (!$response->is_success) { die $response->status_line; }
     return $self;
 }
 
 # ------------------------------------------------------------------------------
 sub _post
 {
-    my ($msg) = @args;
+    my $rc = $self->{ua}->post( $self->{url}, @args );
 
-    my $rq = HTTP::Request->new( POST => $self->{url} );
-    $rq->content_type('application/x-www-form-urlencoded');
-    $rq->content($msg);
-    my $rc = $self->{ua}->request($rq);
-
-    #if (!$response->is_success) {
-    #die $response->status_line;
-    #}
+    #print $rc->content;
+    #if (!$response->is_success) { die $response->status_line; }
     return $self;
 }
 
@@ -92,17 +98,21 @@ sub _post
 sub _print
 {
     my ($msg) = @args;
+
+    my %form;
     if ( $self->{split} ) {
-        $msg = sprintf 'tstamp=%s&pid=%s&level=%s&msg=%s', uri_encode( $self->{log}->{tstamp} ),
-            uri_encode( $self->{log}->{pid} ), uri_encode( $self->{log}->{level} ), uri_encode( $self->{log}->{msg} );
+        $form{tstamp}            = uri_encode( $self->{log}->{tstamp} );
+        $form{pid}               = uri_encode( $self->{log}->{pid} );
+        $form{level}             = uri_encode( $self->{log}->{level} );
+        $form{ $self->{prefix} } = uri_encode( $self->{log}->{ $self->{prefix} } );
     }
     else {
-        $msg = $self->{prefix} . q{=} . uri_encode($msg);
+        $form{ $self->{prefix} } = uri_encode($msg);
     }
     if ( $self->{method} eq 'POST' ) {
-        return $self->_post($msg);
+        return $self->_post( \%form );
     }
-    return $self->_get($msg);
+    return $self->_get( \%form );
 }
 
 # ------------------------------------------------------------------------------
@@ -114,7 +124,7 @@ __END__
     my $logger = Things::Log::LWP->new( method => 'get', url => 'http://localhost/' );
     # prefix:   data prefix (default: "log=...") 
     # OR
-    # split:    BOOL (send tstamp=, pid=, level=, msg=)
+    # split:    BOOL (if true send tstamp=, pid=, level=, msg=)
     # params:   LWP::UserAgent methods with data
     # headers:  HTTP::Headers pairs
 =cut

@@ -70,10 +70,10 @@ sub _msg
         $self->{comments} or return;
         $msg =~ s/^[';#]+//sm;
     }
-    $self->{log}->{tstamp} = time;
-    $self->{log}->{pid}    = $PID;
-    $self->{log}->{level}  = $level;
-    $self->{log}->{msg}    = $msg;
+    $self->{log}->{tstamp}            = time;
+    $self->{log}->{pid}               = $PID;
+    $self->{log}->{level}             = $level;
+    $self->{log}->{ $self->{prefix} } = $msg;
     return sprintf "%s %u %s %s", $self->_t, $PID, $level, $msg;
 }
 
