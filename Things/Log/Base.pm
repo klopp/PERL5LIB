@@ -1,13 +1,12 @@
-package Things::Log;
+package Things::Log::Base;
 
 # ------------------------------------------------------------------------------
 use strict;
 use warnings;
 use self;
 
-use English qw/-no_match_vars/;
 use Const::Fast;
-use Fcntl qw/:flock/;
+use English qw/-no_match_vars/;
 use POSIX qw/strftime/;
 
 const my %LEVELS => (
@@ -30,13 +29,16 @@ const my %LEVELS => (
     'TRC'       => 8,
 );
 
+our $VERSION = 'v1.00';
+
 # ------------------------------------------------------------------------------
 sub new
 {
     $self = bless {@args}, $self;
 
-    $self->{file} or Carp::croak 'No required "file" parameter.';
-    ( $self->{level} and exists $LEVELS{ $self->{level} } ) or $self->{level} = 'INFO';
+    if ( !$self->{level} || !exists $LEVELS{ $self->{level} } ) {
+        $self->{level} = 'INFO';
+    }
 
     my $package = ref $self;
     while ( my ($key) = each %LEVELS ) {
@@ -46,10 +48,6 @@ sub new
             return shift->_log( $key, @_ );
         }
     }
-
-    open( $self->{fh}, '>>', $self->{file} )
-        or Carp::croak sprintf 'Can not open log file "%s" (%s)', $self->{file}, $ERRNO;
-    $self->{fh}->autoflush(1);
 
     return $self;
 }
@@ -68,9 +66,9 @@ sub _msg
     my $msg = sprintf $fmt, @data;
     if ( $msg =~ /^\s*?[';#\/]/sm ) {
         $self->{comments} or return;
-        $msg =~ s/^\s*?[';#\/]+\s*//;
+        $msg =~ s/^\s*?[';#\/]+\s*//sm;
     }
-    return sprintf "%s %u %s %s\n", $self->_t(), $PID, $level, $msg;
+    return sprintf "%s %u %s %s\n", $self->_t, $PID, $level, $msg;
 }
 
 # ------------------------------------------------------------------------------
@@ -80,20 +78,15 @@ sub _log
 
     if ( $LEVELS{$level} <= $LEVELS{ $self->{level} } ) {
         my $msg = $self->_msg( $level, $fmt, @data );
-        if ($msg) {
-            flock( $self->{fh}, LOCK_EX );
-            $self->{fh}->print($msg);
-            flock( $self->{fh}, LOCK_UN );
-        }
+        $msg and $self->_print($msg);
     }
     return $self;
 }
 
 # ------------------------------------------------------------------------------
-sub DESTROY
+sub _print
 {
-    close $self->{fh};
-    return $self;
+    return Carp::croak sprintf 'Method %s() must be overloaded.', ( caller(0) )[3];
 }
 
 # ------------------------------------------------------------------------------
