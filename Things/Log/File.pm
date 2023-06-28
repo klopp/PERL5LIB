@@ -40,6 +40,8 @@ sub new
 # ------------------------------------------------------------------------------
 sub _print
 {
+    return $self unless $self->{fh};
+
     my ($msg) = @args;
 
     flock $self->{fh}, LOCK_EX;

@@ -80,8 +80,6 @@ sub _msg
 # ------------------------------------------------------------------------------
 sub _log
 {
-    return $self if $self->{error};
-
     my ( $level, $fmt, @data ) = @args;
 
     if ( $LEVELS{$level} <= $LEVELS{ $self->{level} } ) {

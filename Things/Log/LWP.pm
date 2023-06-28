@@ -5,11 +5,8 @@ use strict;
 use warnings;
 use self;
 
-use HTTP::Request;
 use LWP::UserAgent;
 use URI::Encode qw/uri_encode/;
-
-# use URI::Escape qw/uri_escape/;
 
 use Things::Trim;
 
@@ -79,8 +76,7 @@ sub _get
         $url .= q{&} . $query;
     }
     my $rc = $self->{ua}->get($url);
-
-    #if (!$response->is_success) { die $response->status_line; }
+    $rc->is_success or $self->{error} = $rc->status_line;
     return $self;
 }
 
@@ -88,9 +84,7 @@ sub _get
 sub _post
 {
     my $rc = $self->{ua}->post( $self->{url}, @args );
-
-    #print $rc->content;
-    #if (!$response->is_success) { die $response->status_line; }
+    $rc->is_success or $self->{error} = $rc->status_line;
     return $self;
 }
 
@@ -124,7 +118,7 @@ __END__
     my $logger = Things::Log::LWP->new( method => 'get', url => 'http://localhost/' );
     # prefix:   data prefix (default: "log=...") 
     # OR
-    # split:    BOOL (if true send tstamp=, pid=, level=, msg=)
+    # split:    BOOL (if true send tstamp=, pid=, level=, log=)
     # params:   LWP::UserAgent methods with data
     # headers:  HTTP::Headers pairs
 =cut
