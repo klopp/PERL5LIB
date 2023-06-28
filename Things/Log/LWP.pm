@@ -8,8 +8,6 @@ use self;
 use LWP::UserAgent;
 use URI::Encode qw/uri_encode/;
 
-use Things::Trim;
-
 use Things::Log::Base;
 use base qw/Things::Log::Base/;
 
