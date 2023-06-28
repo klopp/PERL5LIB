@@ -5,6 +5,8 @@ use strict;
 use warnings;
 use self;
 
+use Things::Trim;
+
 use Const::Fast;
 use English qw/-no_match_vars/;
 use POSIX qw/strftime/;
@@ -55,7 +57,7 @@ sub new
 # ------------------------------------------------------------------------------
 sub _t
 {
-    return strftime '%F %X', localtime;
+    return strftime '%F %X', localtime $self->{log}->{tstamp};
 }
 
 # ------------------------------------------------------------------------------
@@ -63,19 +65,23 @@ sub _msg
 {
     my ( $level, $fmt, @data ) = @args;
 
-    my $msg = sprintf $fmt, @data;
-    if ( $msg =~ /^\s*[';#]/sm ) {
+    my $msg = trim( sprintf $fmt, @data );
+    if ( $msg =~ /^[';#]/sm ) {
         $self->{comments} or return;
-        $msg =~ s/^\s*[';#]+//sm;
+        $msg =~ s/^[';#]+//sm;
     }
-    return sprintf "%s %u %s %s\n", _t(), $PID, $level, $msg;
+    $self->{log}->{tstamp} = time;
+    $self->{log}->{pid}    = $PID;
+    $self->{log}->{level}  = $level;
+    $self->{log}->{msg}    = $msg;
+    return sprintf "%s %u %s %s", $self->_t, $PID, $level, $msg;
 }
 
 # ------------------------------------------------------------------------------
 sub _log
 {
     return $self if $self->{error};
-    
+
     my ( $level, $fmt, @data ) = @args;
 
     if ( $LEVELS{$level} <= $LEVELS{ $self->{level} } ) {

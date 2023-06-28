@@ -43,7 +43,7 @@ sub _print
     my ($msg) = @args;
 
     flock $self->{fh}, LOCK_EX;
-    $self->{fh}->print($msg);
+    $self->{fh}->print( $msg . "\n" );
     flock $self->{fh}, LOCK_UN;
     return $self;
 }

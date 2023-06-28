@@ -39,10 +39,13 @@ sub new
     $self->{prefix} ||= 'log';
 
     $self->{ua} = LWP::UserAgent->new;
-    while ( my ( $key, $value ) = each %{ $self->{param} } ) {
+    while ( my ( $key, $value ) = each %{ $self->{params} } ) {
         if ( my $method = $self->{ua}->can($key) ) {
             $self->{ua}->$method($value);
         }
+    }
+    while ( my ( $key, $value ) = each %{ $self->{headers} } ) {
+        $self->{ua}->default_header( $key, $value );
     }
 
     return $self;
@@ -89,7 +92,13 @@ sub _post
 sub _print
 {
     my ($msg) = @args;
-    $msg = $self->{prefix} . q{=} . uri_encode( trim($msg) );
+    if ( $self->{split} ) {
+        $msg = sprintf 'tstamp=%s&pid=%s&level=%s&msg=%s', uri_encode( $self->{log}->{tstamp} ),
+            uri_encode( $self->{log}->{pid} ), uri_encode( $self->{log}->{level} ), uri_encode( $self->{log}->{msg} );
+    }
+    else {
+        $msg = $self->{prefix} . q{=} . uri_encode($msg);
+    }
     if ( $self->{method} eq 'POST' ) {
         return $self->_post($msg);
     }
@@ -103,8 +112,11 @@ __END__
 =head1 SYNOPSIS
 
     my $logger = Things::Log::LWP->new( method => 'get', url => 'http://localhost/' );
-    # param:   LWP::UserAgent methods with data
-    # prefix:  data prefix (default: "log=...") 
+    # prefix:   data prefix (default: "log=...") 
+    # OR
+    # split:    BOOL (send tstamp=, pid=, level=, msg=)
+    # params:   LWP::UserAgent methods with data
+    # headers:  HTTP::Headers pairs
 =cut
 
 # ------------------------------------------------------------------------------
