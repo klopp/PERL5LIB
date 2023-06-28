@@ -101,7 +101,7 @@
 Всё почти тоже самое, конфиг стандартный, но с вложенными секциями:
 
 ```ini
-    # comment line, may start with [;] [:] ['] ["]
+    # comment line, may start with [;] [:] [#] ['] ["]
     root_value "root value"
     multiline "multi\nline"
     [section]
@@ -201,11 +201,11 @@
     $locker->error and Carp::confess $locker->error;
 ```
 
-### sub lock()
-### sub lock_and_carp()
-### sub lock_and_cluck()
-### sub lock_or_cluck()
-### sub lock_or_confess()
+#### sub lock()
+#### sub lock_and_carp()
+#### sub lock_and_cluck()
+#### sub lock_or_cluck()
+#### sub lock_or_confess()
 
 ### [Things::Instance::LockFile](Things/Instance/LockFile.pm)
 
@@ -258,9 +258,10 @@
 2023-06-28 22:09:08.562396 391634 INFO ляляля    
 ```
 
-Строки, начинающиеся с символов `'`, `#` и `:` считаются комментариями и выводятся в лог только если `comments => TRUE`.
 
-#### [Things::Log::File](Things/Log/File.pm)
+Строки, начинающиеся с символов `'`, `#` и `;` считаются комментариями и выводятся в лог только если `comments => TRUE`.
+
+### [Things::Log::File](Things/Log/File.pm)
 
 Лог в файл. Имя файла в конструкторе:
 
@@ -274,9 +275,14 @@
   
 Лог в `STDOUT`. При этом перехватывается вывод в `STDERR` (`$logger->notice()`), перловые `warn` (`$logger->warn()`) и `die()` (`$logger->emergency()` + `die`).
 
-#### [Things::Log::LWP](Things/Log/LWP.pm)
 
-#### [Things::Log::Db](Things/Log/Db.pm)
+### [Things::Log::LWP](Things/Log/LWP.pm)
+
+Лог в URL.
+
+### [Things::Log::Db](Things/Log/Db.pm)
+
+Лог в любой объект, умеющий [DBI::do()](https://metacpan.org/pod/DBI#do).
 
 ### [Things::Sqlite](Things/Sqlite.pm), [Things::Mysql](Things/Mysql.pm),  [Things::Pg](Things/Pg.pm)
 
