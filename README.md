@@ -182,82 +182,101 @@
     sub new {
         my $class = shift;
         my $self = bless {}, $class;
-        ( $self, my $opt ) = selfopt( $self, @_ );
+        my $opt = selfopt( $self, @_ );
         $self->{error} and return $self;
     }  
 ```
 
 ### [Things::Instance::LockSock](Things/Instance/LockSock.pm)
 
-#### sub lock_instance( FILE )
+Проверка запущеного процесса и его блокировка. Использует [Lock::Socket](https://metacpan.org/pod/Lock::Socket):
 
-Проверка запущеного процесса и его блокировка. Возвращает либо хэш с описанием ошибки, либо ссылку на объект [Lock::Socket](https://metacpan.org/pod/Lock::Socket) (для снятия блокировки его нужно освободить):
+#### sub new( FILE )
 
 ```perl
-    # our @EXPORT      = qw/lock_instance/;
-    # our @EXPORT_OK   = qw/ lock_instance 
-    #                        lock_or_croak lock_or_confess 
-    #                        lock_and_cluck lock_and_carp /;
-    # our %EXPORT_TAGS = (
-    #    'all'  => \@EXPORT_OK,
-    #    'die'  => qw/lock_or_croak lock_or_confess/,
-    #    'warn' => qw/lock_and_cluck lock_and_carp/,
-    # );
-    #
-    use Things::Instance::LockSock qw/lock_or_confess/;
-    lock_or_confess($LOCKFILE);
-    #
-    # OR [, OR...]
-    #
     use Things::Instance::LockSock;
-    my $lock = lock_instance($LOCKFILE);
-    $lock->{errno} and Carp::croak $lock->{msg};
-    #
-    # OR
-    #
-    use Things::Instance::LockSock;
-    my $lock = lock_instance($LOCKFILE);
-    if ( $lock->{errno} ) {
-        if ( $lock->{reason} eq 'open' ) {
-            Carp::confess sprintf 'Open file "%s" (%s)!', $LOCKFILE, $lock->{errno};
-        }
-        elsif ( $lock->{reason} eq 'lock' ) {
-            Carp::confess sprintf 'Lock process on port %u (%s)!', $lock->{port}, $lock->{errno};
-        }
-        elsif ( $lock->{reason} eq 'write' ) {
-            Carp::confess sprintf 'Write file "%s" (%s)!', $LOCKFILE, $lock->{errno};
-        }
-        else {
-            Carp::confess sprintf 'Unknown error reason (%s)!', $lock->{errno};
-        }
-        exit 1;
-    }
-    #
-    # do something
-    #
-    undef $lock;
+    my $locker = Things::Instance::LockSock->new( '/run/myinstance.lock' );
+    $locker->error and Carp::confess $locker->error;
+    $locker->lock;
+    $locker->error and Carp::confess $locker->error;
 ```
+
+### sub lock()
+### sub lock_and_carp()
+### sub lock_and_cluck()
+### sub lock_or_cluck()
+### sub lock_or_confess()
 
 ### [Things::Instance::LockFile](Things/Instance/LockFile.pm)
 
-#### sub lock_instance( FILE [, close = BOOL] )
+#### sub new( FILE [, noclose = BOOL] )
 
-То же самое, но сместо сокета используется отслеживание процесса по `PID`. Функции те же, в случае успеха возвращают либо пустой хэш (`{}`), либо, если задан второй аргумент:
+То же самое, но сместо сокета используется отслеживание процесса по `PID`. Методы те же.
 
-```perl
-    { fh => $lock_file_handle }
-```
-Это на тот случай, если процесс будет форкаться. В таком  случае необходимо записать в файл `PID` рабочего потомка и закрыть его, схематично:
+Второй аргумент на случай, если процесс будет форкаться. В таком  случае необходимо записать в файл `PID` рабочего потомка и закрыть его, схематично:
 
 ```perl
-    my $rc = lock_instance( $lockfile, 1 );
-    Carp::confess $rc->{msg} if $rc->{errno};
+    use Things::Instance::LockFile;
+    my $locker = Things::Instance::LockFile->new( '/run/myinstance.lock', 1 );
+    $locker->error and Carp::confess $locker->error;
+    $locker->lock;
+    $locker->error and Carp::confess $locker->error;
     exit if fork();
     exit if fork();
     # лучше не забывать про \n:
-    syswrite $rc->{fh}, "$PID\n";
-    close $rc->{fh};
+    syswrite $locker->{fh}, "$PID\n";
+    close $locker->{fh};
 ```
+
+### [Things::Log](Things/Log)
+
+Ну как же без логгера. Базовый конструктор:
+
+#### sub new( level => [$LOG_INFO], microsec => BOOL, comments => BOOL, ... )
+
+Все необязательные. Методы принимают формат `printf()`:
+
+##### emergency(), emerg()
+##### alert()
+##### critical(), crit()
+##### error(), err()
+##### warning(), warn()
+##### notice(), not()
+##### info(), inf()
+##### debug(), dbg()
+##### trace(), trc()
+
+В строке лога: время, PID, уровень, сообщение:
+
+```
+2023-06-28 22:09:08 391634 INFO ляляля    
+```
+
+Если задано `microsec`, то к времени добавляются микросекунды:
+
+```
+2023-06-28 22:09:08.562396 391634 INFO ляляля    
+```
+
+Строки, начинающиеся с символов `'`, `#` и `:` считаются комментариями и выводятся в лог только если `comments => TRUE`.
+
+#### [Things::Log::File](Things/Log/File.pm)
+
+Лог в файл. Имя файла в конструкторе:
+
+```perl
+    my $logger = Things::Log::File->new( file => '/var/log/my.log' );
+    Carp::confess $logger->{error} if $logger->{error};
+    $logger->info( 'Hello from %s!', $PROGRAM_NAME );  
+```
+
+#### [Things::Log::Std](Things/Log/Std.pm)
+  
+Лог в `STDOUT`. При этом перехватывается вывод в `STDERR` (`$logger->notice()`), перловые `warn` (`$logger->warn()`) и `die()` (`$logger->emergency()` + `die`).
+
+#### [Things::Log::LWP](Things/Log/LWP.pm)
+
+#### [Things::Log::Db](Things/Log/Db.pm)
 
 ### [Things::Sqlite](Things/Sqlite.pm), [Things::Mysql](Things/Mysql.pm),  [Things::Pg](Things/Pg.pm)
 
