@@ -70,7 +70,6 @@ __END__
 =head1 SYNOPSIS
 
     my $logger = Things::Log::File->new( file => '/var/log/my.log', comments => 1 );
-    # file => '-' # use STDOUT    
 
 =cut
 
