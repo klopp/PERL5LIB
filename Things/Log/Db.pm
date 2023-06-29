@@ -40,6 +40,12 @@ sub new
 }
 
 # ------------------------------------------------------------------------------
+sub _q
+{
+    return $self->{dbobj}->q(@args);
+}
+
+# ------------------------------------------------------------------------------
 sub _print
 {
     my ($msg) = @args;
@@ -51,14 +57,15 @@ sub _print
         push @data, $self->{log}->{level};
         push @data, $self->{log}->{ $self->{prefix} };
         $q = sprintf q{
-            INSERT INTO %s (tstamp, pid, level, %s) VALUES(?, ?, ?, ?)       
-        }, $self->{table}, $self->{prefix};
+            INSERT INTO %s (%s, %s, %s, %s) VALUES(?, ?, ?, ?)       
+        }, $self->_q( $self->{table} ), $self->_q('tstamp'), $self->_q('pid'), $self->_q('level'),
+            $self->_q( $self->{prefix} );
     }
     else {
         push @data, $msg;
         $q = sprintf q{
-            INSERT INTO %s (`%s`) VALUES(?)       
-        }, $self->{table}, $self->{prefix};
+            INSERT INTO %s (%s) VALUES(?)       
+        }, $self->_q( $self->{table} ), $self->_q( $self->{prefix} );
     }
 
     defined $self->{dbobj}->do( $q, undef, @data )
