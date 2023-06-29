@@ -8,6 +8,7 @@ use utf8::all;
 
 use English qw/-no_match_vars/;
 use Fcntl qw/:flock/;
+use IO::Interactive qw/is_interactive/;
 
 use Things::Log::Base;
 use base qw/Things::Log::Base/;
@@ -57,7 +58,7 @@ sub _print
 sub DESTROY
 {
     if ( $self->{fh} ) {
-        -t $self->{fh} or close $self->{fh};
+        is_interactive( $self->{fh} ) or close $self->{fh};
     }
     return $self;
 }
