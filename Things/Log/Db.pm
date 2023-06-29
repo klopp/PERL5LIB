@@ -11,6 +11,19 @@ use base qw/Things::Log::Base/;
 our $VERSION = 'v1.00';
 
 # ------------------------------------------------------------------------------
+#   dbobj => OBJECT
+#       DBI object with do()
+#   table => STRING
+#       table name
+#   prefix => [STRING]
+#       table column with log data, default 'log'
+#   split => [FALSE]
+#       if TRUE log data will be splitted:
+#           log=message
+#           tstamp=seconds OR milliseconds
+#           level=LOG_LEVEL
+#           pid=PID
+# ------------------------------------------------------------------------------
 sub new
 {
     $self = $self->SUPER::new(@args);
