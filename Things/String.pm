@@ -54,6 +54,9 @@ use overload
 ## no critic (RequireArgUnpacking)
 sub string
 {
+    if ( @_ == 1 ) {
+        unshift @_, undef;
+    }
     if ( @_ > 2 or !exists $_[0] or defined $_[0] ) {
         Carp::confess 'Usage: string my $string [=> "string"] or [, "string"];';
     }
