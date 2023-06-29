@@ -23,6 +23,7 @@ our $VERSION = 'v1.00';
 #           tstamp=seconds OR milliseconds
 #           level=LOG_LEVEL
 #           pid=PID
+#           exe=$PROGRAM_NAME @ARGV
 # ------------------------------------------------------------------------------
 sub new
 {
@@ -48,20 +49,21 @@ sub _print
     if ( $self->{split} ) {
         push @data, $self->{log}->{tstamp};
         push @data, $self->{log}->{pid};
+        push @data, $self->{log}->{exe};
         push @data, $self->{log}->{level};
         push @data, $self->{log}->{ $self->{prefix} };
         $q = sprintf q{
-            INSERT INTO %s (tstamp, pid, level, %s) VALUES(?, ?, ?, ?)       
+            INSERT INTO `%s` (`tstamp`, `pid`, `exe`, `level`, `%s`) VALUES(?, ?, ?, ?, ?)       
         }, $self->{table}, $self->{prefix};
     }
     else {
         push @data, $msg;
         $q = sprintf q{
-            INSERT INTO %s (`%s`) VALUES(?)       
+            INSERT INTO `%s` (`%s`) VALUES(?)       
         }, $self->{table}, $self->{prefix};
     }
 
-    defined $self->{dbobj}->do( $q, undef, @data )
+    defined $self->{dbobj}->do( $self->{dbobj}->qi($q), undef, @data )
         or $self->{error} = $self->{dbobj}->errstr;
 
     return $self;

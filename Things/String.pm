@@ -3,13 +3,14 @@ package Things::String;
 # ------------------------------------------------------------------------------
 use strict;
 use warnings;
+
 # ------------------------------------------------------------------------------
+use Things::TieData;
+use base qw/Things::TieData/;
+
 use base qw/Exporter/;
 our @EXPORT  = qw/string/;
 our $VERSION = 'v1.1';
-
-use Things::TieData;
-use base qw/Things::TieData/;
 
 # ------------------------------------------------------------------------------
 use overload
@@ -22,6 +23,9 @@ use overload
     # copy constructor:
     q{=} => sub {
     shift;
+    },
+    q{+=} => sub {
+        shift->{data} .= shift;
     },
 
     # concat:
@@ -59,7 +63,6 @@ sub string
 sub lc
 {
     my ($self) = @_;
-
     if ( ref $self eq __PACKAGE__ ) {
         $self->{data} = CORE::lc $self->{data};
         return $self->{data};
@@ -71,7 +74,6 @@ sub lc
 sub lcfirst
 {
     my ($self) = @_;
-
     if ( ref $self eq __PACKAGE__ ) {
         $self->{data} = CORE::lcfirst $self->{data};
         return $self->{data};
@@ -94,7 +96,6 @@ sub uc
 sub ucfirst
 {
     my ($self) = @_;
-
     if ( ref $self eq __PACKAGE__ ) {
         $self->{data} = CORE::ucfirst $self->{data};
         return $self->{data};
@@ -106,39 +107,58 @@ sub ucfirst
 sub trim
 {
     my ($self) = @_;
-    ...
+    if ( ref $self eq __PACKAGE__ ) {
+        Things::Trim::trim( $self->{data}, 1 );
+        return $self->{data};
+    }
+    return trim $self;
 }
 
 # ------------------------------------------------------------------------------
 sub chop
 {
     my ($self) = @_;
-    return CORE::chop $self->{data};
+    if ( ref $self eq __PACKAGE__ ) {
+        CORE::chop $self->{data};
+        return $self->{data};
+    }
+    CORE::chop $self;
+    return $self;
 }
 
-=for comment
 # ------------------------------------------------------------------------------
 sub chomp
 {
     my ($self) = @_;
-    ...
+    if ( ref $self eq __PACKAGE__ ) {
+        CORE::chomp $self->{data};
+        return $self->{data};
+    }
+    CORE::chomp $self;
+    return $self;
 }
 
 # ------------------------------------------------------------------------------
-sub index
+sub reverse
 {
     my ($self) = @_;
-    ...
+    if ( ref $self eq __PACKAGE__ ) {
+        $self->{data} = CORE::reverse $self->{data};
+        return $self->{data};
+    }
+    return CORE::reverse $self;
 }
 
 # ------------------------------------------------------------------------------
 sub substr
 {
-    my ($self) = @_;
-    ...
+    my ($self, @args) = @_;
+    if ( ref $self eq __PACKAGE__ ) {
+        $self->{data} = CORE::substr $self->{data}, @args;
+        return $self->{data};
+    }
+    return CORE::substr $self, @args;
 }
-    
-=cut
 
 # ------------------------------------------------------------------------------
 sub _concat
@@ -165,7 +185,7 @@ sub _inc
         return $self;
     }
 
-    my $c = substr $self->{data}, -1, 1;
+    my $c = CORE::substr $self->{data}, -1, 1;
 
     # проверяем что в конце цифра/буква, иначе инкремент не
     # пройдёт и вылезет warning:
@@ -187,7 +207,7 @@ sub _dec
     my ($self) = @_;
     $self->{data} or return $self;
 
-    my $c = substr $self->{data}, -1, 1;
+    my $c = CORE::substr $self->{data}, -1, 1;
 
     # в конце цифра? уменьшаем её,
     # или укорачиваем строку, если 0

@@ -21,9 +21,20 @@ sub new
 }
 
 # ------------------------------------------------------------------------------
+# change `XYZ` to DB-specific quoting for identifiers
+# ------------------------------------------------------------------------------
+sub qi
+{
+    my ($q) = @args;
+    for my $id ( $q =~ /`(\w+)`/smg ) {
+        $q =~ s/`$id`/$self->{db}->quote_identifier($id)/sme;
+    }
+    return $q;
+}
+
+# ------------------------------------------------------------------------------
 sub get_object
 {
-    $self->{db} or return Carp::confess sprintf 'Error: {db} field is empty in "%s()".', ( caller 1 )[3];
     return $self->{db};
 }
 
@@ -31,7 +42,7 @@ sub get_object
 sub select_field
 {
     my ( $select, $field, @bind ) = @args;
-    my $rc = $self->selectrow_hashref( $select, {}, @bind );
+    my $rc = $self->selectrow_hashref( $self->qi($select), {}, @bind );
     $rc or return;
     return $rc->{$field};
 }
@@ -40,24 +51,21 @@ sub select_field
 sub select_fields
 {
     my ( $select, $field, @bind ) = @args;
-    my $rc = $self->selectall_arrayref( $select, { Slice => {} }, @bind );
+    my $rc = $self->selectall_arrayref( $self->qi($select), { Slice => {} }, @bind );
     $rc or return;
     my @fields = map { $_->{$field} } @{$rc};
     return wantarray ? @fields : \@fields;
 }
 
 # ------------------------------------------------------------------------------
+# table (string),
+# key name (string),
+# data to insert {
+#       name => value, ...
+#    }
+# ------------------------------------------------------------------------------
 sub upsert
 {
-
-=for comment
-    table (string),
-    key name (string),
-    data to insert {
-        name => value, ...
-    }
-=cut
-
     my ( $table, $key, $data ) = @args;
 
     my ( @fields, @values, @placeholders );
@@ -69,9 +77,9 @@ sub upsert
     }
     my $q = sprintf q{
             REPLACE INTO `%s` (`%s`) VALUES(%s)
-        }, $table, join( '`,`', @fields ), join( ',', @placeholders );
+        }, $table, join( '`,`', @fields ), join( q{,}, @placeholders );
 
-    my $sth = $self->prepare($q);
+    my $sth = $self->prepare( $self->qi($q) );
     return $sth ? $sth->execute(@values) : $sth;
 }
 
@@ -80,8 +88,7 @@ sub cget
 {
     my ( $name, $table ) = @args;
     $table ||= $CONFIG_TABLE;
-    return $self->select_field( sprintf( 'SELECT value FROM %s WHERE name = ?', $table ), 'value', undef,
-        $name );
+    return $self->select_field( sprintf( 'SELECT `value` FROM `%s` WHERE name = ?', $table ), 'value', undef, $name );
 }
 
 # ------------------------------------------------------------------------------

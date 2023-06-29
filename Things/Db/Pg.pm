@@ -21,15 +21,6 @@ sub new
 # ------------------------------------------------------------------------------
 sub upsert
 {
-
-=for comment
-    table (string),
-    key (string),
-    {
-        name => value, ...
-    }
-=cut
-
     my ( $table, $key, $data ) = @args;
 
     my ( @fields, @values, @set, @placeholders );
