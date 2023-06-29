@@ -274,7 +274,7 @@
   
 Лог в `STDOUT`. При этом перехватывается вывод в `STDERR` (`$logger->notice()`), перловые `warn` (`$logger->warn()`) и `die()` (`$logger->emergency()` + `die`).
 
-### [Things::Log::LWP](Things/Log/LWP.pm)
+### [Things::Log::Url](Things/Log/Url.pm)
 
 Лог в URL.
 

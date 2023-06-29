@@ -1,4 +1,4 @@
-package Things::Log::LWP;
+package Things::Log::Url;
 
 # ------------------------------------------------------------------------------
 use strict;
