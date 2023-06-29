@@ -132,10 +132,11 @@
 
 ```perl
     use Things::String;
-    # string my $string, 'abc';
-    # или
-    # string my $string => 'abc';
-    # say $string->ucfirst;
+    my $s = string 'abc';
+    # OR
+    # string my $s, 'def';
+    # OR
+    # string my $s => 'zxc';
     # ...
 ```
 
