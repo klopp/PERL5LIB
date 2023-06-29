@@ -25,10 +25,10 @@ use overload
     shift;
     },
     q{+=} => sub {
-        shift->{data} .= shift;
+    shift->{data} .= shift;
     },
     q{&=} => sub {
-        shift->{data} .= shift;
+    shift->{data} .= shift;
     },
 
     # concat:
@@ -155,7 +155,7 @@ sub reverse
 # ------------------------------------------------------------------------------
 sub substr
 {
-    my ($self, @args) = @_;
+    my ( $self, @args ) = @_;
     if ( ref $self eq __PACKAGE__ ) {
         $self->{data} = CORE::substr $self->{data}, @args;
         return $self->{data};
@@ -190,16 +190,30 @@ sub _inc
 
     my $c = CORE::substr $self->{data}, -1, 1;
 
-    # проверяем что в конце цифра/буква, иначе инкремент не
-    # пройдёт и вылезет warning:
-    if ( $c =~ /^[[:alnum:]]$/ ) {
+    if ( $c =~ /^[[:digit:]]$/ ) {
+        if ( $c eq q{9} ) {
+            $self->{data} .= q{a};
+        }
+        else {
+            ++$c;
+            $self->{data} =~ s/.$/$c/gsm;
+        }
+    }
 
-        # OK, обычный строковый инкремент
-        ++$self->{data};
+    elsif ( $c =~ /^[[:alpha:]]$/ ) {
+        if ( $c eq q{z} ) {
+            $self->{data} =~ s/.$/A/gsm;
+        }
+        elsif ( $c eq q{Z} ) {
+            $self->{data} .= q{a};
+        }
+        else {
+            $c = chr ord($c) + 1;
+            $self->{data} =~ s/.$/$c/gsm;
+        }
     }
     else {
-        # укорачиваем строку:
-        CORE::chop $self->{data};
+        $self->{data} .= q{a};
     }
     return $self;
 }
@@ -227,8 +241,7 @@ sub _dec
     # буква - то же самое:
     elsif ( $c =~ /^[[:alpha:]]$/ ) {
         if ( $c eq q{A} ) {
-            $c = q{z};
-            $self->{data} =~ s/.$/$c/gsm;
+            $self->{data} =~ s/.$/z/gsm;
         }
         elsif ( $c eq q{a} ) {
             CORE::chop $self->{data};
