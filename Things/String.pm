@@ -27,6 +27,9 @@ use overload
     q{+=} => sub {
         shift->{data} .= shift;
     },
+    q{&=} => sub {
+        shift->{data} .= shift;
+    },
 
     # concat:
     q{+} => \&_concat,
