@@ -63,9 +63,11 @@ sub new
         $self->{level} = $LOG_INFO;
     }
     $self->{prefix} ||= 'log';
+    $self->{log}->{exe} = $PROGRAM_NAME;
+    @ARGV and $self->{log}->{exe} .= q{ } . join q{ }, @ARGV;
 
     my $package = ref $self;
-    for my $method ( sort { length $b <=> length $a } keys %METHODS ) {
+    for my $method ( sort { length $a <=> length $b } keys %METHODS ) {
         my $level = $METHODS{$method};
         $self->{methods}->{$level} = $method;
         $method = lc $method;
@@ -102,10 +104,10 @@ sub _msg
     $self->{log}->{ $self->{prefix} } = $msg;
     if ( $self->{microsec} ) {
         $self->{log}->{tstamp} = $sec * 1_000_000 + $microsec;
-        return sprintf "%s.%6u %u %s %s", _t($sec), $microsec, $PID, $method, $msg;
+        return sprintf '%s.%-6u %-6u %s %s', _t($sec), $microsec, $PID, $method, $msg;
     }
     $self->{log}->{tstamp} = $sec;
-    return sprintf "%s %u %s %s", _t($sec), $PID, $method, $msg;
+    return sprintf '%s %-6u %s %s', _t($sec), $PID, $method, $msg;
 }
 
 # ------------------------------------------------------------------------------
@@ -123,7 +125,7 @@ sub _log
 # ------------------------------------------------------------------------------
 sub _print
 {
-    return Carp::croak sprintf 'Method %s() must be overloaded.', ( caller(0) )[3];
+    return Carp::croak sprintf 'Method %s() must be overloaded.', ( caller 0 )[3];
 }
 
 # ------------------------------------------------------------------------------

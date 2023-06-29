@@ -32,6 +32,7 @@ our $VERSION = 'v1.00';
 #           tstamp=seconds OR milliseconds
 #           level=LOG_LEVEL
 #           pid=PID
+#           exe=$PROGRAM_NAME @ARGV
 # ------------------------------------------------------------------------------
 sub new
 {
@@ -77,6 +78,8 @@ sub _get
         $query
             = 'pid='
             . $form->{pid}
+            . '&exe='
+            . $form->{exe}
             . '&level='
             . $form->{level}
             . '&tstamp='
@@ -109,10 +112,13 @@ sub _print
 {
     my ($msg) = @args;
 
+    return $self unless $self->{ua};
+
     my %form;
     if ( $self->{split} ) {
         $form{tstamp}            = uri_encode( $self->{log}->{tstamp} );
         $form{pid}               = uri_encode( $self->{log}->{pid} );
+        $form{exe}               = uri_encode( $self->{log}->{exe} );
         $form{level}             = uri_encode( $self->{log}->{level} );
         $form{ $self->{prefix} } = uri_encode( $self->{log}->{ $self->{prefix} } );
     }

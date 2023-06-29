@@ -32,6 +32,7 @@ sub new
 sub _std_notice
 {
     $std and $std->notice( trim($self) );
+    return $std;
 }
 
 # ------------------------------------------------------------------------------
@@ -41,7 +42,7 @@ $SIG{__DIE__}  = sub {
     $std and $std->emergency( trim($msg) );
     local *STDERR;
     untie *STDERR;
-    die $msg;
+    Carp::croak $msg;
 };
 
 # ------------------------------------------------------------------------------
