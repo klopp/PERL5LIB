@@ -14,6 +14,25 @@ use base qw/Things::Log::Base/;
 our $VERSION = 'v1.00';
 
 # ------------------------------------------------------------------------------
+#   url => URL
+#       URL to send log
+#   method => POST or GET (nocase)
+#       URL to send log
+#   params => [ key => value, ... ]
+#       LWP::UserAgent attributes, except default_header & default_headers
+#       see https://metacpan.org/pod/LWP::UserAgent#ATTRIBUTES
+#   headers => [ key => value, ... ]
+#       HTTP headers
+#       https://metacpan.org/pod/LWP::UserAgent#default_header
+#   prefix => [STRING]
+#       parameter with log data name, default 'log'
+#   split => [FALSE]
+#       if TRUE log data will be splitted:
+#           log=message
+#           tstamp=seconds OR milliseconds
+#           level=LOG_LEVEL
+#           pid=PID
+# ------------------------------------------------------------------------------
 sub new
 {
     $self = $self->SUPER::new(@args);
@@ -22,8 +41,8 @@ sub new
         $self->{error} = 'No required "method" parameter.';
         return $self;
     }
-    $self->{method} = uc $self->{method};
-    if ( $self->{method} ne 'POST' && $self->{method} ne 'GET' ) {
+    $self->{method} = lc $self->{method};
+    if ( $self->{method} ne 'post' && $self->{method} ne 'get' ) {
         $self->{error} = 'Invalid "method" parameter (no POST or GET).';
         return $self;
     }

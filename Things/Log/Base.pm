@@ -48,6 +48,13 @@ const my %METHODS => (
 our $VERSION = 'v1.20';
 
 # ------------------------------------------------------------------------------
+#   level => [$LOG_INFO]
+#       log level
+#   microsec => [FALSE]
+#       show microseconds in time
+#   comments => [FALSE]
+#       show log comments
+# ------------------------------------------------------------------------------
 sub new
 {
     $self = bless {@args}, $self;
@@ -126,7 +133,6 @@ __END__
 =head1 SYNOPSIS
 
     my $logger = Things::Log::XXX->new(
-        prefix => 'log', 
         microsec => 1, 
         level => $LOG_INFO, 
         comments => 1 

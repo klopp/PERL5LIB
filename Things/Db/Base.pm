@@ -30,8 +30,8 @@ sub get_object
 # ------------------------------------------------------------------------------
 sub select_field
 {
-    my ( $select, $field, $attrs, @bind ) = @args;
-    my $rc = $self->selectrow_hashref( $select, $attrs || {}, @bind );
+    my ( $select, $field, @bind ) = @args;
+    my $rc = $self->selectrow_hashref( $select, {}, @bind );
     $rc or return;
     return $rc->{$field};
 }
@@ -39,8 +39,8 @@ sub select_field
 # ------------------------------------------------------------------------------
 sub select_fields
 {
-    my ( $select, $field, @attrs ) = @args;
-    my $rc = $self->selectall_arrayref( $select, { Slice => {} }, @attrs );
+    my ( $select, $field, @bind ) = @args;
+    my $rc = $self->selectall_arrayref( $select, { Slice => {} }, @bind );
     $rc or return;
     my @fields = map { $_->{$field} } @{$rc};
     return wantarray ? @fields : \@fields;
@@ -52,8 +52,8 @@ sub upsert
 
 =for comment
     table (string),
-    key (string),
-    {
+    key name (string),
+    data to insert {
         name => value, ...
     }
 =cut
@@ -78,22 +78,24 @@ sub upsert
 # ------------------------------------------------------------------------------
 sub cget
 {
-    my ( $name ) = @args;
-    return $self->select_field( sprintf( 'SELECT value FROM %s WHERE name = ?', $CONFIG_TABLE ), 'value', undef,
+    my ( $name, $table ) = @args;
+    $table ||= $CONFIG_TABLE;
+    return $self->select_field( sprintf( 'SELECT value FROM %s WHERE name = ?', $table ), 'value', undef,
         $name );
 }
 
 # ------------------------------------------------------------------------------
 sub cset
 {
-    my ( $name, $value ) = @args;
-    return $self->upsert( $CONFIG_TABLE, 'name', { name => $name, value => $value } );
+    my ( $name, $value, $table ) = @args;
+    $table ||= $CONFIG_TABLE;
+    return $self->upsert( $table, 'name', { name => $name, value => $value } );
 }
 
 # ------------------------------------------------------------------------------
 sub cjget
 {
-    my ( $name ) = @args;
+    my ( $name, $table ) = @args;
     my $rc = $self->cget($name);
     try {
         $rc and $rc = decode_json $rc;
@@ -107,7 +109,7 @@ sub cjget
 # ------------------------------------------------------------------------------
 sub cjset
 {
-    my ( $name, $value ) = @args;
+    my ( $name, $value, $table ) = @args;
     try {
         $value = encode_json $value;
     }
