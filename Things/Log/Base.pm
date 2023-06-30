@@ -1,6 +1,10 @@
 package Things::Log::Base;
 
 # ------------------------------------------------------------------------------
+use threads;
+use Thread::Queue;
+
+# ------------------------------------------------------------------------------
 use strict;
 use warnings;
 use self;
@@ -10,7 +14,7 @@ use Things::Trim;
 use Const::Fast;
 use English qw/-no_match_vars/;
 use POSIX qw/strftime/;
-use Time::HiRes qw/gettimeofday/;
+use Time::HiRes qw/gettimeofday usleep/;
 
 use Exporter qw/import/;
 our @EXPORT = qw/$LOG_EMERG $LOG_ALERT $LOG_CRIT $LOG_ERROR $LOG_WARN $LOG_NOTICE $LOG_INFO $LOG_DEBUG $LOG_TRACE/;
@@ -73,10 +77,56 @@ sub new
         $method = lc $method;
         no strict 'refs';
         *{"$package\::$method"} = sub {
-            return shift->_log( $level, @_ );
+            my $this = shift;
+            if ( $this->{queue} ) {
+                $this->{queue}->enqueue( { level => $level, args => \@_ } );
+            }
+            else {
+                $this->_log( $level, @_ );
+            }
+            return $this;
         }
     }
 
+    return $self;
+}
+
+# ------------------------------------------------------------------------------
+sub nb
+{
+    if ( !$self->{queue} ) {
+        $self->{queue} = Thread::Queue->new;
+        threads->create(
+            sub {
+                while ( defined( my $data = $self->{queue}->dequeue ) ) {
+                    $self->_log( $data->{level}, @{ $data->{args} } );
+                }
+            },
+        )->detach;
+    }
+    return $self;
+}
+
+# ------------------------------------------------------------------------------
+sub _log
+{
+    my ( $level, $fmt, @data ) = @args;
+    if ( $level <= $self->{level} ) {
+        my $msg = $self->_msg( $level, $fmt, @data );
+        $msg and $self->_print($msg);
+    }
+    return $self;
+}
+
+# ------------------------------------------------------------------------------
+sub DESTROY
+{
+    if ( $self->{queue} ) {
+        while ( $self->{queue}->pending ) {
+            usleep 1_000;
+        }
+        threads->exit;
+    }
     return $self;
 }
 
@@ -108,18 +158,6 @@ sub _msg
     }
     $self->{log}->{tstamp} = $sec;
     return sprintf '%s %-6u %s %s', _t($sec), $PID, $method, $msg;
-}
-
-# ------------------------------------------------------------------------------
-sub _log
-{
-    my ( $level, $fmt, @data ) = @args;
-
-    if ( $level <= $self->{level} ) {
-        my $msg = $self->_msg( $level, $fmt, @data );
-        $msg and $self->_print($msg);
-    }
-    return $self;
 }
 
 # ------------------------------------------------------------------------------
