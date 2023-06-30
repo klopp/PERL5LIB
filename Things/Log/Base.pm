@@ -79,7 +79,7 @@ sub new
         *{"$package\::$method"} = sub {
             my $this = shift;
             if ( $this->{queue} ) {
-                $this->{queue}->enqueue( { level => $level, args => \@_ } );
+                $this->{queue}->enqueue( [ $level, @_ ] );
             }
             else {
                 $this->_log( $level, @_ );
@@ -98,8 +98,8 @@ sub nb
         $self->{queue} = Thread::Queue->new;
         threads->create(
             sub {
-                while ( defined( my $data = $self->{queue}->dequeue ) ) {
-                    $self->_log( $data->{level}, @{ $data->{args} } );
+                while ( defined( my $args = $self->{queue}->dequeue ) ) {
+                    $self->_log( @{$args} );
                 }
             },
         )->detach;
