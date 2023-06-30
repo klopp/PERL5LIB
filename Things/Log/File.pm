@@ -13,7 +13,7 @@ use IO::Interactive qw/is_interactive/;
 use Things::Log::Base;
 use base qw/Things::Log::Base/;
 
-our $VERSION = 'v1.00';
+our $VERSION = 'v1.10';
 
 # ------------------------------------------------------------------------------
 #   file => FILE

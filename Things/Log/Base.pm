@@ -9,15 +9,12 @@ use strict;
 use warnings;
 use self;
 
-use Things::Trim;
-
 use Const::Fast;
 use English qw/-no_match_vars/;
 use POSIX qw/strftime/;
 use Time::HiRes qw/gettimeofday usleep/;
 
-use Exporter qw/import/;
-our @EXPORT = qw/$LOG_EMERG $LOG_ALERT $LOG_CRIT $LOG_ERROR $LOG_WARN $LOG_NOTICE $LOG_INFO $LOG_DEBUG $LOG_TRACE/;
+use Things::Trim;
 
 const our $LOG_EMERG  => 0;
 const our $LOG_ALERT  => 1;
@@ -49,7 +46,10 @@ const my %METHODS => (
     'TRC'       => $LOG_TRACE,
 );
 
-our $VERSION = 'v1.20';
+use Exporter qw/import/;
+our @EXPORT = qw/$LOG_EMERG $LOG_ALERT $LOG_CRIT $LOG_ERROR $LOG_WARN $LOG_NOTICE $LOG_INFO $LOG_DEBUG $LOG_TRACE/;
+
+our $VERSION = 'v2.00';
 
 # ------------------------------------------------------------------------------
 #   level => [$LOG_INFO]
@@ -122,6 +122,7 @@ sub _log
 sub DESTROY
 {
     if ( $self->{queue} ) {
+        $self->{queue}->end;
         while ( $self->{queue}->pending ) {
             usleep 1_000;
         }
