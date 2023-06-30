@@ -66,7 +66,7 @@ sub new
     if ( !$self->{level} || !exists $METHODS{ $self->{level} } ) {
         $self->{level} = $LOG_INFO;
     }
-    $self->{prefix} ||= 'log';
+    $self->{prefix} ||= 'message';
     $self->{log}->{exe} = $PROGRAM_NAME;
     @ARGV and $self->{log}->{exe} .= q{ } . join q{ }, @ARGV;
 
