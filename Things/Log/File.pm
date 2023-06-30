@@ -13,7 +13,7 @@ use IO::Interactive qw/is_interactive/;
 use Things::Log::Base;
 use base qw/Things::Log::Base/;
 
-our $VERSION = 'v1.00';
+our $VERSION = 'v1.10';
 
 # ------------------------------------------------------------------------------
 #   file => FILE
@@ -44,19 +44,19 @@ sub new
 # ------------------------------------------------------------------------------
 sub _print
 {
-    return $self unless $self->{fh};
-
-    my ($msg) = @args;
-
-    flock $self->{fh}, LOCK_EX;
-    $self->{fh}->print( $msg . "\n" );
-    flock $self->{fh}, LOCK_UN;
+    if ( $self->{fh} ) {
+        my ($msg) = @args;
+        flock $self->{fh}, LOCK_EX;
+        $self->{fh}->print( $msg . "\n" );
+        flock $self->{fh}, LOCK_UN;
+    }
     return $self;
 }
 
 # ------------------------------------------------------------------------------
 sub DESTROY
 {
+    $self->SUPER::DESTROY;
     if ( $self->{fh} ) {
         is_interactive( $self->{fh} ) or close $self->{fh};
     }
