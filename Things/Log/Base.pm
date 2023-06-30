@@ -78,11 +78,12 @@ sub new
         no strict 'refs';
         *{"$package\::$method"} = sub {
             my $this = shift;
+            my ( $sec, $microsec ) = gettimeofday;
             if ( $this->{queue} ) {
-                $this->{queue}->enqueue( [ $level, @_ ] );
+                $this->{queue}->enqueue( [ $level, $sec, $microsec, @_ ] );
             }
             else {
-                $this->_log( $level, @_ );
+                $this->_log( $level, $sec, $microsec, @_ );
             }
             return $this;
         }
@@ -110,9 +111,9 @@ sub nb
 # ------------------------------------------------------------------------------
 sub _log
 {
-    my ( $level, $fmt, @data ) = @args;
+    my ( $level, $sec, $microsec, $fmt, @data ) = @args;
     if ( $level <= $self->{level} ) {
-        my $msg = $self->_msg( $level, $fmt, @data );
+        my $msg = $self->_msg( $level, $sec, $microsec, $fmt, @data );
         $msg and $self->_print($msg);
     }
     return $self;
@@ -141,14 +142,13 @@ sub _t
 # ------------------------------------------------------------------------------
 sub _msg
 {
-    my ( $level, $fmt, @data ) = @args;
+    my ( $level, $sec, $microsec, $fmt, @data ) = @args;
 
     my $msg = trim( sprintf $fmt, @data );
     if ( $msg =~ /^[';#]/sm ) {
         $self->{comments} or return;
         $msg =~ s/^[';#]+//sm;
     }
-    my ( $sec, $microsec ) = gettimeofday;
     my $method = $self->{methods}->{$level};
     $self->{log}->{pid}               = $PID;
     $self->{log}->{level}             = $method;
