@@ -14,10 +14,17 @@ use base qw/Things::Log::HttpBase/;
 our $VERSION = 'v1.00';
 
 # ------------------------------------------------------------------------------
+#   params => [ key => value, ... ]
+#       HTTP::Async parameters
+#       see https://metacpan.org/pod/HTTP::Async#new
+#   headers => [ key => value, ... ]
+#       HTTP headers
+#       https://metacpan.org/pod/HTTP::Headers
+# ------------------------------------------------------------------------------
 sub new
 {
     $self = $self->SUPER::new(@args);
-    $self->{async_} = HTTP::Async->new;
+    $self->{async_} = HTTP::Async->new( %{ $self->{params} } );
     return $self;
 }
 
@@ -26,10 +33,10 @@ sub url_get
 {
     my ($url) = @args;
     $self->{async_}->add( HTTP::Request->new( GET => $url, $self->{headers} ) );
-    
+
     my $rc = $self->{async_}->wait_for_next_response;
     printf "%s\n", $rc->content;
-        
+
     return $self;
 }
 
