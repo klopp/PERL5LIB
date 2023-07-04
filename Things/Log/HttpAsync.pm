@@ -33,10 +33,6 @@ sub url_get
 {
     my ($url) = @args;
     $self->{async_}->add( HTTP::Request->new( GET => $url, $self->{headers} ) );
-
-    my $rc = $self->{async_}->wait_for_next_response;
-    printf "%s\n", $rc->content;
-
     return $self;
 }
 
@@ -45,10 +41,6 @@ sub url_post
 {
     my ($content) = @args;
     $self->{async_}->add( HTTP::Request->new( POST => $self->{url}, $self->{headers}, $content ) );
-
-    my $rc = $self->{async_}->wait_for_next_response;
-    printf "%s\n", $rc->content;
-
     return $self;
 }
 
