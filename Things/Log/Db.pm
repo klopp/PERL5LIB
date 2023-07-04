@@ -16,11 +16,11 @@ our $VERSION = 'v1.00';
 #   table => STRING
 #       table name
 #   prefix => [STRING]
-#       table column with log data, default 'log'
+#       table column with log data, default 'message'
 #   split => [FALSE]
 #       if TRUE log data will be splitted:
-#           log=message
-#           tstamp=seconds OR milliseconds
+#           message=message
+#           tstamp=seconds OR microseconds
 #           level=LOG_LEVEL
 #           pid=PID
 #           exe=$PROGRAM_NAME @ARGV
@@ -41,23 +41,25 @@ sub new
 }
 
 # ------------------------------------------------------------------------------
-sub _print
+sub plog
 {
     my ($msg) = @args;
 
     my ( @data, $q );
     if ( $self->{split} ) {
-        push @data, $self->{log}->{tstamp};
-        push @data, $self->{log}->{pid};
-        push @data, $self->{log}->{exe};
-        push @data, $self->{log}->{level};
-        push @data, $self->{log}->{ $self->{prefix} };
+        @data = (
+            $self->{log_}->{tstamp},
+            $self->{log_}->{pid},
+            $self->{log_}->{exe},
+            $self->{log_}->{level},
+            $self->{log_}->{ $self->{prefix} }
+        );
         $q = sprintf q{
             INSERT INTO `%s` (`tstamp`, `pid`, `exe`, `level`, `%s`) VALUES(?, ?, ?, ?, ?)       
         }, $self->{table}, $self->{prefix};
     }
     else {
-        push @data, $msg;
+        @data = ($msg);
         $q = sprintf q{
             INSERT INTO `%s` (`%s`) VALUES(?)       
         }, $self->{table}, $self->{prefix};

@@ -66,23 +66,24 @@ sub new
     if ( !$self->{level} || !exists $METHODS{ $self->{level} } ) {
         $self->{level} = $LOG_INFO;
     }
-    $self->{prefix} ||= 'log';
-    $self->{log}->{exe} = $PROGRAM_NAME;
-    @ARGV and $self->{log}->{exe} .= q{ } . join q{ }, @ARGV;
+    $self->{prefix} ||= 'message';
+    $self->{log_}->{exe} = $PROGRAM_NAME;
+    @ARGV and $self->{log_}->{exe} .= q{ } . join q{ }, @ARGV;
 
     my $package = ref $self;
     for my $method ( sort { length $a <=> length $b } keys %METHODS ) {
         my $level = $METHODS{$method};
-        $self->{methods}->{$level} = $method;
+        $self->{methods_}->{$level} = $method;
         $method = lc $method;
         no strict 'refs';
         *{"$package\::$method"} = sub {
             my $this = shift;
-            if ( $this->{queue} ) {
-                $this->{queue}->enqueue( [ $level, @_ ] );
+            my ( $sec, $microsec ) = gettimeofday;
+            if ( $this->{queue_} ) {
+                $this->{queue_}->enqueue( [ $level, $sec, $microsec, @_ ] );
             }
             else {
-                $this->_log( $level, @_ );
+                $this->_log( $level, $sec, $microsec, @_ );
             }
             return $this;
         }
@@ -94,11 +95,11 @@ sub new
 # ------------------------------------------------------------------------------
 sub nb
 {
-    if ( !$self->{queue} ) {
-        $self->{queue} = Thread::Queue->new;
+    if ( !$self->{queue_} ) {
+        $self->{queue_} = Thread::Queue->new;
         threads->create(
             sub {
-                while ( defined( my $args = $self->{queue}->dequeue ) ) {
+                while ( defined( my $args = $self->{queue_}->dequeue ) ) {
                     $self->_log( @{$args} );
                 }
             },
@@ -110,10 +111,10 @@ sub nb
 # ------------------------------------------------------------------------------
 sub _log
 {
-    my ( $level, $fmt, @data ) = @args;
+    my ( $level, $sec, $microsec, $fmt, @data ) = @args;
     if ( $level <= $self->{level} ) {
-        my $msg = $self->_msg( $level, $fmt, @data );
-        $msg and $self->_print($msg);
+        my $msg = $self->_msg( $level, $sec, $microsec, $fmt, @data );
+        $msg and $self->plog($msg);
     }
     return $self;
 }
@@ -121,9 +122,9 @@ sub _log
 # ------------------------------------------------------------------------------
 sub DESTROY
 {
-    if ( $self->{queue} ) {
-        $self->{queue}->end;
-        while ( $self->{queue}->pending ) {
+    if ( $self->{queue_} ) {
+        $self->{queue_}->end;
+        while ( $self->{queue_}->pending ) {
             usleep 1_000;
         }
         threads->exit;
@@ -132,39 +133,31 @@ sub DESTROY
 }
 
 # ------------------------------------------------------------------------------
-sub _t
-{
-    # $self => seconds
-    return strftime '%F %X', localtime $self;
-}
-
-# ------------------------------------------------------------------------------
 sub _msg
 {
-    my ( $level, $fmt, @data ) = @args;
+    my ( $level, $sec, $microsec, $fmt, @data ) = @args;
 
     my $msg = trim( sprintf $fmt, @data );
     if ( $msg =~ /^[';#]/sm ) {
         $self->{comments} or return;
         $msg =~ s/^[';#]+//sm;
     }
-    my ( $sec, $microsec ) = gettimeofday;
-    my $method = $self->{methods}->{$level};
-    $self->{log}->{pid}               = $PID;
-    $self->{log}->{level}             = $method;
-    $self->{log}->{ $self->{prefix} } = $msg;
+    my $method = $self->{methods_}->{$level};
+    $self->{log_}->{pid}               = $PID;
+    $self->{log_}->{level}             = $method;
+    $self->{log_}->{ $self->{prefix} } = $msg;
     if ( $self->{microsec} ) {
-        $self->{log}->{tstamp} = $sec * 1_000_000 + $microsec;
-        return sprintf '%s.%-6u %-6u %s %s', _t($sec), $microsec, $PID, $method, $msg;
+        $self->{log_}->{tstamp} = $sec * 1_000_000 + $microsec;
+        return sprintf '%s.%-6u %-6u %s %s', ( strftime '%F %X', localtime $sec ), $microsec, $PID, $method, $msg;
     }
-    $self->{log}->{tstamp} = $sec;
-    return sprintf '%s %-6u %s %s', _t($sec), $PID, $method, $msg;
+    $self->{log_}->{tstamp} = $sec;
+    return sprintf '%s %-6u %s %s', ( strftime '%F %X', localtime $sec ), $PID, $method, $msg;
 }
 
 # ------------------------------------------------------------------------------
-sub _print
+sub plog
 {
-    return Carp::croak sprintf 'Method %s() must be overloaded.', ( caller 0 )[3];
+    return Carp::confess sprintf 'Method %s() must be overloaded.', ( caller 0 )[3];
 }
 
 # ------------------------------------------------------------------------------

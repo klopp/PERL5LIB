@@ -42,13 +42,17 @@ sub new
 }
 
 # ------------------------------------------------------------------------------
-sub _print
+sub plog
 {
     if ( $self->{fh} ) {
         my ($msg) = @args;
-        flock $self->{fh}, LOCK_EX;
-        $self->{fh}->print( $msg . "\n" );
-        flock $self->{fh}, LOCK_UN;
+        if ( flock $self->{fh}, LOCK_EX ) {
+            $self->{fh}->print( $msg . "\n" );
+            flock $self->{fh}, LOCK_UN;
+        }
+        else {
+            $self->{error} = $ERRNO;
+        }
     }
     return $self;
 }
