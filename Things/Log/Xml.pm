@@ -4,7 +4,6 @@ package Things::Log::Xml;
 use strict;
 use warnings;
 use self;
-use utf8::all;
 
 use XML::Hash::XS;
 
@@ -31,9 +30,9 @@ sub new
 }
 
 # ------------------------------------------------------------------------------
-sub _print
+sub plog
 {
-    my ($msg) = hash2xml $self->{log}, %{$self->{xml}};
+    my ($msg) = hash2xml $self->{log_}, %{$self->{xml}};
     return $self->SUPER::_print($msg);
 }
 
