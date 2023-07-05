@@ -58,9 +58,6 @@ sub url_post
     my ($content) = @args;
     my $rc = $self->{ua}->post( $self->{url}, Content => $content );
     $rc->is_success or $self->{error} = $rc->status_line;
-    
-    printf "%s\n", $rc->content;
-    
     return $self;
 }
 
@@ -71,9 +68,9 @@ __END__
 =head1 SYNOPSIS
 
     my $logger = Things::Log::LWP->new( method => 'get', url => 'http://localhost/' );
-    # prefix:   data prefix (default: "log=...") 
+    # prefix:   data prefix (default: "message=...") 
     # OR
-    # split:    BOOL (if true send tstamp=, pid=, level=, log=)
+    # split:    BOOL (if true send tstamp=, pid=, level=, message=)
     # params:   LWP::UserAgent methods with data
     # headers:  HTTP::Headers pairs
 =cut

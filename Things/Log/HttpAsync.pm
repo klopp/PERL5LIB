@@ -1,6 +1,9 @@
 package Things::Log::HttpAsync;
 
 # ------------------------------------------------------------------------------
+# Bad, bad, bad!
+# Do not use this module in real code. Never.
+# ------------------------------------------------------------------------------
 use strict;
 use warnings;
 use self;
