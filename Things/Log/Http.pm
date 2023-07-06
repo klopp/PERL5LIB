@@ -20,14 +20,12 @@ our $VERSION = 'v1.00';
 #   headers => [ key => value, ... ]
 #       HTTP headers
 #       https://metacpan.org/pod/LWP::UserAgent#default_header
-#   ssl_opts => { key => value, ... }
-#        SSL options
 # ------------------------------------------------------------------------------
 sub new
 {
     $self = $self->SUPER::new(@args);
 
-    $self->{ua} = LWP::UserAgent->new( ssl_opts => $self->{ssl_opts} // {} );
+    $self->{ua} = LWP::UserAgent->new;
     while ( my ( $key, $value ) = each %{ $self->{params} } ) {
 
         # skip default_headers(), default_header():
