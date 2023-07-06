@@ -28,7 +28,7 @@ sub new
         return $self;
     }
     if ( $self->{file} eq q{-} ) {
-        $self->{fh} = *STDOUT;
+        $self->{fh}             = *STDOUT;
     }
     else {
         if ( !open $self->{fh}, '>>', $self->{file} ) {
@@ -37,6 +37,7 @@ sub new
         }
     }
     $self->{fh}->autoflush(1);
+    $self->{is_interactive_} = is_interactive( $self->{fh} );
 
     return $self;
 }
@@ -46,13 +47,13 @@ sub plog
 {
     if ( $self->{fh} ) {
         my ($msg) = @args;
-        if ( flock $self->{fh}, LOCK_EX ) {
+        local $ERRNO;
+        $self->{is_interactive_} or flock $self->{fh}, LOCK_EX;
+        if ( !$ERRNO ) {
             $self->{fh}->print( $msg . "\n" );
-            flock $self->{fh}, LOCK_UN;
+            $self->{is_interactive_} or flock $self->{fh}, LOCK_UN;
         }
-        else {
-            $self->{error} = $ERRNO;
-        }
+        $self->{error} = $ERRNO;
     }
     return $self;
 }
@@ -61,8 +62,8 @@ sub plog
 sub DESTROY
 {
     $self->SUPER::DESTROY;
-    if ( $self->{fh} ) {
-        is_interactive( $self->{fh} ) or close $self->{fh};
+    if ( $self->{fh} && !$self->{is_interactive_} ) {
+        close $self->{fh};
     }
     return $self;
 }

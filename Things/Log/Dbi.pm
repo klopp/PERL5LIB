@@ -1,4 +1,4 @@
-package Things::Log::Db;
+package Things::Log::Dbi;
 
 # ------------------------------------------------------------------------------
 use strict;
