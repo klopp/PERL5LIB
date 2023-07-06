@@ -40,8 +40,9 @@ sub new
 # ------------------------------------------------------------------------------
 sub plog
 {
+    my ($msg) = @args;
     try {
-        my $msg = $self->{json}->encode( $self->{log_} );
+        $msg = $self->{json}->encode( $self->{split} ? $self->{log_} : { $self->{prefix} => $msg } );
         $self->SUPER::plog($msg);
     }
     catch {

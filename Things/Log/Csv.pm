@@ -31,14 +31,18 @@ sub new
 # ------------------------------------------------------------------------------
 sub plog
 {
-    $self->{csv_}->combine(
-        $self->{log_}->{exe},
-        $self->{log_}->{level},
-        $self->{log_}->{message},
-        $self->{log_}->{pid},
-        $self->{log_}->{tstamp},
-    );
-    my $msg = $self->{csv_}->string;
+    my ($msg) = @args;
+
+    if ( $self->{split} ) {
+        $self->{csv_}->combine(
+            $self->{log_}->{exe}, $self->{log_}->{level}, $self->{log_}->{message},
+            $self->{log_}->{pid}, $self->{log_}->{tstamp},
+        );
+    }
+    else {
+        $self->{csv_}->combine($msg);
+    }
+    $msg = $self->{csv_}->string;
     if ($msg) {
         $self->SUPER::plog($msg);
     }

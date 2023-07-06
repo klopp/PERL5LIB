@@ -22,17 +22,19 @@ our $VERSION = 'v1.10';
 # ------------------------------------------------------------------------------
 sub new
 {
-    $self = $self->SUPER::new(@args);
-    $self->{xml}->{xml_decl} = 0; 
-    $self->{xml}->{canonical} = 1; 
-    $self->{xml}->{root} ||= 'log'; 
+    $self                     = $self->SUPER::new(@args);
+    $self->{xml}->{xml_decl}  = 0;
+    $self->{xml}->{canonical} = 1;
+    $self->{xml}->{root} ||= 'log';
     return $self;
 }
 
 # ------------------------------------------------------------------------------
 sub plog
 {
-    my ($msg) = hash2xml $self->{log_}, %{$self->{xml}};
+    my ($msg) = @args;
+    $msg = $self->{split} ? hash2xml $self->{log_}, %{ $self->{xml} } : hash2xml { $self->{prefix} => $msg },
+        %{ $self->{xml} };
     return $self->SUPER::plog($msg);
 }
 
