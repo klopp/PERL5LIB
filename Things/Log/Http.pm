@@ -66,7 +66,7 @@ __END__
 =head1 SYNOPSIS
 
     my $logger = Things::Log::LWP->new( method => 'get', url => 'http://localhost/' );
-    # prefix:   data prefix (default: "message=...") 
+    # log:      message prefix (default: "log=...") 
     # OR
     # split:    BOOL (if true send tstamp=, pid=, level=, message=)
     # params:   LWP::UserAgent methods with data

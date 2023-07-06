@@ -17,7 +17,7 @@ our $VERSION = 'v1.10';
 #       log file
 #   xml => [ key => value, ... ]
 #       XML::Hash::XS options
-#       (canonical is always 1, root is 'log' by default)
+#       (canonical is always 1, root is $self->{root} by default)
 #       https://metacpan.org/pod/XML::Hash::XS#OPTIONS
 # ------------------------------------------------------------------------------
 sub new
@@ -25,7 +25,7 @@ sub new
     $self                     = $self->SUPER::new(@args);
     $self->{xml}->{xml_decl}  = 0;
     $self->{xml}->{canonical} = 1;
-    $self->{xml}->{root} ||= 'log';
+    $self->{xml}->{root} ||= $self->{root};
     return $self;
 }
 
@@ -33,7 +33,7 @@ sub new
 sub plog
 {
     my ($msg) = @args;
-    $msg = $self->{split} ? hash2xml $self->{log_}, %{ $self->{xml} } : hash2xml { $self->{prefix} => $msg },
+    $msg = $self->{split} ? hash2xml $self->{log_}, %{ $self->{xml} } : hash2xml { $self->{root} => $msg },
         %{ $self->{xml} };
     return $self->SUPER::plog($msg);
 }

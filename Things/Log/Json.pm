@@ -42,7 +42,7 @@ sub plog
 {
     my ($msg) = @args;
     try {
-        $msg = $self->{json}->encode( $self->{split} ? $self->{log_} : { $self->{prefix} => $msg } );
+        $msg = $self->{json}->encode( $self->{split} ? $self->{log_} : { $self->{root} => $msg } );
         $self->SUPER::plog($msg);
     }
     catch {
