@@ -10,13 +10,13 @@ our @EXPORT_OK = qw/
     $YEAR_OFFSET
     $HOUR_IN_DAY $MIN_IN_HOUR $MIN_IN_DAY $SEC_IN_DAY $SEC_IN_HOUR $SEC_IN_MIN
     @MONTHS3 %MONTHS3
-    $ARRAY $HASH $SCALAR $GLOB
+    $ARRAY $HASH $SCALAR $GLOB $CODE
     /;
 our %EXPORT_TAGS = (
     'all'   => \@EXPORT_OK,
     'types' => [
         qw/
-            $ARRAY $HASH $SCALAR $GLOB
+            $ARRAY $HASH $SCALAR $GLOB $CODE
             /,
     ],
     'dt' => [
@@ -36,6 +36,7 @@ const our $ARRAY       => 'ARRAY';
 const our $HASH        => 'HASH';
 const our $SCALAR      => 'SCALAR';
 const our $GLOB        => 'GLOB';
+const our $CODE        => 'CODE';
 const our $YEAR_OFFSET => 1900;
 const our $SEC_IN_MIN  => 60;
 const our $HOUR_IN_DAY => 24;
