@@ -33,7 +33,7 @@ sub new
 sub plog
 {
     my ($msg) = hash2xml $self->{log_}, %{$self->{xml}};
-    return $self->SUPER::_print($msg);
+    return $self->SUPER::plog($msg);
 }
 
 # ------------------------------------------------------------------------------
