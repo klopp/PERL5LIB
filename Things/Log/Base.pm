@@ -9,9 +9,11 @@ use strict;
 use warnings;
 use self;
 
+use Carp::Trace;
 use Const::Fast;
 use English qw/-no_match_vars/;
 use POSIX qw/strftime/;
+use Sys::Hostname;
 use Time::HiRes qw/gettimeofday usleep/;
 
 use Things::Trim;
@@ -46,6 +48,20 @@ const my %METHODS => (
     'TRC'       => $LOG_TRACE,
 );
 
+=pod
+const my %FIELDS => (
+
+    # what => [ name, default ]
+    tstamp  => [ 'tstamp',  1 ],
+    pid     => [ 'pid',     1 ],
+    level   => [ 'level',   1 ],
+    message => [ 'message', 1 ],
+    exe     => [ 'exe', ],
+    host    => [ 'host', ],
+    trace   => [ 'trace', ],
+);
+=cut
+
 use Exporter qw/import/;
 our @EXPORT = qw/$LOG_EMERG $LOG_ALERT $LOG_CRIT $LOG_ERROR $LOG_WARN $LOG_NOTICE $LOG_INFO $LOG_DEBUG $LOG_TRACE/;
 
@@ -69,9 +85,12 @@ sub new
     $self->{level_} = $self->{level};
     delete $self->{level};
 
-    $self->{caption_} = $self->{caption};
-    $self->{caption_} ||= 'message';
-    delete $self->{caption};
+    $self->{log_exe_} = $self->{log_exe};
+    delete $self->{log_exe};
+    $self->{log_host_} = $self->{log_host};
+    delete $self->{log_host};
+    $self->{log_trace_} = $self->{log_trace};
+    delete $self->{log_trace};
 
     $self->{microsec_} = $self->{microsec};
     delete $self->{microsec};
@@ -79,8 +98,29 @@ sub new
     $self->{split_} = $self->{split};
     delete $self->{split};
 
-    $self->{log_}->{exe} = $PROGRAM_NAME;
-    @ARGV and $self->{log_}->{exe} .= q{ } . join q{ }, @ARGV;
+=pod
+    if ( $self->{fields} ) {
+        while ( my ( $field, $name ) = each %{ $self->{fields} } ) {
+            if ( !exists $FIELDS{$field} ) {
+                $self->{error} = 'Unknown field in "fields" parameter.';
+                return $self;
+            }
+            $self->{fields_}->{$field} = $name;
+        }
+        delete $self->{fields};
+    }
+    else {
+        while ( my ( $field, $data ) = each %FIELDS ) {
+            $data->[1] and $self->{fields_}->{$field} = $data->[0];
+        }
+    }
+=cut
+
+    if ( $self->{log_exe_} ) {
+        $self->{log_}->{exe} = $PROGRAM_NAME;
+        @ARGV and $self->{log_}->{exe} .= q{ } . join q{ }, @ARGV;
+    }
+    $self->{log_host_} and $self->{log_}->{host} = hostname;
 
     my $package = ref $self;
     for my $method ( sort { length $a <=> length $b } keys %METHODS ) {
@@ -90,6 +130,7 @@ sub new
         no strict 'refs';
         *{"$package\::$method"} = sub {
             my $this = shift;
+            local *__ANON__ = __PACKAGE__ . "::$method";
             my ( $sec, $microsec ) = gettimeofday;
             if ( $this->{queue_} ) {
                 $this->{queue_}->enqueue( [ $level, $sec, $microsec, @_ ] );
@@ -155,14 +196,27 @@ sub _msg
         $msg =~ s/^[';#]+//sm;
     }
     my $method = $self->{methods_}->{$level};
-    $self->{log_}->{pid}                 = $PID;
-    $self->{log_}->{level}               = $method;
-    $self->{log_}->{ $self->{caption_} } = $msg;
+    $self->{log_}->{pid}     = $PID;
+    $self->{log_}->{level}   = $method;
+    $self->{log_}->{message} = $msg;
     if ( $self->{microsec_} ) {
         $self->{log_}->{tstamp} = $sec * 1_000_000 + $microsec;
         return sprintf '%s.%-6u %-6u %s %s', ( strftime '%F %X', localtime $sec ), $microsec, $PID, $method, $msg;
     }
     $self->{log_}->{tstamp} = $sec;
+    if ( $self->{log_trace_} ) {
+        my $depth = 3;
+        my @stack;
+        while ( my @caller = caller $depth ) {
+            push @stack, sprintf '%u %s() at line %u of "%s"', $depth - 2, $caller[3], $caller[2], $caller[1];
+        }
+        continue {
+            ++$depth;
+        }
+        $depth = scalar @stack;
+        $self->{log_}->{trace} = \@stack; #join "\n", @stack;
+    }
+
     return sprintf '%s %-6u %s %s', ( strftime '%F %X', localtime $sec ), $PID, $method, $msg;
 }
 

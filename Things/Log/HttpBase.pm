@@ -55,18 +55,13 @@ sub plog
 {
     my ($msg) = @args;
 
-    my $query = $self->{caption_} . q{=} . uri_encode($msg);
+    my $query = 'message=' . uri_encode($msg);
     if ( $self->{split_} ) {
-        $query
-            = 'pid='
-            . uri_encode( $self->{log_}->{pid} ) . '&exe='
-            . uri_encode( $self->{log_}->{exe} )
-            . '&level='
-            . uri_encode( $self->{log_}->{level} )
-            . '&tstamp='
-            . uri_encode( $self->{log_}->{tstamp} ) . q{&}
-            . $self->{caption_} . q{=}
-            . uri_encode( $self->{log_}->{ $self->{caption_} } );
+        my $log_data = $self->{log_};
+        $log_data->{trace} and $log_data->{trace} = join "\n", @{ $log_data->{trace} };
+        my @values;
+        push @values, "$_=" . uri_encode $log_data->{$_} for keys %{$log_data};
+        $query = join q{&}, @values;
     }
     if ( $self->{http_method_} eq 'get' ) {
         my $url = $self->{url_};

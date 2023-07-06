@@ -38,7 +38,7 @@ sub plog
     $self->{format_} eq 'csv'  and $msg = to_csv( $msg, $self );
     $self->{format_} eq 'json' and $msg = to_json( $msg, $self );
     $self->{format_} eq 'xml'  and $msg = to_xml( $msg, $self );
-    $self->{redis_}->lpush( $self->{caption_}, $msg );
+    $self->{redis_}->lpush( 'message', $msg );
     return $self;
 }
 
