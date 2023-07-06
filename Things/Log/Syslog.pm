@@ -36,18 +36,6 @@ const my %SYSLOG_LEVELS => (
     'TRC'       => LOG_DEBUG,
 );
 
-=pod
-LOG_ALERT - action must be taken immediately
-
-LOG_CRIT - critical conditions
-LOG_EMERG - system is unusable
-LOG_ERR - error conditions
-LOG_WARNING - warning conditions
-LOG_NOTICE - normal, but significant, condition
-LOG_INFO - informational message
-LOG_DEBUG - debug-level message
-=cut
-
 # ------------------------------------------------------------------------------
 sub new
 {
