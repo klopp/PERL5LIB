@@ -36,7 +36,7 @@ sub new
         $self->{error} = 'No required "namespace" ("ns") in MongoDB options.';
         return $self;
     }
-    if ( $namespace !~ /^\w+[.]\w+$/ ) {
+    if ( $namespace !~ /^\w+[.]\w+$/sm ) {
         $self->{error} = 'Invalid "namespace" ("ns") in MongoDB options.';
         return $self;
     }

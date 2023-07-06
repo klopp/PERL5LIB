@@ -56,7 +56,7 @@ sub plog
             $self->{log_}->{pid},
             $self->{log_}->{exe},
             $self->{log_}->{level},
-            $self->{log_}->{ $self->{caption} }
+            $self->{log_}->{ $self->{caption} },
         );
         $q = sprintf q{
             INSERT INTO `%s` (`tstamp`, `pid`, `exe`, `level`, `%s`) VALUES(?, ?, ?, ?, ?)       
