@@ -34,7 +34,7 @@ sub new
 sub plog
 {
     my ($msg) = @args;
-    $self->{code_}->( $self, $msg );
+    $self->{code_} and $self->{code_}->( $msg, $self );
     return $self;
 }
 
