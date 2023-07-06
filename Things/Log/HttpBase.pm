@@ -17,8 +17,8 @@ our $VERSION = 'v1.00';
 #       URL to send log
 #   method => POST or GET (nocase)
 #       URL to send log
-#   prefix => [STRING]
-#       parameter with log data name, default 'message'
+#   root => [STRING]
+#       parameter with log data name, default 'log'
 #   split => [FALSE]
 #       if TRUE log data will be splitted:
 #           message=message
@@ -51,7 +51,7 @@ sub plog
 {
     my ($msg) = @args;
 
-    my $query = $self->{prefix} . q{=} . uri_encode($msg);
+    my $query = $self->{root} . q{=} . uri_encode($msg);
     if ( $self->{split} ) {
         $query
             = 'pid='
@@ -61,8 +61,8 @@ sub plog
             . uri_encode( $self->{log_}->{level} )
             . '&tstamp='
             . uri_encode( $self->{log_}->{tstamp} ) . q{&}
-            . $self->{prefix} . q{=}
-            . uri_encode( $self->{log_}->{ $self->{prefix} } );
+            . $self->{root} . q{=}
+            . uri_encode( $self->{log_}->{ $self->{root} } );
     }
     if ( $self->{http_method_} eq 'get' ) {
         my $url = $self->{url};

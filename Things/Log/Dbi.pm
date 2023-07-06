@@ -15,7 +15,7 @@ our $VERSION = 'v1.00';
 #       DBI object with do()
 #   table => STRING
 #       table name
-#   prefix => [STRING]
+#   root => [STRING]
 #       table column with log data, default 'message'
 #   split => [FALSE]
 #       if TRUE log data will be splitted:
@@ -52,17 +52,17 @@ sub plog
             $self->{log_}->{pid},
             $self->{log_}->{exe},
             $self->{log_}->{level},
-            $self->{log_}->{ $self->{prefix} }
+            $self->{log_}->{ $self->{root} }
         );
         $q = sprintf q{
             INSERT INTO `%s` (`tstamp`, `pid`, `exe`, `level`, `%s`) VALUES(?, ?, ?, ?, ?)       
-        }, $self->{table}, $self->{prefix};
+        }, $self->{table}, $self->{root};
     }
     else {
         @data = ($msg);
         $q = sprintf q{
             INSERT INTO `%s` (`%s`) VALUES(?)       
-        }, $self->{table}, $self->{prefix};
+        }, $self->{table}, $self->{root};
     }
 
     defined $self->{dbobj}->do( $self->{dbobj}->qi($q), undef, @data )
