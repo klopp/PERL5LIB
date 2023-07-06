@@ -5,8 +5,9 @@ use strict;
 use warnings;
 use self;
 
-use XML::Hash::XS;
+#use XML::Hash::XS;
 
+use Things::Log::XmlBase;
 use Things::Log::File;
 use base qw/Things::Log::File/;
 
@@ -22,19 +23,15 @@ our $VERSION = 'v1.10';
 # ------------------------------------------------------------------------------
 sub new
 {
-    $self                     = $self->SUPER::new(@args);
-    $self->{xml}->{xml_decl}  = 0;
-    $self->{xml}->{canonical} = 1;
-    $self->{xml}->{root} ||= $self->{root};
-    return $self;
+    $self = $self->SUPER::new(@args);
+    return get_xml( $self );
 }
 
 # ------------------------------------------------------------------------------
 sub plog
 {
     my ($msg) = @args;
-    $msg = $self->{split} ? hash2xml $self->{log_}, %{ $self->{xml} } : hash2xml { $self->{root} => $msg },
-        %{ $self->{xml} };
+    $msg = to_xml($msg, $self);
     return $self->SUPER::plog($msg);
 }
 

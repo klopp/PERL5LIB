@@ -66,7 +66,7 @@ sub new
     if ( !$self->{level} || !exists $METHODS{ $self->{level} } ) {
         $self->{level} = $LOG_INFO;
     }
-    $self->{root} ||= 'log';
+    $self->{caption} ||= 'message';
     $self->{log_}->{exe} = $PROGRAM_NAME;
     @ARGV and $self->{log_}->{exe} .= q{ } . join q{ }, @ARGV;
 
@@ -145,7 +145,7 @@ sub _msg
     my $method = $self->{methods_}->{$level};
     $self->{log_}->{pid}               = $PID;
     $self->{log_}->{level}             = $method;
-    $self->{log_}->{ $self->{root} } = $msg;
+    $self->{log_}->{ $self->{caption}} = $msg;
     if ( $self->{microsec} ) {
         $self->{log_}->{tstamp} = $sec * 1_000_000 + $microsec;
         return sprintf '%s.%-6u %-6u %s %s', ( strftime '%F %X', localtime $sec ), $microsec, $PID, $method, $msg;

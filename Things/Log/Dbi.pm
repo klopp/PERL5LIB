@@ -52,17 +52,17 @@ sub plog
             $self->{log_}->{pid},
             $self->{log_}->{exe},
             $self->{log_}->{level},
-            $self->{log_}->{ $self->{root} }
+            $self->{log_}->{ $self->{caption} }
         );
         $q = sprintf q{
             INSERT INTO `%s` (`tstamp`, `pid`, `exe`, `level`, `%s`) VALUES(?, ?, ?, ?, ?)       
-        }, $self->{table}, $self->{root};
+        }, $self->{table}, $self->{caption};
     }
     else {
         @data = ($msg);
         $q = sprintf q{
             INSERT INTO `%s` (`%s`) VALUES(?)       
-        }, $self->{table}, $self->{root};
+        }, $self->{table}, $self->{caption};
     }
 
     defined $self->{dbobj}->do( $self->{dbobj}->qi($q), undef, @data )

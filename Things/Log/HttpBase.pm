@@ -51,7 +51,7 @@ sub plog
 {
     my ($msg) = @args;
 
-    my $query = $self->{root} . q{=} . uri_encode($msg);
+    my $query = $self->{caption} . q{=} . uri_encode($msg);
     if ( $self->{split} ) {
         $query
             = 'pid='
@@ -61,8 +61,8 @@ sub plog
             . uri_encode( $self->{log_}->{level} )
             . '&tstamp='
             . uri_encode( $self->{log_}->{tstamp} ) . q{&}
-            . $self->{root} . q{=}
-            . uri_encode( $self->{log_}->{ $self->{root} } );
+            . $self->{caption} . q{=}
+            . uri_encode( $self->{log_}->{ $self->{caption} } );
     }
     if ( $self->{http_method_} eq 'get' ) {
         my $url = $self->{url};
