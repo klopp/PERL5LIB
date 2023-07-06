@@ -5,8 +5,7 @@ use strict;
 use warnings;
 use self;
 
-use Text::CSV;
-
+use Things::Log::CsvBase;
 use Things::Log::File;
 use base qw/Things::Log::File/;
 
@@ -22,10 +21,7 @@ sub new
 {
     $self = $self->SUPER::new(@args);
     $self->{error} and return $self;
-
-    $self->{csv_}  = Text::CSV->new( $self->{csv} || {} );
-    $self->{error} = Text::CSV->error_diag;
-    return $self;
+    return get_csv($self);
 }
 
 # ------------------------------------------------------------------------------
@@ -33,23 +29,8 @@ sub plog
 {
     my ($msg) = @args;
 
-    if ( $self->{split} ) {
-        $self->{csv_}->combine(
-            $self->{log_}->{exe}, $self->{log_}->{level}, $self->{log_}->{message},
-            $self->{log_}->{pid}, $self->{log_}->{tstamp},
-        );
-    }
-    else {
-        $self->{csv_}->combine($msg);
-    }
-    $msg = $self->{csv_}->string;
-    if ($msg) {
-        $self->SUPER::plog($msg);
-    }
-    else {
-        $self->{error} = $self->{csv_}->error_diag;
-    }
-
+    $msg = to_csv( $msg, $self );
+    $msg and $self->SUPER::plog($msg);
     return $self;
 }
 
