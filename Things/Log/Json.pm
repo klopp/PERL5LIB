@@ -20,7 +20,7 @@ our $VERSION = 'v1.10';
 sub new
 {
     $self = $self->SUPER::new(@args);
-    return get_json( $self );
+    return get_json($self);
 }
 
 # ------------------------------------------------------------------------------

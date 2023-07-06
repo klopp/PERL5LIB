@@ -24,14 +24,14 @@ our $VERSION = 'v1.10';
 sub new
 {
     $self = $self->SUPER::new(@args);
-    return get_xml( $self );
+    return get_xml($self);
 }
 
 # ------------------------------------------------------------------------------
 sub plog
 {
     my ($msg) = @args;
-    $msg = to_xml($msg, $self);
+    $msg = to_xml( $msg, $self );
     return $self->SUPER::plog($msg);
 }
 

@@ -47,6 +47,7 @@ sub new
     $host =~ s/^$MONGO_SCHEME//gsm;
     try {
         $self->{mongo_} = MongoDB->connect( $MONGO_SCHEME . $host, $self->{mongo} )->ns($namespace);
+        delete $self->{mongo};
         $self->{format} = lc $self->{format};
         $self->{format} eq 'csv'  and get_csv($self);
         $self->{format} eq 'json' and get_json($self);
@@ -69,7 +70,7 @@ sub plog
         $self->{format} eq 'json' and $msg = to_json( $msg, $self );
         $self->{format} eq 'xml'  and $msg = to_xml( $msg, $self );
         try {
-            $self->{mongo_}->insert_one( [ $self->{caption}, $msg ] );
+            $self->{mongo_}->insert_one( [ $self->{caption_}, $msg ] );
         }
         catch {
             $self->{error} = $_;

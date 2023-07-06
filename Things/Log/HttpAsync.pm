@@ -43,7 +43,7 @@ sub url_get
 sub url_post
 {
     my ($content) = @args;
-    $self->{async_}->add( HTTP::Request->new( POST => $self->{url}, $self->{headers}, $content ) );
+    $self->{async_}->add( HTTP::Request->new( POST => $self->{url_}, $self->{headers}, $content ) );
     return $self;
 }
 

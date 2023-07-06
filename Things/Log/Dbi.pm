@@ -37,6 +37,10 @@ sub new
         $self->{error} = 'No required "table" parameter.';
         return $self;
     }
+    $self->{dbobj_}   = $self->{dbobj};
+    $self->{dbtable_} = $self->{table};
+    delete $self->{table};
+    delete $self->{dbobj};
     return $self;
 }
 
@@ -46,7 +50,7 @@ sub plog
     my ($msg) = @args;
 
     my ( @data, $q );
-    if ( $self->{split} ) {
+    if ( $self->{split_} ) {
         @data = (
             $self->{log_}->{tstamp},
             $self->{log_}->{pid},
@@ -56,17 +60,17 @@ sub plog
         );
         $q = sprintf q{
             INSERT INTO `%s` (`tstamp`, `pid`, `exe`, `level`, `%s`) VALUES(?, ?, ?, ?, ?)       
-        }, $self->{table}, $self->{caption};
+        }, $self->{dbtable_}, $self->{caption_};
     }
     else {
         @data = ($msg);
-        $q = sprintf q{
+        $q    = sprintf q{
             INSERT INTO `%s` (`%s`) VALUES(?)       
-        }, $self->{table}, $self->{caption};
+        }, $self->{dbtable_}, $self->{caption_};
     }
 
-    defined $self->{dbobj}->do( $self->{dbobj}->qi($q), undef, @data )
-        or $self->{error} = $self->{dbobj}->errstr;
+    defined $self->{dbobj_}->do( $self->{dbobj_}->qi($q), undef, @data )
+        or $self->{error} = $self->{dbobj_}->errstr;
 
     return $self;
 }
