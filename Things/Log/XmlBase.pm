@@ -10,7 +10,6 @@ use Exporter qw/import/;
 our @EXPORT = qw/get_xml to_xml/;
 
 our $VERSION = 'v1.10';
-
 # ------------------------------------------------------------------------------
 sub get_xml
 {
@@ -19,6 +18,7 @@ sub get_xml
     $logger->{xml_}->{xml_decl}  = 0;
     $logger->{xml_}->{canonical} = 1;
     $logger->{xml_}->{root} ||= 'log';
+    delete $logger->{xml};
     return $logger;
 }
 
@@ -26,7 +26,9 @@ sub get_xml
 sub to_xml
 {
     my ( $msg, $logger ) = @_;
-    $msg = $logger->{split} ? hash2xml $logger->{log_}, %{ $logger->{xml_} } : hash2xml { $logger->{caption} => $msg },
+    $msg = $logger->{split_}
+        ? hash2xml $logger->{log_}, %{ $logger->{xml_} }
+        : hash2xml { $logger->{caption_} => $msg },
         %{ $logger->{xml_} };
     return $msg;
 }

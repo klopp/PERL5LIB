@@ -25,17 +25,17 @@ sub new
 {
     $self = $self->SUPER::new(@args);
 
-    $self->{ua} = LWP::UserAgent->new;
+    $self->{ua_} = LWP::UserAgent->new;
     while ( my ( $key, $value ) = each %{ $self->{params} } ) {
 
         # skip default_headers(), default_header():
         next if $key =~ /header/ism;
-        if ( my $method = $self->{ua}->can($key) ) {
+        if ( my $method = $self->{ua_}->can($key) ) {
             $self->{ua}->$method($value);
         }
     }
     while ( my ( $key, $value ) = each %{ $self->{headers} } ) {
-        $self->{ua}->default_header( $key, $value );
+        $self->{ua_}->default_header( $key, $value );
     }
 
     return $self;
@@ -45,7 +45,7 @@ sub new
 sub url_get
 {
     my ($url) = @args;
-    my $rc = $self->{ua}->get($url);
+    my $rc = $self->{ua_}->get($url);
     $rc->is_success or $self->{error} = $rc->status_line;
     return $self;
 }
@@ -54,7 +54,7 @@ sub url_get
 sub url_post
 {
     my ($content) = @args;
-    my $rc = $self->{ua}->post( $self->{url}, Content => $content );
+    my $rc = $self->{ua_}->post( $self->{url}, Content => $content );
     $rc->is_success or $self->{error} = $rc->status_line;
     return $self;
 }

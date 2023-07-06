@@ -36,6 +36,8 @@ sub new
         return $self;
     }
     $self->{http_method_} = lc $self->{method};
+    delete $self->{method};
+
     if ( $self->{http_method_} ne 'post' && $self->{http_method_} ne 'get' ) {
         $self->{error} = 'Invalid "method" parameter (no POST or GET).';
         return $self;
@@ -43,6 +45,8 @@ sub new
     if ( !$self->{url} ) {
         $self->{error} = 'No required "url" parameter.';
     }
+    $self->{url_} = $self->{url};
+    delete $self->{url};
     return $self;
 }
 
@@ -51,8 +55,8 @@ sub plog
 {
     my ($msg) = @args;
 
-    my $query = $self->{caption} . q{=} . uri_encode($msg);
-    if ( $self->{split} ) {
+    my $query = $self->{caption_} . q{=} . uri_encode($msg);
+    if ( $self->{split_} ) {
         $query
             = 'pid='
             . uri_encode( $self->{log_}->{pid} ) . '&exe='
@@ -61,11 +65,11 @@ sub plog
             . uri_encode( $self->{log_}->{level} )
             . '&tstamp='
             . uri_encode( $self->{log_}->{tstamp} ) . q{&}
-            . $self->{caption} . q{=}
-            . uri_encode( $self->{log_}->{ $self->{caption} } );
+            . $self->{caption_} . q{=}
+            . uri_encode( $self->{log_}->{ $self->{caption_} } );
     }
     if ( $self->{http_method_} eq 'get' ) {
-        my $url = $self->{url};
+        my $url = $self->{url_};
         if ( -1 == index $url, q{?} ) {
             $url .= q{?} . $query;
         }

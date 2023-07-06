@@ -66,7 +66,19 @@ sub new
     if ( !$self->{level} || !exists $METHODS{ $self->{level} } ) {
         $self->{level} = $LOG_INFO;
     }
-    $self->{caption} ||= 'message';
+    $self->{level_} = $self->{level};
+    delete $self->{level};
+
+    $self->{caption_} = $self->{caption};
+    $self->{caption_} ||= 'message';
+    delete $self->{caption};
+
+    $self->{microsec_} = $self->{microsec};
+    delete $self->{microsec};
+
+    $self->{split_} = $self->{split};
+    delete $self->{split};
+
     $self->{log_}->{exe} = $PROGRAM_NAME;
     @ARGV and $self->{log_}->{exe} .= q{ } . join q{ }, @ARGV;
 
@@ -112,7 +124,7 @@ sub nb
 sub _log
 {
     my ( $level, $sec, $microsec, $fmt, @data ) = @args;
-    if ( $level <= $self->{level} ) {
+    if ( $level <= $self->{level_} ) {
         my $msg = $self->_msg( $level, $sec, $microsec, $fmt, @data );
         $msg and $self->plog($msg);
     }
@@ -143,10 +155,10 @@ sub _msg
         $msg =~ s/^[';#]+//sm;
     }
     my $method = $self->{methods_}->{$level};
-    $self->{log_}->{pid}               = $PID;
-    $self->{log_}->{level}             = $method;
-    $self->{log_}->{ $self->{caption}} = $msg;
-    if ( $self->{microsec} ) {
+    $self->{log_}->{pid}                 = $PID;
+    $self->{log_}->{level}               = $method;
+    $self->{log_}->{ $self->{caption_} } = $msg;
+    if ( $self->{microsec_} ) {
         $self->{log_}->{tstamp} = $sec * 1_000_000 + $microsec;
         return sprintf '%s.%-6u %-6u %s %s', ( strftime '%F %X', localtime $sec ), $microsec, $PID, $method, $msg;
     }

@@ -15,15 +15,17 @@ our $VERSION = 'v1.10';
 sub get_csv
 {
     my ($logger) = @_;
-    $logger->{csv_}  = Text::CSV->new( $logger->{csv} || {} );
+    $logger->{csv_} = Text::CSV->new( $logger->{csv} || {} );
+    delete $logger->{csv};
     $logger->{error} = Text::CSV->error_diag;
     return $logger;
 }
+
 # ------------------------------------------------------------------------------
 sub to_csv
 {
     my ( $msg, $logger ) = @_;
-    if ( $logger->{split} ) {
+    if ( $logger->{split_} ) {
         $logger->{csv_}->combine(
             $logger->{log_}->{exe}, $logger->{log_}->{level}, $logger->{log_}->{message},
             $logger->{log_}->{pid}, $logger->{log_}->{tstamp},

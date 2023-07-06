@@ -1,49 +1,52 @@
-package Things::Log::Json;
+package Things::Log::Code;
 
 # ------------------------------------------------------------------------------
 use strict;
 use warnings;
 use self;
 
-use Things::Log::JsonBase;
-use Things::Log::File;
-use base qw/Things::Log::File/;
-
-our $VERSION = 'v1.10';
+use Things::Const qw/:types/;
+use Things::Log::Base;
+use base qw/Things::Log::Base/;
 
 # ------------------------------------------------------------------------------
-#   file => FILE
-#       log file
-#   json => [ method => value, ... ]
-#       JSON::XS options
+our $VERSION = 'v1.00';
+
 # ------------------------------------------------------------------------------
 sub new
 {
     $self = $self->SUPER::new(@args);
-    return get_json($self);
+    my $coderef = $self->{code} || $self->{coderef};
+    if ( !$coderef ) {
+        $self->{error} = 'No required "code" ("coderef") parameter.';
+        return $self;
+    }
+    if ( ref $coderef ne $CODE ) {
+        $self->{error} = 'Parameter "code" ("coderef") must be CODE ref.';
+        return $self;
+    }
+    $self->{code_} = $coderef;
+    delete $self->{code};
+    return $self;
 }
 
 # ------------------------------------------------------------------------------
 sub plog
 {
     my ($msg) = @args;
-    $msg = to_json( $msg, $self );
-    $msg and $self->SUPER::plog($msg);
+    $self->{code_}->( $self, $msg );
     return $self;
 }
 
 # ------------------------------------------------------------------------------
+
 1;
 __END__
 
 =head1 SYNOPSIS
-
-    my $logger = Things::Log::Json->new
-    (
-        file => '/var/log/my.log',
-        json => [ key => value, ... ]
-    );
-
+    
+    my $logger = Things::Log::Code->new( code = sub {} );
+      
 =cut
 
 # ------------------------------------------------------------------------------

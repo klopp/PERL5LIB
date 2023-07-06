@@ -24,6 +24,7 @@ sub get_json
             }
         }
         $logger->{json_}->canonical(1);
+        delete $logger->{json};
     }
     catch {
         $logger->{error} = sprintf 'JSON :: %s', $_;
@@ -36,7 +37,7 @@ sub to_json
 {
     my ( $msg, $logger ) = @_;
     try {
-        $msg = $logger->{json_}->encode( $logger->{split} ? $logger->{log_} : { $logger->{caption} => $msg } );
+        $msg = $logger->{json_}->encode( $logger->{split_} ? $logger->{log_} : { $logger->{caption_} => $msg } );
     }
     catch {
         undef $msg;
