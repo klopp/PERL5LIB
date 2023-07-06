@@ -1,11 +1,11 @@
-package Things::Log::Xml;
+package Things::Log::Csv;
 
 # ------------------------------------------------------------------------------
 use strict;
 use warnings;
 use self;
 
-use XML::Hash::XS;
+use Text::CSV;
 
 use Things::Log::File;
 use base qw/Things::Log::File/;
@@ -15,25 +15,38 @@ our $VERSION = 'v1.10';
 # ------------------------------------------------------------------------------
 #   file => FILE
 #       log file
-#   xml => [ key => value, ... ]
-#       XML::Hash::XS options
-#       (canonical is always 1, root is 'log' by default)
-#       https://metacpan.org/pod/XML::Hash::XS#OPTIONS
+#   csv => [ method => value, ... ]
+#       Text::CSV options
 # ------------------------------------------------------------------------------
 sub new
 {
     $self = $self->SUPER::new(@args);
-    $self->{xml}->{xml_decl} = 0; 
-    $self->{xml}->{canonical} = 1; 
-    $self->{xml}->{root} ||= 'log'; 
+    $self->{error} and return $self;
+
+    $self->{csv_}  = Text::CSV->new( $self->{csv} || {} );
+    $self->{error} = Text::CSV->error_diag;
     return $self;
 }
 
 # ------------------------------------------------------------------------------
 sub plog
 {
-    my ($msg) = hash2xml $self->{log_}, %{$self->{xml}};
-    return $self->SUPER::plog($msg);
+    $self->{csv_}->combine(
+        $self->{log_}->{exe},
+        $self->{log_}->{level},
+        $self->{log_}->{message},
+        $self->{log_}->{pid},
+        $self->{log_}->{tstamp},
+    );
+    my $msg = $self->{csv_}->string;
+    if ($msg) {
+        $self->SUPER::plog($msg);
+    }
+    else {
+        $self->{error} = $self->{csv_}->error_diag;
+    }
+
+    return $self;
 }
 
 # ------------------------------------------------------------------------------
@@ -42,10 +55,10 @@ __END__
 
 =head1 SYNOPSIS
 
-    my $logger = Things::Log::Xml->new
+    my $logger = Things::Log::Csv->new
     (
         file => '/var/log/my.log',
-        xml => [ key => value, ... ]
+        csv  => [ key => value, ... ]
     );
 
 =cut

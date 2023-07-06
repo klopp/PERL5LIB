@@ -1,11 +1,12 @@
-package Things::Log::Xml;
+package Things::Log::Json;
 
 # ------------------------------------------------------------------------------
 use strict;
 use warnings;
 use self;
 
-use XML::Hash::XS;
+use JSON::XS;
+use Try::Catch;
 
 use Things::Log::File;
 use base qw/Things::Log::File/;
@@ -15,25 +16,39 @@ our $VERSION = 'v1.10';
 # ------------------------------------------------------------------------------
 #   file => FILE
 #       log file
-#   xml => [ key => value, ... ]
-#       XML::Hash::XS options
-#       (canonical is always 1, root is 'log' by default)
-#       https://metacpan.org/pod/XML::Hash::XS#OPTIONS
+#   json => [ method => value, ... ]
+#       JSON::XS options
 # ------------------------------------------------------------------------------
 sub new
 {
     $self = $self->SUPER::new(@args);
-    $self->{xml}->{xml_decl} = 0; 
-    $self->{xml}->{canonical} = 1; 
-    $self->{xml}->{root} ||= 'log'; 
+    try {
+        $self->{json} = JSON::XS->new;
+        while ( my ( $method, $value ) = each %{ $self->{params}->{json} } ) {
+            if ( $self->{json}->can($method) ) {
+                $self->{json}->$method($value);
+            }
+        }
+        $self->{json}->canonical(1);
+    }
+    catch {
+        $self->{error} = sprintf 'JSON :: %s', $_;
+    };
     return $self;
 }
 
 # ------------------------------------------------------------------------------
 sub plog
 {
-    my ($msg) = hash2xml $self->{log_}, %{$self->{xml}};
-    return $self->SUPER::plog($msg);
+    try {
+        my $msg = $self->{json}->encode( $self->{log_} );
+        $self->SUPER::plog($msg);
+    }
+    catch {
+        $self->{error} = sprintf 'JSON :: %s', $_;
+    };
+
+    return $self;
 }
 
 # ------------------------------------------------------------------------------
@@ -42,10 +57,10 @@ __END__
 
 =head1 SYNOPSIS
 
-    my $logger = Things::Log::Xml->new
+    my $logger = Things::Log::Json->new
     (
         file => '/var/log/my.log',
-        xml => [ key => value, ... ]
+        json => [ key => value, ... ]
     );
 
 =cut
