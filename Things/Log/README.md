@@ -187,7 +187,7 @@ my $log = Things::Log::Syslog->new(
 
 #### json => { key => value ... }
 
-Методы [JSON::XS](https://metacpan.org/pod/JSON::XS#OBJECT-ORIENTED-INTERFACEs). Параметр `canonical` всегда `TRUE`.
+Методы [JSON::XS](https://metacpan.org/pod/JSON::XS#OBJECT-ORIENTED-INTERFACE). Параметр `canonical` всегда `TRUE`.
 
 ```js
 {"message":"2023-07-09 18:33:56 492829 INFO сообщение"}
@@ -211,6 +211,27 @@ my $log = Things::Log::Syslog->new(
 }
 ```
 
-### [Things::Log::Db](Things/Log/Db.pm)
+### [Things::Log::Csv](Things/Log/Csv.pm)
 
-Лог в любой объект, умеющий [DBI::do()](https://metacpan.org/pod/DBI#do).
+Пишет файл в формате CSV. Конструктор наследуется из `Things::Log::File`. Дополнительные параметры:
+
+#### csv => { key => value ... }
+
+Параметры [Text::CSV](https://metacpan.org/pod/Text::CSV#new). Параметр `binary` всегда `TRUE`.
+
+```
+"2023-07-09 18:42:27 494578 INFO сообщение"
+```
+
+Формат записи при задании полей в параметре `fields` (в одну строку, в алфавитном порядке, строки `trace` разделены `"\n"`):
+
+```
+./c.pl,
+localhost,
+INFO,
+"сообщение с пробелами",
+494868,
+"1 main::tst() at line 67 of ""./c.pl""
+ 2 main::sts() at line 61 of ""./c.pl""",
+1688917416
+```
