@@ -24,13 +24,13 @@
 Строка лога формируется по шаблону `"ДАТА ВРЕМЯ PID УРОВЕНЬ СООБЩЕНИЕ"`:
 
 ```
-2023-06-28 22:09:08 391634 INFO что-то хочется сказать
+    2023-06-28 22:09:08 391634 INFO что-то хочется сказать
 ```
 
 ### Общие аргументы конструктора
 
-```
-my $logger = Things::Log::XYZ->new( comments => BOOL, microsec => BOOL, level => LOG_LEVEL );
+```perl
+    my $logger = Things::Log::XYZ->new( comments => BOOL, microsec => BOOL, level => LOG_LEVEL );
 ```
 
 Эти аргументы обрабатываются всеми классами-потомками одинаково.
@@ -43,19 +43,19 @@ my $logger = Things::Log::XYZ->new( comments => BOOL, microsec => BOOL, level =>
 
 Строки, начинающиеся с символов `'`, `#` и `;` считаются комментариями и выводятся в лог только если `comments => TRUE`:
 
-```
-$log->info( '%s', '; optional string' );
-# comments => FALSE, в лог не пойдёт вообще ничего
-# comments => TRUE, в лог пойдёт строка 'optional string'
+```perl
+    $log->info( '%s', '; optional string' );
+    # comments => FALSE, в лог не пойдёт вообще ничего
+    # comments => TRUE, в лог пойдёт строка 'optional string'
 ```
 
 По умолчанию `FALSE`. Может меняться динамически:
 
-```
-$log->comments(0);
-$log->info( '%s', '; optional string' );
-$log->comments(1);
-$log->error( '%s', '; maybe error' );
+```perl
+    $log->comments(0);
+    $log->info( '%s', '; optional string' );
+    $log->comments(1);
+    $log->error( '%s', '; maybe error' );
 ```
 
 #### microsec => BOOL
@@ -63,7 +63,7 @@ $log->error( '%s', '; maybe error' );
 По умолчанию `FALSE`. В случае `TRUE` к дате в строке лога будут добавлены микросекунды:
 
 ```
-2023-06-28 22:09:08.562396 391634 INFO очень полезная информация
+    2023-06-28 22:09:08.562396 391634 INFO очень полезная информация
 ```
 
 #### fields => { STRING | ARRAY }
@@ -124,16 +124,16 @@ $log->error( '%s', '; maybe error' );
 Используется `syslog.` Параметры `fields` игнорируются. 
 
 ```perl
-use English qw/-no_match_vars/;
-use File::Basename qw/basename/;
-use Sys::Syslog qw(:macros);
-use Things::Log::Syslog;
-my $log = Things::Log::Syslog->new(
-    level    => $LOG_INFO, 
-    opt      => 'ndelay,nofatal',
-    facility => LOG_LOCAL0|LOG_DAEMON,
-    ident    => basename $PROGRAM_NAME,
-);
+    use English qw/-no_match_vars/;
+    use File::Basename qw/basename/;
+    use Sys::Syslog qw(:macros);
+    use Things::Log::Syslog;
+    my $log = Things::Log::Syslog->new(
+        level    => $LOG_INFO, 
+        opt      => 'ndelay,nofatal',
+        facility => LOG_LOCAL0|LOG_DAEMON,
+        ident    => basename $PROGRAM_NAME,
+    );
 ```
 
 В конструкторе:
@@ -163,22 +163,22 @@ my $log = Things::Log::Syslog->new(
 Параметры [XML::Hash::XS](https://metacpan.org/pod/XML::Hash::XS#OPTIONS). Ключ `root` по умолчанию выставляется в `"log"`, ключ `canonical` всегда `TRUE`.
 
 ```xml
-<log><message>2023-07-09 18:26:45 491269 INFO сообщение</message></log>
+    <log><message>2023-07-09 18:26:45 491269 INFO сообщение</message></log>
 ```
 
 Формат записи при задании полей в параметре `fields`:
 
 ```xml
-<log>
-  <exe>./c.pl arg arg</exe>
-  <host>localhost</host>
-  <level>INFO</level>
-  <message>сообщение</message
-  <pid>12345678</pid>
-  <trace>1 main::tst() at line 67 of "./c.pl"</trace>
-  <trace>2 main::sts() at line 61 of "./c.pl"</trace>
-  <tstamp>1688915709</tstamp>
-</log>
+    <log>
+        <exe>./c.pl arg arg</exe>
+        <host>localhost</host>
+        <level>INFO</level>
+        <message>сообщение</message
+        <pid>12345678</pid>
+        <trace>1 main::tst() at line 67 of "./c.pl"</trace>
+        <trace>2 main::sts() at line 61 of "./c.pl"</trace>
+        <tstamp>1688915709</tstamp>
+    </log>
 ```
 
 ### [Things::Log::Json](Things/Log/Json.pm)
@@ -190,25 +190,25 @@ my $log = Things::Log::Syslog->new(
 Методы [JSON::XS](https://metacpan.org/pod/JSON::XS#OBJECT-ORIENTED-INTERFACE). Параметр `canonical` всегда `TRUE`.
 
 ```js
-{"message":"2023-07-09 18:33:56 492829 INFO сообщение"}
+    {"message":"2023-07-09 18:33:56 492829 INFO сообщение"}
 ```
 
 Формат записи при задании полей в параметре `fields`:
 
 ```js
-{
-  "exe":"./c.pl",
-  "host":"localhost",
-  "level":"INFO",
-  "message":"сообщение",
-  "pid":493219,
-  "trace":
-  [
-    "1 main::tst() at line 67 of \"./c.pl\"",
-    "2 main::sts() at line 61 of \"./c.pl\""
-  ],
-  "tstamp":1688916904
-}
+    {
+      "exe":"./c.pl",
+      "host":"localhost",
+      "level":"INFO",
+      "message":"сообщение",
+      "pid":493219,
+      "trace":
+      [
+        "1 main::tst() at line 67 of \"./c.pl\"",
+        "2 main::sts() at line 61 of \"./c.pl\""
+      ],
+      "tstamp":1688916904
+    }
 ```
 
 ### [Things::Log::Csv](Things/Log/Csv.pm)
@@ -220,20 +220,20 @@ my $log = Things::Log::Syslog->new(
 Параметры [Text::CSV](https://metacpan.org/pod/Text::CSV#new). Параметр `binary` всегда `TRUE`.
 
 ```
-"2023-07-09 18:42:27 494578 INFO сообщение"
+    "2023-07-09 18:42:27 494578 INFO сообщение"
 ```
 
-Формат записи при задании полей в параметре `fields` (в одну строку, в алфавитном порядке, строки `trace` разделены `"\n"`):
+Формат записи при задании полей в параметре `fields` (в одну строку, в алфавитном порядке: `"exe","host","level","message","pid","trace","tstamp"`, строки `trace` разделены `"\n"`):
 
 ```
-./c.pl,
-localhost,
-INFO,
-"сообщение с пробелами",
-494868,
-"1 main::tst() at line 67 of ""./c.pl""
- 2 main::sts() at line 61 of ""./c.pl""",
-1688917416
+    ./c.pl,
+    localhost,
+    INFO,
+    "сообщение с пробелами",
+    494868,
+    "1 main::tst() at line 67 of ""./c.pl""
+     2 main::sts() at line 61 of ""./c.pl""",
+    1688917416
 ```
 
 ### [Things::Log::Db](Things/Log/Db.pm)
