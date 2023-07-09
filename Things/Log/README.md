@@ -248,7 +248,7 @@
     1688917416
 ```
 
-## [Things::Log::Db](Things/Log/Db.pm)
+## [Things::Log::Dbi](Things/Log/Dbi.pm)
 
 ## [Things::Log::Http](Things/Log/Http.pm)
 
