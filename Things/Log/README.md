@@ -1,7 +1,19 @@
 # Разные логеры
 
 * [Базовый класс](#базовый-класс)
+    * [Формат лога](#формат-лога)
+    * [Общие аргументы конструктора](#общие-аргументы-конструктора)
 * [Асинхронность](#асинхронность)
+* [Things::Log::File](#thingslogfile)
+* [Things::Log::Std](#thingslogstd)
+* [Things::Log::Syslog](#thingslogsyslog)
+* [Things::Log::Xml](#thingslogxml)
+* [Things::Log::Json](#thingslogjson)
+* [Things::Log::Csv](#thingslogcsv)
+* [Things::Log::Db](#thingslogdb)
+* [Things::Log::Http](#thingsloghttp)
+* [Things::Log::Redis](#thingslogredis)
+* [Things::Log::Mongo](#thingslogmongo)
 
 ## Базовый класс
 
@@ -19,7 +31,7 @@
 * debug(), dbg()
 * trace(), trc()
 
-### Базовый формат
+### Формат лога
 
 Строка лога формируется по шаблону `"ДАТА ВРЕМЯ PID УРОВЕНЬ СООБЩЕНИЕ"`:
 
@@ -93,7 +105,7 @@
 
 Может быть вызван один раз, все последующие вызовы игнорируются. Отменить неблокирующий режим нельзя.
 
-### [Things::Log::File](Things/Log/File.pm)
+## [Things::Log::File](Things/Log/File.pm)
 
 Лог в файл. Параметры `fields` игнорируются. Имя файла в конструкторе:
 
@@ -103,23 +115,23 @@
     $logger->info( 'Hello from %s!', $PROGRAM_NAME );  
 ```
 
-### [Things::Log::Std](Things/Log/Std.pm)
+## [Things::Log::Std](Things/Log/Std.pm)
 
 Лог в `STDOUT`. Параметры `fields` игнорируются. Перехватываются:
 
-#### вывод в STDERR 
+### вывод в STDERR 
 
 Преобразуется в `$logger->notice()`
 
-#### warn() 
+### warn() 
 
 Преобразуется в `$logger->warn()`
 
-#### die() 
+### die() 
 
 Преобразуется в `$logger->emergency()` с последующим `Carp::croak`.
 
-### [Things::Log::Syslog](Things/Log/Syslog.pm)
+## [Things::Log::Syslog](Things/Log/Syslog.pm)
 
 Используется `syslog.` Параметры `fields` игнорируются. 
 
@@ -138,27 +150,27 @@
 
 В конструкторе:
 
-#### sock => ...
+### sock => ...
 
 Параметры сокета, подробней в описании [Sys::Syslog#setlogsock()](https://metacpan.org/pod/Sys::Syslog#FUNCTIONS). По умолчанию не используется.
 
-#### ident => STRING
+### ident => STRING
 
 Идентификатор (префикс) для сообщений. По умолчанию пустая строка.
 
-#### opt => STRING
+### opt => STRING
 
 Параметры: [Sys::Syslog#openlog()/Options](https://metacpan.org/pod/Sys::Syslog#FUNCTIONS). По умолчанию пустая строка.
 
-#### facility => VALUE
+### facility => VALUE
 
 См. [Sys::Syslog#Facilities](https://metacpan.org/pod/Sys::Syslog#Facilities).
 
-### [Things::Log::Xml](Things/Log/Xml.pm)
+## [Things::Log::Xml](Things/Log/Xml.pm)
 
 Пишет файл в формате XML. Конструктор наследуется из `Things::Log::File`. Дополнительные параметры:
 
-#### xml => { key => value ... }
+### xml => { key => value ... }
 
 Параметры [XML::Hash::XS](https://metacpan.org/pod/XML::Hash::XS#OPTIONS). Ключ `root` по умолчанию выставляется в `"log"`, ключ `canonical` всегда `TRUE`.
 
@@ -181,11 +193,11 @@
     </log>
 ```
 
-### [Things::Log::Json](Things/Log/Json.pm)
+## [Things::Log::Json](Things/Log/Json.pm)
 
 Пишет файл в формате JSON. Конструктор наследуется из `Things::Log::File`. Дополнительные параметры:
 
-#### json => { key => value ... }
+### json => { key => value ... }
 
 Методы [JSON::XS](https://metacpan.org/pod/JSON::XS#OBJECT-ORIENTED-INTERFACE). Параметр `canonical` всегда `TRUE`.
 
@@ -211,11 +223,11 @@
     }
 ```
 
-### [Things::Log::Csv](Things/Log/Csv.pm)
+## [Things::Log::Csv](Things/Log/Csv.pm)
 
 Пишет файл в формате CSV. Конструктор наследуется из `Things::Log::File`. Дополнительные параметры:
 
-#### csv => { key => value ... }
+### csv => { key => value ... }
 
 Параметры [Text::CSV](https://metacpan.org/pod/Text::CSV#new). Параметр `binary` всегда `TRUE`.
 
@@ -236,12 +248,12 @@
     1688917416
 ```
 
-### [Things::Log::Db](Things/Log/Db.pm)
+## [Things::Log::Db](Things/Log/Db.pm)
 
-### [Things::Log::Http](Things/Log/Http.pm)
+## [Things::Log::Http](Things/Log/Http.pm)
 
-### [Things::Log::Redis](Things/Log/Redis.pm)
+## [Things::Log::Redis](Things/Log/Redis.pm)
 
-### [Things::Log::Mongo](Things/Log/Mongo.pm)
+## [Things::Log::Mongo](Things/Log/Mongo.pm)
 
 
