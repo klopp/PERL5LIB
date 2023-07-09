@@ -184,33 +184,33 @@ sub _msg
         $self->{comments_} or return;
         $msg =~ s/^[';#\s]+//sm;
     }
-    delete $self->{log_};
-    $self->{log_}->{message} = $msg;
-
     my $method = $self->{methods_}->{$level};
+
     if ( $self->{use_fields_} ) {
+        $self->{log_} = { message => $msg };
         $self->{fields_}->{pid}   and $self->{log_}->{pid}   = $PID;
         $self->{fields_}->{level} and $self->{log_}->{level} = $method;
         $self->{fields_}->{exe}   and $self->{log_}->{exe}   = $self->{exe_};
         $self->{fields_}->{host}  and $self->{log_}->{host}  = $self->{host_};
+        if ( $self->{fields_}->{tstamp} ) {
+            $self->{log_}->{tstamp}
+                = $self->{microsec_}
+                ? $sec * 1_000_000 + $microsec
+                : $sec;
+        }
         if ( $self->{fields_}->{trace} ) {
             my $depth = 3;
             my @stack;
             while ( my @caller = caller $depth ) {
                 push @stack, sprintf '%u %s() at line %u of "%s"', $depth - 2, $caller[3], $caller[2], $caller[1];
-            }
-            continue {
                 ++$depth;
             }
-            $depth = scalar @stack;
-            $self->{log_}->{trace} = \@stack;         #join "\n", @stack;
+            $self->{log_}->{trace} = \@stack;
         }
     }
-    if ( $self->{microsec_} ) {
-        $self->{fields_}->{tstamp} and $self->{log_}->{tstamp} = $sec * 1_000_000 + $microsec;
-        return sprintf '%s.%-6u %-6u %s %s', ( strftime '%F %X', localtime $sec ), $microsec, $PID, $method, $msg;
-    }
-    $self->{fields_}->{tstamp} and $self->{log_}->{tstamp} = $sec;
+    $self->{microsec_}
+        and return sprintf '%s.%-6u %-6u %s %s', ( strftime '%F %X', localtime $sec ), $microsec, $PID, $method,
+        $msg;
     return sprintf '%s %-6u %s %s', ( strftime '%F %X', localtime $sec ), $PID, $method, $msg;
 }
 
