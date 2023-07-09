@@ -83,7 +83,7 @@ $log->error( '%s', '; maybe error' );
 ...
 ```
  
-Поле `message` в этой структуре будет использоваться всегда.
+Поле `message` в этой структуре будет использоваться всегда. При указании `"all"` или `"*"` в структуру будут включены все поля. 
 
 ## Асинхронность
 
@@ -95,7 +95,7 @@ $log->error( '%s', '; maybe error' );
 
 ### [Things::Log::File](Things/Log/File.pm)
 
-Лог в файл. Имя файла в конструкторе:
+Лог в файл. Параметры `fields` игнорируются. Имя файла в конструкторе:
 
 ```perl
     my $logger = Things::Log::File->new( file => '/var/log/my.log' );
@@ -105,7 +105,7 @@ $log->error( '%s', '; maybe error' );
 
 ### [Things::Log::Std](Things/Log/Std.pm)
 
-Лог в `STDOUT`. При этом перехватываются:
+Лог в `STDOUT`. Параметры `fields` игнорируются. Перехватываются:
 
 #### вывод в STDERR 
 
@@ -117,12 +117,131 @@ $log->error( '%s', '; maybe error' );
 
 #### die() 
 
-Преобразуется в `$logger->emergency()` с последующим `die`.
+Преобразуется в `$logger->emergency()` с последующим `Carp::croak`.
 
-### [Things::Log::Url](Things/Log/Url.pm)
+### [Things::Log::Syslog](Things/Log/Syslog.pm)
 
-Лог в URL.
+Используется `syslog.` Параметры `fields` игнорируются. 
+
+```perl
+use English qw/-no_match_vars/;
+use File::Basename qw/basename/;
+use Sys::Syslog qw(:macros);
+use Things::Log::Syslog;
+my $log = Things::Log::Syslog->new(
+    level    => $LOG_INFO, 
+    opt      => 'ndelay,nofatal',
+    facility => LOG_LOCAL0|LOG_DAEMON,
+    ident    => basename $PROGRAM_NAME,
+);
+```
+
+В конструкторе:
+
+#### sock => ...
+
+Параметры сокета, подробней в описании [Sys::Syslog#setlogsock()](https://metacpan.org/pod/Sys::Syslog#FUNCTIONS). По умолчанию не используется.
+
+#### ident => STRING
+
+Идентификатор (префикс) для сообщений. По умолчанию пустая строка.
+
+#### opt => STRING
+
+Параметры: [Sys::Syslog#openlog()/Options](https://metacpan.org/pod/Sys::Syslog#FUNCTIONS). По умолчанию пустая строка.
+
+#### facility => VALUE
+
+См. [Sys::Syslog#Facilities](https://metacpan.org/pod/Sys::Syslog#Facilities).
+
+### [Things::Log::Xml](Things/Log/Xml.pm)
+
+Пишет файл в формате XML. Конструктор наследуется из `Things::Log::File`. Дополнительные параметры:
+
+#### xml => { key => value ... }
+
+Параметры [XML::Hash::XS](https://metacpan.org/pod/XML::Hash::XS#OPTIONS). Ключ `root` по умолчанию выставляется в `"log"`, ключ `canonical` всегда `TRUE`.
+
+```xml
+<log><message>2023-07-09 18:26:45 491269 INFO сообщение</message></log>
+```
+
+Формат записи при задании полей в параметре `fields`:
+
+```xml
+<log>
+  <exe>./c.pl arg arg</exe>
+  <host>localhost</host>
+  <level>INFO</level>
+  <message>сообщение</message
+  <pid>12345678</pid>
+  <trace>1 main::tst() at line 67 of "./c.pl"</trace>
+  <trace>2 main::sts() at line 61 of "./c.pl"</trace>
+  <tstamp>1688915709</tstamp>
+</log>
+```
+
+### [Things::Log::Json](Things/Log/Json.pm)
+
+Пишет файл в формате JSON. Конструктор наследуется из `Things::Log::File`. Дополнительные параметры:
+
+#### json => { key => value ... }
+
+Методы [JSON::XS](https://metacpan.org/pod/JSON::XS#OBJECT-ORIENTED-INTERFACE). Параметр `canonical` всегда `TRUE`.
+
+```js
+{"message":"2023-07-09 18:33:56 492829 INFO сообщение"}
+```
+
+Формат записи при задании полей в параметре `fields`:
+
+```js
+{
+  "exe":"./c.pl",
+  "host":"localhost",
+  "level":"INFO",
+  "message":"сообщение",
+  "pid":493219,
+  "trace":
+  [
+    "1 main::tst() at line 67 of \"./c.pl\"",
+    "2 main::sts() at line 61 of \"./c.pl\""
+  ],
+  "tstamp":1688916904
+}
+```
+
+### [Things::Log::Csv](Things/Log/Csv.pm)
+
+Пишет файл в формате CSV. Конструктор наследуется из `Things::Log::File`. Дополнительные параметры:
+
+#### csv => { key => value ... }
+
+Параметры [Text::CSV](https://metacpan.org/pod/Text::CSV#new). Параметр `binary` всегда `TRUE`.
+
+```
+"2023-07-09 18:42:27 494578 INFO сообщение"
+```
+
+Формат записи при задании полей в параметре `fields` (в одну строку, в алфавитном порядке, строки `trace` разделены `"\n"`):
+
+```
+./c.pl,
+localhost,
+INFO,
+"сообщение с пробелами",
+494868,
+"1 main::tst() at line 67 of ""./c.pl""
+ 2 main::sts() at line 61 of ""./c.pl""",
+1688917416
+```
 
 ### [Things::Log::Db](Things/Log/Db.pm)
 
-Лог в любой объект, умеющий [DBI::do()](https://metacpan.org/pod/DBI#do).
+### [Things::Log::Http](Things/Log/Http.pm)
+
+### [Things::Log::Redis](Things/Log/Redis.pm)
+
+### [Things::Log::Mongo](Things/Log/Mongo.pm)
+
+

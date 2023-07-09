@@ -28,7 +28,7 @@ sub to_xml
 {
     my ( $msg, $logger ) = @_;
     $msg
-        = $logger->{fields_}
+        = $logger->{use_fields_}
         ? hash2xml $logger->{log_}, %{ $logger->{xml_} }
         : hash2xml { message => $msg },
         %{ $logger->{xml_} };

@@ -46,10 +46,14 @@ sub new
             $self->{error} = $ERRNO;
             return $self;
         }
+        delete $self->{sock};
     }
     try {
-        openlog( $self->{indent} || q{}, $self->{logopt}, $self->{facility} );
+        openlog( $self->{ident} || q{}, $self->{opt} || q{}, $self->{facility} || LOG_LOCAL0 );
         $self->{syslog_} = 1;
+        delete $self->{indent};
+        delete $self->{opt};
+        delete $self->{facility};
     }
     catch {
         $self->{error} = $_;
