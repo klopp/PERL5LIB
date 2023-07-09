@@ -44,9 +44,9 @@ sub plog
 __END__
 
 =head1 SYNOPSIS
-    
+
     my $logger = Things::Log::Code->new( code = sub {} );
-      
+
 =cut
 
 # ------------------------------------------------------------------------------

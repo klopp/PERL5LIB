@@ -73,8 +73,6 @@ sub plog
         }, $self->{dbtable_};
     }
 
-    printf "[[ %s ]]\n", $q;
-
     defined $self->{dbobj_}->do( $self->{dbobj_}->qi($q), undef, @data )
         or $self->{error} = $self->{dbobj_}->errstr;
 

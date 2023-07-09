@@ -79,24 +79,26 @@ sub new
 {
     $self = bless {@args}, $self;
 
+    # common parammeters:
     if ( !$self->{level} || !exists $METHODS{ $self->{level} } ) {
         $self->{level} = $LOG_INFO;
     }
     $self->{level_} = $self->{level};
     delete $self->{level};
+    $self->{microsec_} = $self->{microsec};
+    delete $self->{microsec};
+    $self->{comments_} = $self->{comments};
+    delete $self->{comments};
 
+    # group-specific parameters:
+    $self->{split_} = $self->{split};
+    delete $self->{split};
     $self->{log_exe_} = $self->{log_exe};
     delete $self->{log_exe};
     $self->{log_host_} = $self->{log_host};
     delete $self->{log_host};
     $self->{log_trace_} = $self->{log_trace};
     delete $self->{log_trace};
-
-    $self->{microsec_} = $self->{microsec};
-    delete $self->{microsec};
-
-    $self->{split_} = $self->{split};
-    delete $self->{split};
 
 =pod
     if ( $self->{fields} ) {
@@ -142,6 +144,13 @@ sub new
         }
     }
 
+    return $self;
+}
+
+# ------------------------------------------------------------------------------
+sub comments
+{
+    ( $self->{comments_} ) = @args;
     return $self;
 }
 
@@ -192,8 +201,8 @@ sub _msg
 
     my $msg = trim( sprintf $fmt, @data );
     if ( $msg =~ /^[';#]/sm ) {
-        $self->{comments} or return;
-        $msg =~ s/^[';#]+//sm;
+        $self->{comments_} or return;
+        $msg =~ s/^[';#\s]+//sm;
     }
     my $method = $self->{methods_}->{$level};
     $self->{log_}->{pid}     = $PID;
@@ -214,7 +223,7 @@ sub _msg
             ++$depth;
         }
         $depth = scalar @stack;
-        $self->{log_}->{trace} = \@stack; #join "\n", @stack;
+        $self->{log_}->{trace} = \@stack;         #join "\n", @stack;
     }
 
     return sprintf '%s %-6u %s %s', ( strftime '%F %X', localtime $sec ), $PID, $method, $msg;
