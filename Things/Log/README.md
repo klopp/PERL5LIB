@@ -83,7 +83,7 @@ $log->error( '%s', '; maybe error' );
 ...
 ```
  
-Поле `message` в этой структуре будет использоваться всегда.
+Поле `message` в этой структуре будет использоваться всегда. При указании `"all"` или `"*"` в структуру будут включены все поля. 
 
 ## Асинхронность
 
@@ -121,7 +121,22 @@ $log->error( '%s', '; maybe error' );
 
 ### [Things::Log::Syslog](Things/Log/Syslog.pm)
 
-Используется `syslog.` Параметры `fields` игнорируются. В конструкторе:
+Используется `syslog.` Параметры `fields` игнорируются. 
+
+```perl
+use English qw/-no_match_vars/;
+use File::Basename qw/basename/;
+use Sys::Syslog qw(:macros);
+use Things::Log::Syslog;
+my $log = Things::Log::Syslog->new(
+    level    => $LOG_INFO, 
+    opt      => 'ndelay,nofatal',
+    facility => LOG_LOCAL0|LOG_DAEMON,
+    ident    => basename $PROGRAM_NAME,
+);
+```
+
+В конструкторе:
 
 #### sock => ...
 
@@ -131,7 +146,7 @@ $log->error( '%s', '; maybe error' );
 
 Идентификатор (префикс) для сообщений. По умолчанию пустая строка.
 
-#### logopt => STRING
+#### opt => STRING
 
 Параметры: [Sys::Syslog#openlog()/Options](https://metacpan.org/pod/Sys::Syslog#FUNCTIONS). По умолчанию пустая строка.
 
@@ -139,9 +154,62 @@ $log->error( '%s', '; maybe error' );
 
 См. [Sys::Syslog#Facilities](https://metacpan.org/pod/Sys::Syslog#Facilities).
 
-### [Things::Log::Url](Things/Log/Url.pm)
+### [Things::Log::Xml](Things/Log/Xml.pm)
 
-Лог в URL.
+Пишет файл в формате XML. Конструктор наследуется из `Things::Log::File`. Дополнительные параметры:
+
+#### xml => { key => value ... }
+
+Параметры [XML::Hash::XS](https://metacpan.org/pod/XML::Hash::XS#OPTIONS). Ключ `root` по умолчанию выставляется в `"log"`, ключ `canonical` всегда `TRUE`.
+
+```xml
+<log><message>2023-07-09 18:26:45 491269 INFO сообщение</message></log>
+```
+
+Формат записи при задании полей в параметре `fields`:
+
+```xml
+<log>
+  <exe>./c.pl arg arg</exe>
+  <host>localhost</host>
+  <level>INFO</level>
+  <message>сообщение</message
+  <pid>12345678</pid>
+  <trace>1 main::tst() at line 67 of "./c.pl"</trace>
+  <trace>2 main::sts() at line 61 of "./c.pl"</trace>
+  <tstamp>1688915709</tstamp>
+</log>
+```
+
+### [Things::Log::Json](Things/Log/Json.pm)
+
+Пишет файл в формате JSON. Конструктор наследуется из `Things::Log::File`. Дополнительные параметры:
+
+#### json => { key => value ... }
+
+Методы [JSON::XS](https://metacpan.org/pod/JSON::XS#OBJECT-ORIENTED-INTERFACEs). Параметр `canonical` всегда `TRUE`.
+
+```js
+{"message":"2023-07-09 18:33:56 492829 INFO сообщение"}
+```
+
+Формат записи при задании полей в параметре `fields`:
+
+```js
+{
+  "exe":"./c.pl",
+  "host":"localhost",
+  "level":"INFO",
+  "message":"сообщение",
+  "pid":493219,
+  "trace":
+  [
+    "1 main::tst() at line 67 of \"./c.pl\"",
+    "2 main::sts() at line 61 of \"./c.pl\""
+  ],
+  "tstamp":1688916904
+}
+```
 
 ### [Things::Log::Db](Things/Log/Db.pm)
 
