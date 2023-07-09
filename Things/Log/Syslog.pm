@@ -49,10 +49,10 @@ sub new
         delete $self->{sock};
     }
     try {
-        openlog( $self->{ident} || q{}, $self->{logopt} || q{}, $self->{facility} || LOG_LOCAL0 );
+        openlog( $self->{ident} || q{}, $self->{opt} || q{}, $self->{facility} || LOG_LOCAL0 );
         $self->{syslog_} = 1;
         delete $self->{indent};
-        delete $self->{logopt};
+        delete $self->{opt};
         delete $self->{facility};
     }
     catch {
