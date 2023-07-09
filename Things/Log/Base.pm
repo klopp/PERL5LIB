@@ -10,7 +10,6 @@ use strict;
 use warnings;
 use self;
 
-use Carp::Trace;
 use Const::Fast;
 use English qw/-no_match_vars/;
 use POSIX qw/strftime/;
