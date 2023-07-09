@@ -36,7 +36,7 @@ sub new
         $self->{error} = 'No required "namespace" ("ns") in MongoDB options.';
         return $self;
     }
-    if ( $namespace !~ /^\w+[.]\w+$/ ) {
+    if ( $namespace !~ /^\w+[.]\w+$/sm ) {
         $self->{error} = 'Invalid "namespace" ("ns") in MongoDB options.';
         return $self;
     }
@@ -70,7 +70,7 @@ sub plog
         $self->{format} eq 'json' and $msg = to_json( $msg, $self );
         $self->{format} eq 'xml'  and $msg = to_xml( $msg, $self );
         try {
-            $self->{mongo_}->insert_one( [ $self->{caption_}, $msg ] );
+            $self->{mongo_}->insert_one( { message => $msg } );
         }
         catch {
             $self->{error} = $_;

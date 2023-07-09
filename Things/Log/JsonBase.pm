@@ -37,7 +37,7 @@ sub to_json
 {
     my ( $msg, $logger ) = @_;
     try {
-        $msg = $logger->{json_}->encode( $logger->{split_} ? $logger->{log_} : { $logger->{caption_} => $msg } );
+        $msg = $logger->{json_}->encode( $logger->{fields_} ? $logger->{log_} : { message => $msg } );
     }
     catch {
         undef $msg;

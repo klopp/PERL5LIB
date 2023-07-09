@@ -2,6 +2,7 @@ package Things::Log::Base;
 
 # ------------------------------------------------------------------------------
 use threads;
+use threads::shared;
 use Thread::Queue;
 
 # ------------------------------------------------------------------------------
@@ -9,11 +10,14 @@ use strict;
 use warnings;
 use self;
 
+use Carp::Trace;
 use Const::Fast;
 use English qw/-no_match_vars/;
 use POSIX qw/strftime/;
+use Sys::Hostname;
 use Time::HiRes qw/gettimeofday usleep/;
 
+use Things::Const qw/:types/;
 use Things::Trim;
 
 const our $LOG_EMERG  => 0;
@@ -46,10 +50,12 @@ const my %METHODS => (
     'TRC'       => $LOG_TRACE,
 );
 
+const my %FIELDS => qw/tstamp 1 pid 1 level 1 exe 1 host 1 trace 1/;
+
 use Exporter qw/import/;
 our @EXPORT = qw/$LOG_EMERG $LOG_ALERT $LOG_CRIT $LOG_ERROR $LOG_WARN $LOG_NOTICE $LOG_INFO $LOG_DEBUG $LOG_TRACE/;
 
-our $VERSION = 'v2.00';
+our $VERSION = 'v2.10';
 
 # ------------------------------------------------------------------------------
 #   level => [$LOG_INFO]
@@ -63,24 +69,33 @@ sub new
 {
     $self = bless {@args}, $self;
 
+    # common parameters:
     if ( !$self->{level} || !exists $METHODS{ $self->{level} } ) {
         $self->{level} = $LOG_INFO;
     }
     $self->{level_} = $self->{level};
     delete $self->{level};
-
-    $self->{caption_} = $self->{caption};
-    $self->{caption_} ||= 'message';
-    delete $self->{caption};
-
     $self->{microsec_} = $self->{microsec};
     delete $self->{microsec};
+    $self->{comments_} = $self->{comments};
+    delete $self->{comments};
 
-    $self->{split_} = $self->{split};
-    delete $self->{split};
-
-    $self->{log_}->{exe} = $PROGRAM_NAME;
-    @ARGV and $self->{log_}->{exe} .= q{ } . join q{ }, @ARGV;
+    # group-specific parameters:
+    if ( $self->{fields} ) {
+        for ( ref $self->{fields} eq $ARRAY ? @{ $self->{fields} } : split /[,;\s]+/sm, $self->{fields} ) {
+            if ( exists $FIELDS{$_} ) {
+                $self->{fields_}->{$_} = 1;
+            }
+            else {
+                $self->{error} = sprintf 'Unknown field "%s" in fields parameter.', $_;
+                return $self;
+            }
+        }
+        delete $self->{fields};
+        $self->{exe_} = $PROGRAM_NAME;
+        @ARGV and $self->{exe_} .= q{ } . join q{ }, @ARGV;
+        $self->{host_} = hostname;
+    }
 
     my $package = ref $self;
     for my $method ( sort { length $a <=> length $b } keys %METHODS ) {
@@ -90,6 +105,7 @@ sub new
         no strict 'refs';
         *{"$package\::$method"} = sub {
             my $this = shift;
+            local *__ANON__ = __PACKAGE__ . "::$method";
             my ( $sec, $microsec ) = gettimeofday;
             if ( $this->{queue_} ) {
                 $this->{queue_}->enqueue( [ $level, $sec, $microsec, @_ ] );
@@ -105,10 +121,18 @@ sub new
 }
 
 # ------------------------------------------------------------------------------
+sub comments
+{
+    ( $self->{comments_} ) = @args;
+    return $self;
+}
+
+# ------------------------------------------------------------------------------
 sub nb
 {
     if ( !$self->{queue_} ) {
-        $self->{queue_} = Thread::Queue->new;
+        $self->{queue_}    = Thread::Queue->new;
+        $self->{comments_} = shared_clone( $self->{comments_} );
         threads->create(
             sub {
                 while ( defined( my $args = $self->{queue_}->dequeue ) ) {
@@ -151,18 +175,36 @@ sub _msg
 
     my $msg = trim( sprintf $fmt, @data );
     if ( $msg =~ /^[';#]/sm ) {
-        $self->{comments} or return;
-        $msg =~ s/^[';#]+//sm;
+        $self->{comments_} or return;
+        $msg =~ s/^[';#\s]+//sm;
     }
+    delete $self->{log_};
+    $self->{log_}->{message} = $msg;
+
     my $method = $self->{methods_}->{$level};
-    $self->{log_}->{pid}                 = $PID;
-    $self->{log_}->{level}               = $method;
-    $self->{log_}->{ $self->{caption_} } = $msg;
+    if ( $self->{fields_} ) {
+        $self->{fields_}->{pid}   and $self->{log_}->{pid}   = $PID;
+        $self->{fields_}->{level} and $self->{log_}->{level} = $method;
+        $self->{fields_}->{exe}   and $self->{log_}->{exe}   = $self->{exe_};
+        $self->{fields_}->{host}  and $self->{log_}->{host}  = $self->{host_};
+        if ( $self->{fields_}->{trace} ) {
+            my $depth = 3;
+            my @stack;
+            while ( my @caller = caller $depth ) {
+                push @stack, sprintf '%u %s() at line %u of "%s"', $depth - 2, $caller[3], $caller[2], $caller[1];
+            }
+            continue {
+                ++$depth;
+            }
+            $depth = scalar @stack;
+            $self->{log_}->{trace} = \@stack;         #join "\n", @stack;
+        }
+    }
     if ( $self->{microsec_} ) {
-        $self->{log_}->{tstamp} = $sec * 1_000_000 + $microsec;
+        $self->{fields_}->{tstamp} and $self->{log_}->{tstamp} = $sec * 1_000_000 + $microsec;
         return sprintf '%s.%-6u %-6u %s %s', ( strftime '%F %X', localtime $sec ), $microsec, $PID, $method, $msg;
     }
-    $self->{log_}->{tstamp} = $sec;
+    $self->{fields_}->{tstamp} and $self->{log_}->{tstamp} = $sec;
     return sprintf '%s %-6u %s %s', ( strftime '%F %X', localtime $sec ), $PID, $method, $msg;
 }
 

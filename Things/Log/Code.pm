@@ -34,7 +34,7 @@ sub new
 sub plog
 {
     my ($msg) = @args;
-    $self->{code_}->( $self, $msg );
+    $self->{code_} and $self->{code_}->( $msg, $self );
     return $self;
 }
 
@@ -44,9 +44,9 @@ sub plog
 __END__
 
 =head1 SYNOPSIS
-    
+
     my $logger = Things::Log::Code->new( code = sub {} );
-      
+
 =cut
 
 # ------------------------------------------------------------------------------

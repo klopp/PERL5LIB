@@ -50,23 +50,27 @@ sub plog
     my ($msg) = @args;
 
     my ( @data, $q );
-    if ( $self->{split_} ) {
-        @data = (
-            $self->{log_}->{tstamp},
-            $self->{log_}->{pid},
-            $self->{log_}->{exe},
-            $self->{log_}->{level},
-            $self->{log_}->{ $self->{caption} }
-        );
+
+    if ( $self->{fields_} ) {
+        my $log_data = $self->{log_};
+        my @fields;
+        my @placeholders;
+        $log_data->{trace} and $log_data->{trace} = join "\n", @{ $log_data->{trace} };
+        for ( keys %{$log_data} ) {
+            push @fields,       "`$_`";
+            push @data,         $log_data->{$_};
+            push @placeholders, q{?};
+        }
+
         $q = sprintf q{
-            INSERT INTO `%s` (`tstamp`, `pid`, `exe`, `level`, `%s`) VALUES(?, ?, ?, ?, ?)       
-        }, $self->{dbtable_}, $self->{caption_};
+            INSERT INTO `%s` (%s) VALUES(%s)       
+        }, $self->{dbtable_}, join( q{,}, @fields ), join( q{,}, @placeholders );
     }
     else {
         @data = ($msg);
         $q    = sprintf q{
-            INSERT INTO `%s` (`%s`) VALUES(?)       
-        }, $self->{dbtable_}, $self->{caption_};
+            INSERT INTO `%s` (`message`) VALUES(?)       
+        }, $self->{dbtable_};
     }
 
     defined $self->{dbobj_}->do( $self->{dbobj_}->qi($q), undef, @data )
