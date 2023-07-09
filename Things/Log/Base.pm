@@ -82,9 +82,13 @@ sub new
 
     # group-specific parameters:
     if ( $self->{fields} ) {
-        $self->{fields_} = {};
+        $self->{use_fields_} = 1;
         for ( ref $self->{fields} eq $ARRAY ? @{ $self->{fields} } : split /[,;\s]+/sm, $self->{fields} ) {
             $_ = lc;
+            if ( $_ eq 'all' || $_ eq q{*} ) {
+                %{ $self->{fields_} } = %FIELDS;
+                last;
+            }
             if ( exists $FIELDS{$_} ) {
                 $self->{fields_}->{$_} = 1;
             }
@@ -184,7 +188,7 @@ sub _msg
     $self->{log_}->{message} = $msg;
 
     my $method = $self->{methods_}->{$level};
-    if ( $self->{fields_} ) {
+    if ( $self->{use_fields_} ) {
         $self->{fields_}->{pid}   and $self->{log_}->{pid}   = $PID;
         $self->{fields_}->{level} and $self->{log_}->{level} = $method;
         $self->{fields_}->{exe}   and $self->{log_}->{exe}   = $self->{exe_};

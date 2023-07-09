@@ -17,14 +17,16 @@ sub get_json
 {
     my ($logger) = @_;
     try {
-        $logger->{json_} = JSON::XS->new;
-        while ( my ( $method, $value ) = each %{ $logger->{json} } ) {
-            if ( $logger->{json_}->can($method) ) {
-                $logger->{json_}->$method($value);
+        if ( !$logger->{json_} ) {
+            $logger->{json_} = JSON::XS->new;
+            while ( my ( $method, $value ) = each %{ $logger->{json} } ) {
+                if ( $logger->{json_}->can($method) ) {
+                    $logger->{json_}->$method($value);
+                }
             }
+            $logger->{json_}->canonical(1);
+            delete $logger->{json};
         }
-        $logger->{json_}->canonical(1);
-        delete $logger->{json};
     }
     catch {
         $logger->{error} = sprintf 'JSON :: %s', $_;
@@ -37,7 +39,7 @@ sub to_json
 {
     my ( $msg, $logger ) = @_;
     try {
-        $msg = $logger->{json_}->encode( $logger->{fields_} ? $logger->{log_} : { message => $msg } );
+        $msg = $logger->{json_}->encode( $logger->{use_fields_} ? $logger->{log_} : { message => $msg } );
     }
     catch {
         undef $msg;
