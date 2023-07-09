@@ -2,6 +2,7 @@ package Things::Log::Base;
 
 # ------------------------------------------------------------------------------
 use threads;
+use threads::shared;
 use Thread::Queue;
 
 # ------------------------------------------------------------------------------
@@ -54,7 +55,7 @@ const my %FIELDS => qw/tstamp 1 pid 1 level 1 exe 1 host 1 trace 1/;
 use Exporter qw/import/;
 our @EXPORT = qw/$LOG_EMERG $LOG_ALERT $LOG_CRIT $LOG_ERROR $LOG_WARN $LOG_NOTICE $LOG_INFO $LOG_DEBUG $LOG_TRACE/;
 
-our $VERSION = 'v2.00';
+our $VERSION = 'v2.10';
 
 # ------------------------------------------------------------------------------
 #   level => [$LOG_INFO]
@@ -80,10 +81,6 @@ sub new
     delete $self->{comments};
 
     # group-specific parameters:
-    $self->{exe_} = $PROGRAM_NAME;
-    @ARGV and $self->{exe_} .= q{ } . join q{ }, @ARGV;
-    $self->{host_} = hostname;
-
     if ( $self->{fields} ) {
         for ( ref $self->{fields} eq $ARRAY ? @{ $self->{fields} } : split /[,;\s]+/sm, $self->{fields} ) {
             if ( exists $FIELDS{$_} ) {
@@ -95,6 +92,9 @@ sub new
             }
         }
         delete $self->{fields};
+        $self->{exe_} = $PROGRAM_NAME;
+        @ARGV and $self->{exe_} .= q{ } . join q{ }, @ARGV;
+        $self->{host_} = hostname;
     }
 
     my $package = ref $self;
@@ -131,7 +131,8 @@ sub comments
 sub nb
 {
     if ( !$self->{queue_} ) {
-        $self->{queue_} = Thread::Queue->new;
+        $self->{queue_}    = Thread::Queue->new;
+        $self->{comments_} = shared_clone( $self->{comments_} );
         threads->create(
             sub {
                 while ( defined( my $args = $self->{queue_}->dequeue ) ) {
