@@ -95,7 +95,7 @@ $log->error( '%s', '; maybe error' );
 
 ### [Things::Log::File](Things/Log/File.pm)
 
-Лог в файл. Имя файла в конструкторе:
+Лог в файл. Параметры `fields` игнорируются. Имя файла в конструкторе:
 
 ```perl
     my $logger = Things::Log::File->new( file => '/var/log/my.log' );
@@ -105,7 +105,7 @@ $log->error( '%s', '; maybe error' );
 
 ### [Things::Log::Std](Things/Log/Std.pm)
 
-Лог в `STDOUT`. При этом перехватываются:
+Лог в `STDOUT`. Параметры `fields` игнорируются. Перехватываются:
 
 #### вывод в STDERR 
 
@@ -117,7 +117,27 @@ $log->error( '%s', '; maybe error' );
 
 #### die() 
 
-Преобразуется в `$logger->emergency()` с последующим `die`.
+Преобразуется в `$logger->emergency()` с последующим `Carp::croak`.
+
+### [Things::Log::Syslog](Things/Log/Syslog.pm)
+
+Используется `syslog.` Параметры `fields` игнорируются. В конструкторе:
+
+#### sock => ...
+
+Параметры сокета, подробней в описании [Sys::Syslog#setlogsock()](https://metacpan.org/pod/Sys::Syslog#FUNCTIONS). По умолчанию не используется.
+
+#### ident => STRING
+
+Идентификатор (префикс) для сообщений. По умолчанию пустая строка.
+
+#### logopt => STRING
+
+Параметры: [Sys::Syslog#openlog()/Options](https://metacpan.org/pod/Sys::Syslog#FUNCTIONS). По умолчанию пустая строка.
+
+#### facility => VALUE
+
+См. [Sys::Syslog#Facilities](https://metacpan.org/pod/Sys::Syslog#Facilities).
 
 ### [Things::Log::Url](Things/Log/Url.pm)
 
