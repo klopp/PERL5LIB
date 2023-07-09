@@ -238,61 +238,7 @@
 
 ### [Things::Log](Things/Log)
 
-Ну как же без логгера. Базовый конструктор:
-
-#### sub new( level => [$LOG_INFO], microsec => BOOL, comments => BOOL, ... )
-
-Все необязательные. Методы принимают формат `printf()`:
-
-##### emergency(), emerg()
-##### alert()
-##### critical(), crit()
-##### error(), err()
-##### warning(), warn()
-##### notice(), not()
-##### info(), inf()
-##### debug(), dbg()
-##### trace(), trc()
-
-В строке лога: время, PID, уровень, сообщение:
-
-```
-2023-06-28 22:09:08 391634 INFO ляляля    
-```
-
-Если задано `microsec`, то к времени добавляются микросекунды:
-
-```
-2023-06-28 22:09:08.562396 391634 INFO ляляля    
-```
-
-Строки, начинающиеся с символов `'`, `#` и `;` считаются комментариями и выводятся в лог только если `comments => TRUE`.
-
-#### sub nb()
-
-**Мегакруть: переводит логирование в неблокирующий режим (вывод в лог ставится в очередь, которая разгребается отдельным потоком)!**
-
-### [Things::Log::File](Things/Log/File.pm)
-
-Лог в файл. Имя файла в конструкторе:
-
-```perl
-    my $logger = Things::Log::File->new( file => '/var/log/my.log' );
-    Carp::confess $logger->{error} if $logger->{error};
-    $logger->info( 'Hello from %s!', $PROGRAM_NAME );  
-```
-
-#### [Things::Log::Std](Things/Log/Std.pm)
-  
-Лог в `STDOUT`. При этом перехватывается вывод в `STDERR` (`$logger->notice()`), перловые `warn` (`$logger->warn()`) и `die()` (`$logger->emergency()` + `die`).
-
-### [Things::Log::Url](Things/Log/Url.pm)
-
-Лог в URL.
-
-### [Things::Log::Db](Things/Log/Db.pm)
-
-Лог в любой объект, умеющий [DBI::do()](https://metacpan.org/pod/DBI#do).
+Ну как же без логгера. Подробности в [тамошнем README](Things/Log/README.md).
 
 ### [Things::Sqlite](Things/Sqlite.pm), [Things::Mysql](Things/Mysql.pm),  [Things::Pg](Things/Pg.pm)
 
