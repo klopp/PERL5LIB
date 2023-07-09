@@ -82,7 +82,9 @@ sub new
 
     # group-specific parameters:
     if ( $self->{fields} ) {
+        $self->{fields_} = {};
         for ( ref $self->{fields} eq $ARRAY ? @{ $self->{fields} } : split /[,;\s]+/sm, $self->{fields} ) {
+            $_ = lc;
             if ( exists $FIELDS{$_} ) {
                 $self->{fields_}->{$_} = 1;
             }
