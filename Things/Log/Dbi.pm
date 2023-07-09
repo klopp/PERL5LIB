@@ -51,7 +51,7 @@ sub plog
 
     my ( @data, $q );
 
-    if ( $self->{split_} ) {
+    if ( $self->{fields_} ) {
         my $log_data = $self->{log_};
         my @fields;
         my @placeholders;

@@ -56,7 +56,7 @@ sub plog
     my ($msg) = @args;
 
     my $query = 'message=' . uri_encode($msg);
-    if ( $self->{split_} ) {
+    if ( $self->{fields_} ) {
         my $log_data = $self->{log_};
         $log_data->{trace} and $log_data->{trace} = join "\n", @{ $log_data->{trace} };
         my @values;

@@ -16,6 +16,7 @@ use POSIX qw/strftime/;
 use Sys::Hostname;
 use Time::HiRes qw/gettimeofday usleep/;
 
+use Things::Const qw/:types/;
 use Things::Trim;
 
 const our $LOG_EMERG  => 0;
@@ -48,19 +49,7 @@ const my %METHODS => (
     'TRC'       => $LOG_TRACE,
 );
 
-=pod
-const my %FIELDS => (
-
-    # what => [ name, default ]
-    tstamp  => [ 'tstamp',  1 ],
-    pid     => [ 'pid',     1 ],
-    level   => [ 'level',   1 ],
-    message => [ 'message', 1 ],
-    exe     => [ 'exe', ],
-    host    => [ 'host', ],
-    trace   => [ 'trace', ],
-);
-=cut
+const my %FIELDS => qw/tstamp 1 pid 1 level 1 exe 1 host 1 trace 1/;
 
 use Exporter qw/import/;
 our @EXPORT = qw/$LOG_EMERG $LOG_ALERT $LOG_CRIT $LOG_ERROR $LOG_WARN $LOG_NOTICE $LOG_INFO $LOG_DEBUG $LOG_TRACE/;
@@ -79,7 +68,7 @@ sub new
 {
     $self = bless {@args}, $self;
 
-    # common parammeters:
+    # common parameters:
     if ( !$self->{level} || !exists $METHODS{ $self->{level} } ) {
         $self->{level} = $LOG_INFO;
     }
@@ -91,38 +80,22 @@ sub new
     delete $self->{comments};
 
     # group-specific parameters:
-    $self->{split_} = $self->{split};
-    delete $self->{split};
-    $self->{log_exe_} = $self->{log_exe};
-    delete $self->{log_exe};
-    $self->{log_host_} = $self->{log_host};
-    delete $self->{log_host};
-    $self->{log_trace_} = $self->{log_trace};
-    delete $self->{log_trace};
+    $self->{exe_} = $PROGRAM_NAME;
+    @ARGV and $self->{exe_} .= q{ } . join q{ }, @ARGV;
+    $self->{host_} = hostname;
 
-=pod
     if ( $self->{fields} ) {
-        while ( my ( $field, $name ) = each %{ $self->{fields} } ) {
-            if ( !exists $FIELDS{$field} ) {
-                $self->{error} = 'Unknown field in "fields" parameter.';
+        for ( ref $self->{fields} eq $ARRAY ? @{ $self->{fields} } : split /[,;\s]+/sm, $self->{fields} ) {
+            if ( exists $FIELDS{$_} ) {
+                $self->{fields_}->{$_} = 1;
+            }
+            else {
+                $self->{error} = sprintf 'Unknown field "%s" in fields parameter.', $_;
                 return $self;
             }
-            $self->{fields_}->{$field} = $name;
         }
         delete $self->{fields};
     }
-    else {
-        while ( my ( $field, $data ) = each %FIELDS ) {
-            $data->[1] and $self->{fields_}->{$field} = $data->[0];
-        }
-    }
-=cut
-
-    if ( $self->{log_exe_} ) {
-        $self->{log_}->{exe} = $PROGRAM_NAME;
-        @ARGV and $self->{log_}->{exe} .= q{ } . join q{ }, @ARGV;
-    }
-    $self->{log_host_} and $self->{log_}->{host} = hostname;
 
     my $package = ref $self;
     for my $method ( sort { length $a <=> length $b } keys %METHODS ) {
@@ -204,28 +177,33 @@ sub _msg
         $self->{comments_} or return;
         $msg =~ s/^[';#\s]+//sm;
     }
-    my $method = $self->{methods_}->{$level};
-    $self->{log_}->{pid}     = $PID;
-    $self->{log_}->{level}   = $method;
+    delete $self->{log_};
     $self->{log_}->{message} = $msg;
+
+    my $method = $self->{methods_}->{$level};
+    if ( $self->{fields_} ) {
+        $self->{fields_}->{pid}   and $self->{log_}->{pid}   = $PID;
+        $self->{fields_}->{level} and $self->{log_}->{level} = $method;
+        $self->{fields_}->{exe}   and $self->{log_}->{exe}   = $self->{exe_};
+        $self->{fields_}->{host}  and $self->{log_}->{host}  = $self->{host_};
+        if ( $self->{fields_}->{trace} ) {
+            my $depth = 3;
+            my @stack;
+            while ( my @caller = caller $depth ) {
+                push @stack, sprintf '%u %s() at line %u of "%s"', $depth - 2, $caller[3], $caller[2], $caller[1];
+            }
+            continue {
+                ++$depth;
+            }
+            $depth = scalar @stack;
+            $self->{log_}->{trace} = \@stack;         #join "\n", @stack;
+        }
+    }
     if ( $self->{microsec_} ) {
-        $self->{log_}->{tstamp} = $sec * 1_000_000 + $microsec;
+        $self->{fields_}->{tstamp} and $self->{log_}->{tstamp} = $sec * 1_000_000 + $microsec;
         return sprintf '%s.%-6u %-6u %s %s', ( strftime '%F %X', localtime $sec ), $microsec, $PID, $method, $msg;
     }
-    $self->{log_}->{tstamp} = $sec;
-    if ( $self->{log_trace_} ) {
-        my $depth = 3;
-        my @stack;
-        while ( my @caller = caller $depth ) {
-            push @stack, sprintf '%u %s() at line %u of "%s"', $depth - 2, $caller[3], $caller[2], $caller[1];
-        }
-        continue {
-            ++$depth;
-        }
-        $depth = scalar @stack;
-        $self->{log_}->{trace} = \@stack;         #join "\n", @stack;
-    }
-
+    $self->{fields_}->{tstamp} and $self->{log_}->{tstamp} = $sec;
     return sprintf '%s %-6u %s %s', ( strftime '%F %X', localtime $sec ), $PID, $method, $msg;
 }
 

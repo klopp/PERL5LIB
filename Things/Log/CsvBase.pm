@@ -26,7 +26,7 @@ sub get_csv
 sub to_csv
 {
     my ( $msg, $logger ) = @_;
-    if ( $logger->{split_} ) {
+    if ( $logger->{fields_} ) {
         my $log_data = $logger->{log_};
         $log_data->{trace} and $log_data->{trace} = join "\n", @{$log_data->{trace}};
         my @values;
