@@ -16,7 +16,6 @@ our $VERSION = 'v1.00';
 #   url => URL
 #       URL to send log
 #   method => POST or GET (nocase)
-#       URL to send log
 # ------------------------------------------------------------------------------
 sub new
 {

@@ -245,15 +245,104 @@
     494868,
     "1 main::tst() at line 67 of ""./c.pl""
      2 main::sts() at line 61 of ""./c.pl""",
-    1688917416
+    | 1688917416 | 
 ```
 
 ## [Things::Log::Dbi](Things/Log/Dbi.pm)
 
-## [Things::Log::Http](Things/Log/Http.pm)
+Пишет логи в базу. На входе конструктора:
+
+### dbobj => OBJECT
+
+Любой объект, полученный `DBI->connect`.
+
+### table => STRING
+
+Имя таблицы в БД.
+
+При отсутствии `fields` запись будет выглядеть следующим образом:
+
+
+| message      | 
+| :------------- |
+| 2023-07-09 18:42:27 494578 INFO сообщение |
+
+При наличии `fields`:
+
+| message      |  tstamp | exe | level | pid | host | trace | 
+| :------------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- |
+| сообщение | 1688917416 | ./c.pl | INFO | 494868 | localhost | 1 main::tst() at line 67 of "./c.pl"... |
+
+Возможные типы колонок:
+
+```sql
+    create table `log` (
+        `message` TEXT,
+        `tstamp` BIGINT UNSIGNED,
+        `exe` TEXT,
+        `trace` TEXT,
+        `level` CHAR(10),
+        `pid` INT UNSIGNED,
+        `host` VARCHAR(255)
+    );
+```
 
 ## [Things::Log::Redis](Things/Log/Redis.pm)
 
+Отправка логов в Redis. В конструкторе:
+
+### redis => { key => value ... }
+
+Параметры соединения, см [Redis::Fast](https://metacpan.org/pod/Redis::Fast).
+
+### format => { XML | JSON | CSV }
+
+Регистр значения не имеет. Формат записи:
+
+Регистр значения не имеет. Формат записи:
+
+| message      | 
+| :------------- |
+| {XML | CSV | JSON} |
+
+Содержимое документа зависит от параметра `fields`, см. описания соответствующих классов.
+
+
 ## [Things::Log::Mongo](Things/Log/Mongo.pm)
 
+Аналогично Redis, параметры соединения задаются в конструкторе:
+
+### uri, host => URI
+
+Схему `mongodb://` можно не указывать.
+
+### namespace, ns => NAMESPACE
+
+Формат: `database.collection`.
+
+См. [MongoDB](https://metacpan.org/pod/MongoDB).
+
+## [Things::Log::Http](Things/Log/Http.pm)
+
+Отправка логов по HTTP. В конструкторе:
+
+### url => URL
+
+Куда отправлять.
+
+### method => { GET | POST }
+
+Регистр значения не имеет.
+
+В случае указания `fields` (схематично):
+
+```
+    message=URL_ENCODE(сообщение) 
+    &
+    tstamp=1688917416
+    &
+    exe=URL_ENCODE($PROGRAM_NAME @ARGV)  
+    &
+    ...
+```
 

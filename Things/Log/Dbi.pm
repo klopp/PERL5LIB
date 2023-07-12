@@ -36,7 +36,7 @@ sub new
 }
 
 # ------------------------------------------------------------------------------
-sub qi
+sub _qi
 {
     my ($ident) = @args;
     return $self->{dbobj_}->quote_identifier($ident);
@@ -55,20 +55,20 @@ sub plog
         my @placeholders;
         $log_data->{trace} and $log_data->{trace} = join "\n", @{ $log_data->{trace} };
         for ( keys %{$log_data} ) {
-            push @fields,       $self->qi($_);
+            push @fields,       $self->_qi($_);
             push @data,         $log_data->{$_};
             push @placeholders, q{?};
         }
 
         $q = sprintf q{
             INSERT INTO %s (%s) VALUES(%s)       
-        }, $self->qi( $self->{dbtable_} ), join( q{,}, @fields ), join( q{,}, @placeholders );
+        }, $self->_qi( $self->{dbtable_} ), join( q{,}, @fields ), join( q{,}, @placeholders );
     }
     else {
         @data = ($msg);
         $q    = sprintf q{
             INSERT INTO %s (%s) VALUES(?)       
-        }, $self->qi( $self->{dbtable_} ), $self->qi('message');
+        }, $self->_qi( $self->{dbtable_} ), $self->_qi('message');
     }
 
     defined $self->{dbobj_}->do( $q, undef, @data )

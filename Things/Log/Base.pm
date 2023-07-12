@@ -60,7 +60,7 @@ our $VERSION = 'v2.10';
 #   level => [$LOG_INFO]
 #       log level
 #   microsec => [FALSE]
-#       show microseconds in time
+#       use microseconds in time
 #   comments => [FALSE]
 #       show log comments
 # ------------------------------------------------------------------------------
