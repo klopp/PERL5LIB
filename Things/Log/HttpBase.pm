@@ -16,16 +16,6 @@ our $VERSION = 'v1.00';
 #   url => URL
 #       URL to send log
 #   method => POST or GET (nocase)
-#       URL to send log
-#   root => [STRING]
-#       parameter with log data name, default 'log'
-#   split => [FALSE]
-#       if TRUE log data will be splitted:
-#           message=message
-#           tstamp=seconds OR microseconds
-#           level=LOG_LEVEL
-#           pid=PID
-#           exe=$PROGRAM_NAME @ARGV
 # ------------------------------------------------------------------------------
 sub new
 {

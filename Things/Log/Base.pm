@@ -10,7 +10,6 @@ use strict;
 use warnings;
 use self;
 
-use Carp::Trace;
 use Const::Fast;
 use English qw/-no_match_vars/;
 use POSIX qw/strftime/;
@@ -61,7 +60,7 @@ our $VERSION = 'v2.10';
 #   level => [$LOG_INFO]
 #       log level
 #   microsec => [FALSE]
-#       show microseconds in time
+#       use microseconds in time
 #   comments => [FALSE]
 #       show log comments
 # ------------------------------------------------------------------------------

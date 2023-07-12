@@ -12,18 +12,9 @@ our $VERSION = 'v1.00';
 
 # ------------------------------------------------------------------------------
 #   dbobj => OBJECT
-#       DBI object with do()
+#       DBI object
 #   table => STRING
 #       table name
-#   root => [STRING]
-#       table column with log data, default 'message'
-#   split => [FALSE]
-#       if TRUE log data will be splitted:
-#           message=message
-#           tstamp=seconds OR microseconds
-#           level=LOG_LEVEL
-#           pid=PID
-#           exe=$PROGRAM_NAME @ARGV
 # ------------------------------------------------------------------------------
 sub new
 {
@@ -45,6 +36,13 @@ sub new
 }
 
 # ------------------------------------------------------------------------------
+sub _qi
+{
+    my ($ident) = @args;
+    return $self->{dbobj_}->quote_identifier($ident);
+}
+
+# ------------------------------------------------------------------------------
 sub plog
 {
     my ($msg) = @args;
@@ -57,23 +55,23 @@ sub plog
         my @placeholders;
         $log_data->{trace} and $log_data->{trace} = join "\n", @{ $log_data->{trace} };
         for ( keys %{$log_data} ) {
-            push @fields,       "`$_`";
+            push @fields,       $self->_qi($_);
             push @data,         $log_data->{$_};
             push @placeholders, q{?};
         }
 
         $q = sprintf q{
-            INSERT INTO `%s` (%s) VALUES(%s)       
-        }, $self->{dbtable_}, join( q{,}, @fields ), join( q{,}, @placeholders );
+            INSERT INTO %s (%s) VALUES(%s)       
+        }, $self->_qi( $self->{dbtable_} ), join( q{,}, @fields ), join( q{,}, @placeholders );
     }
     else {
         @data = ($msg);
         $q    = sprintf q{
-            INSERT INTO `%s` (`message`) VALUES(?)       
-        }, $self->{dbtable_};
+            INSERT INTO %s (%s) VALUES(?)       
+        }, $self->_qi( $self->{dbtable_} ), $self->_qi('message');
     }
 
-    defined $self->{dbobj_}->do( $self->{dbobj_}->qi($q), undef, @data )
+    defined $self->{dbobj_}->do( $q, undef, @data )
         or $self->{error} = $self->{dbobj_}->errstr;
 
     return $self;
