@@ -6,7 +6,7 @@
 * [Асинхронность](#асинхронность)
 * [Things::Log::File](#thingslogfile)
 * [Things::Log::Std](#thingslogstd)
-* [Things::Log::Mongo](#thingslogcode)
+* [Things::Log::Code](#thingslogcode)
 * [Things::Log::Syslog](#thingslogsyslog)
 * [Things::Log::Xml](#thingslogxml)
 * [Things::Log::Json](#thingslogjson)
@@ -153,7 +153,79 @@
 
 ```perl
     use DDP;
-    my $log = Things::Log::Code->new( code => sub { printf "%s\n", np @_ } );
+    use Things::Log 'Code', fields => q{*}, code => sub { printf "%s\n", np @_ };
+    $log->info( 'хочу сказать' );
+```
+
+Вывод:
+
+```text
+[
+    [0] "2023-07-31 07:10:20 358593 INFO хочу сказать" (dualvar: 2023),
+    [1] Things::Log::Code  {
+            parents: Things::Log::Base
+            public methods (29):
+                new, plog
+                Const::Fast:
+                    const
+                Exporter:
+                    as_heavy, export, export_fail, export_ok_tags, export_tags, export_to_level, require_version
+                POSIX:
+                    strftime
+                Sys::Hostname:
+                    hostname
+                Things::Log::Base:
+                    comments, DESTROY, import, nb
+                Things::Trim:
+                    trim
+                Time::HiRes:
+                    gettimeofday, usleep
+                self:
+                    args, self
+                threads:
+                    async
+                threads::shared:
+                    bless, cond_broadcast, cond_signal, cond_timedwait, cond_wait, share, shared_clone
+            private methods (0)
+            internals: {
+                code_         sub { ... },
+                comments_     undef,
+                exe_          "./c.pl",
+                fields_       {
+                    exe      1,
+                    host     1,
+                    level    1,
+                    pid      1,
+                    trace    1,
+                    tstamp   1
+                },
+                host_         "klopp-t420",
+                level_        6,
+                log_          {
+                    exe       "./c.pl",
+                    host      "klopp-t420",
+                    level     "INFO" (dualvar: Inf),
+                    message   "хочу сказать",
+                    pid       358593,
+                    trace     [],
+                    tstamp    1690776620
+                },
+                methods_      {
+                    0   "EMERGENCY",
+                    1   "ALERT",
+                    2   "CRITICAL",
+                    3   "ERROR",
+                    4   "WARNING",
+                    5   "NOTICE",
+                    6   "INFO" (dualvar: Inf),
+                    7   "DEBUG",
+                    8   "TRACE"
+                },
+                microsec_     undef,
+                use_fields_   1
+            }
+        }
+]
 ```
 
 ## [Things::Log::Syslog](Things/Log/Syslog.pm)
