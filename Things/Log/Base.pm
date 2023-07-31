@@ -88,6 +88,7 @@ sub new
     delete $self->{comments};
     $self->{format_} = $self->{format} // $FMT_DEF;
     delete $self->{format};
+    $self->{host_} = hostname;
 
     # group-specific parameters:
     if ( $self->{fields} ) {
@@ -109,7 +110,6 @@ sub new
         delete $self->{fields};
         $self->{exe_} = $PROGRAM_NAME;
         @ARGV and $self->{exe_} .= q{ } . join q{ }, @ARGV;
-        $self->{host_} = hostname;
     }
 
     my $package = ref $self;
@@ -214,7 +214,7 @@ sub _msg
             $self->{log_}->{trace} = \@stack;
         }
     }
-    return $self->_format( $sec, $microsec, $PID, $method, $msg );
+    return $self->_format( $sec, $microsec, $PID, $self->{host_}, $method, $msg );
 
     #    return sprintf '%s %-6u %s %s', ( strftime '%F %X', localtime $sec ), $PID, $method, $msg;
 }
@@ -222,21 +222,24 @@ sub _msg
 # ------------------------------------------------------------------------------
 sub _format
 {
-    my ( $seconds, $microsec, $pid, $method, $msg ) = @args;
+    my ( $seconds, $microsec, $pid, $host, $method, $msg ) = @args;
 
 =for comment
-    %G  
+    %@  
         message
     %p 
         PID
     %l, %L 
         level
+    %h
+        host
+        
     %d, %m, %y, %H, %M, %S 
-        day, month, year, hour, min, sec (numeric, zero-padded)
-    %X 
-        alias for "%H:%M:%S"
+        day, month, year, hour, min, sec (numeric)
     %F 
-        alias for "%y-%m-%d"
+        alias for "%y-%m-%d", zero-padded
+    %X 
+        alias for "%H:%M:%S", zero-padded
     %Z 
         alias for "%F %X"
     %i
@@ -247,8 +250,6 @@ sub _format
         executable
     %a
         arguments
-    %h
-        host
     %t
         trace
 #########################
@@ -259,11 +260,14 @@ sub _format
     #my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst ) = localtime $seconds;
     my @ltime = localtime $seconds;
 
-    for my $fmt ( split /([%][-\d]{0,}[\w])/sm, $self->{format_} ) {
-        if ( $fmt =~ /^[%](.*)([\w])$/gsm ) {
+    for my $fmt ( split /([%][-\d]{0,}[\w@])/sm, $self->{format_} ) {
+        if ( $fmt =~ /^[%](.*)([\w@])$/gsm ) {
             my $sfmt = sprintf '%%%ss', $1;
             my $nfmt = sprintf '%%%su', $1;
-            if ( $2 eq q{p} ) {
+            if ( $2 eq q{@} ) {
+                $message .= sprintf $sfmt, $msg;
+            }
+            elsif ( $2 eq q{p} ) {
                 $message .= sprintf $nfmt, $pid;
             }
             elsif ( $2 eq q{L} ) {
@@ -271,9 +275,6 @@ sub _format
             }
             elsif ( $2 eq q{l} ) {
                 $message .= sprintf $sfmt, lc $method;
-            }
-            elsif ( $2 eq q{G} ) {
-                $message .= sprintf $sfmt, $msg;
             }
             elsif ( $2 eq q{i} ) {
                 $message .= sprintf $sfmt, $microsec;
@@ -304,6 +305,9 @@ sub _format
             }
             elsif ( $2 eq q{Z} ) {
                 $message .= sprintf $sfmt, strftime '%F %X', @ltime;
+            }
+            elsif ( $2 eq q{h} ) {
+                $message .= sprintf $sfmt, $host;
             }
             else {
                 $message .= $_;
