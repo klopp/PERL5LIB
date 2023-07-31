@@ -49,7 +49,8 @@ const my %METHODS => (
     'TRC'       => $LOG_TRACE,
 );
 
-const my %FIELDS => qw/tstamp 1 pid 1 level 1 exe 1 host 1 trace 1/;
+const my %FIELDS  => qw/tstamp 1 pid 1 level 1 exe 1 host 1 trace 1/;
+const my $FMT_DEF => '%Z %-6p %L %G';
 
 #use Exporter qw/import/;
 use parent qw/Exporter/;
@@ -60,6 +61,7 @@ our $VERSION = 'v2.10';
 # ------------------------------------------------------------------------------
 sub import
 {
+    ## no critic (RequireArgUnpacking)
     if ( $self ne __PACKAGE__ ) {
         no strict 'refs';
         @{ $self . '::EXPORT' } = @EXPORT;
@@ -71,8 +73,8 @@ sub import
 # ------------------------------------------------------------------------------
 #   level => [$LOG_INFO]
 #       log level
-#### #   microsec => [FALSE]
-#### #       use microseconds in time
+#   format => [$FMT_DEF]
+#       log line format
 #   comments => [FALSE]
 #       show log comments
 # ------------------------------------------------------------------------------
@@ -82,10 +84,10 @@ sub new
 
     $self->{level_} = $self->{level} // $LOG_INFO;
     delete $self->{level};
-####    $self->{microsec_} = $self->{microsec};
-####    delete $self->{microsec};
     $self->{comments_} = $self->{comments};
     delete $self->{comments};
+    $self->{format_} = $self->{format} // $FMT_DEF;
+    delete $self->{format};
 
     # group-specific parameters:
     if ( $self->{fields} ) {
@@ -201,11 +203,6 @@ sub _msg
         $self->{fields_}->{host}  and $self->{log_}->{host}  = $self->{host_};
         if ( $self->{fields_}->{tstamp} ) {
             $self->{log_}->{tstamp} = $sec * 1_000_000 + $microsec;
-
-####            $self->{log_}->{tstamp}
-####                = $self->{microsec_}
-####                ? $sec * 1_000_000 + $microsec
-####                : $sec;
         }
         if ( $self->{fields_}->{trace} ) {
             my $depth = 3;
@@ -217,11 +214,108 @@ sub _msg
             $self->{log_}->{trace} = \@stack;
         }
     }
+    return $self->_format( $sec, $microsec, $PID, $method, $msg );
 
-####    $self->{microsec_}
-####        and return sprintf '%s.%-6u %-6u %s %s', ( strftime '%F %X', localtime $sec ), $microsec, $PID, $method,
-####            $msg;
-    return sprintf '%s %-6u %s %s', ( strftime '%F %X', localtime $sec ), $PID, $method, $msg;
+    #    return sprintf '%s %-6u %s %s', ( strftime '%F %X', localtime $sec ), $PID, $method, $msg;
+}
+
+# ------------------------------------------------------------------------------
+sub _format
+{
+    my ( $seconds, $microsec, $pid, $method, $msg ) = @args;
+
+=for comment
+    %G  
+        message
+    %p 
+        PID
+    %l, %L 
+        level
+    %d, %m, %y, %H, %M, %S 
+        day, month, year, hour, min, sec (numeric, zero-padded)
+    %X 
+        alias for "%H:%M:%S"
+    %F 
+        alias for "%y-%m-%d"
+    %Z 
+        alias for "%F %X"
+    %i
+        microseconds
+
+#########################
+    %x
+        executable
+    %a
+        arguments
+    %h
+        host
+    %t
+        trace
+#########################
+=cut
+
+    my $message = q{};
+
+    #my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst ) = localtime $seconds;
+    my @ltime = localtime $seconds;
+
+    for my $fmt ( split /([%][-\d]{0,}[\w])/sm, $self->{format_} ) {
+        if ( $fmt =~ /^[%](.*)([\w])$/gsm ) {
+            my $sfmt = sprintf '%%%ss', $1;
+            my $nfmt = sprintf '%%%su', $1;
+            if ( $2 eq q{p} ) {
+                $message .= sprintf $nfmt, $pid;
+            }
+            elsif ( $2 eq q{L} ) {
+                $message .= sprintf $sfmt, uc $method;
+            }
+            elsif ( $2 eq q{l} ) {
+                $message .= sprintf $sfmt, lc $method;
+            }
+            elsif ( $2 eq q{G} ) {
+                $message .= sprintf $sfmt, $msg;
+            }
+            elsif ( $2 eq q{i} ) {
+                $message .= sprintf $sfmt, $microsec;
+            }
+            elsif ( $2 eq q{X} ) {
+                $message .= sprintf $sfmt, strftime '%X', @ltime;
+            }
+            elsif ( $2 eq q{d} ) {
+                $message .= sprintf $nfmt, $ltime[3];
+            }
+            elsif ( $2 eq q{m} ) {
+                $message .= sprintf $nfmt, $ltime[4] + 1;
+            }
+            elsif ( $2 eq q{y} ) {
+                $message .= sprintf $nfmt, $ltime[5] + 1900;
+            }
+            elsif ( $2 eq q{H} ) {
+                $message .= sprintf $nfmt, $ltime[2];
+            }
+            elsif ( $2 eq q{M} ) {
+                $message .= sprintf $nfmt, $ltime[1];
+            }
+            elsif ( $2 eq q{S} ) {
+                $message .= sprintf $nfmt, $ltime[0];
+            }
+            elsif ( $2 eq q{F} ) {
+                $message .= sprintf $sfmt, strftime '%F', @ltime;
+            }
+            elsif ( $2 eq q{Z} ) {
+                $message .= sprintf $sfmt, strftime '%F %X', @ltime;
+            }
+            else {
+                $message .= $_;
+            }
+        }
+        else {
+            $message .= $fmt;
+        }
+    }
+    return $message;
+
+    #    return sprintf '%s %-6u %s %s', ( strftime '%F %X', localtime $sec ), $pid, $method, $msg;
 }
 
 # ------------------------------------------------------------------------------
