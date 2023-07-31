@@ -35,3 +35,11 @@ sub import
 # ------------------------------------------------------------------------------
 1;
 __END__
+
+=head1 SYNOPSIS
+
+    use Things::Log 'File', file => '/var/log/my.log';
+    $log->info(...);
+
+=cut
+
