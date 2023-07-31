@@ -6,6 +6,7 @@
 * [Асинхронность](#асинхронность)
 * [Things::Log::File](#thingslogfile)
 * [Things::Log::Std](#thingslogstd)
+* [Things::Log::Mongo](#thingslogcode)
 * [Things::Log::Syslog](#thingslogsyslog)
 * [Things::Log::Xml](#thingslogxml)
 * [Things::Log::Json](#thingslogjson)
@@ -97,6 +98,21 @@
  
 Поле `message` в этой структуре будет использоваться всегда. При указании `"all"` или `"*"` в структуру будут включены все поля. 
 
+## [Things::Log](Things/Log.pm)
+
+Обобщённый интерфейс для логов. Экспортирует переменную `$log`.
+
+```perl
+    use Things::Log 'File', file => '/var/log/my.log', comments => 1, level => $LOG_DEBUG;
+    $log->info( 'хочу проинформировать' );
+    #
+    # Эквивалентно:
+    #
+    # use Things::Log::File;
+    # my $log = Things::Log::File->new( file => '/var/log/my.log', comments => 1, level => $LOG_DEBUG );
+    # ...
+```
+
 ## Асинхронность
 
 Этот метод переводит логирование в неблокирующий режим (вывод в лог ставится в очередь, которая разгребается отдельным потоком):
@@ -130,6 +146,15 @@
 ### die() 
 
 Преобразуется в `$logger->emergency()` с последующим `Carp::croak`.
+
+## [Things::Log::Code](Things/Log/Code.pm)
+
+Лог в произвольный метод пакета, унаследованного от `Things::Log::Base`:
+
+```perl
+    use DDP;
+    my $log = Things::Log::Code->new( code => sub { printf "%s\n", np @_ } );
+```
 
 ## [Things::Log::Syslog](Things/Log/Syslog.pm)
 
