@@ -51,10 +51,22 @@ const my %METHODS => (
 
 const my %FIELDS => qw/tstamp 1 pid 1 level 1 exe 1 host 1 trace 1/;
 
-use Exporter qw/import/;
+#use Exporter qw/import/;
+use parent qw/Exporter/;
 our @EXPORT = qw/$LOG_EMERG $LOG_ALERT $LOG_CRIT $LOG_ERROR $LOG_WARN $LOG_NOTICE $LOG_INFO $LOG_DEBUG $LOG_TRACE/;
 
 our $VERSION = 'v2.10';
+
+# ------------------------------------------------------------------------------
+sub import
+{
+    if ( $self ne __PACKAGE__ ) {
+        no strict 'refs';
+        @{ $self . '::EXPORT' } = @EXPORT;
+    }
+    @_ = ( $self, @args );
+    goto &Exporter::import;
+}
 
 # ------------------------------------------------------------------------------
 #   level => [$LOG_INFO]
@@ -68,11 +80,7 @@ sub new
 {
     $self = bless {@args}, $self;
 
-    # common parameters:
-    if ( !$self->{level} || !exists $METHODS{ $self->{level} } ) {
-        $self->{level} = $LOG_INFO;
-    }
-    $self->{level_} = $self->{level};
+    $self->{level_} = $self->{level} // $LOG_INFO;
     delete $self->{level};
     $self->{microsec_} = $self->{microsec};
     delete $self->{microsec};
