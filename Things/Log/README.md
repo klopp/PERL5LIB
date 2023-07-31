@@ -43,7 +43,7 @@
 ### Общие аргументы конструктора
 
 ```perl
-    my $logger = Things::Log::XYZ->new( comments => BOOL, microsec => BOOL, level => LOG_LEVEL );
+    my $logger = Things::Log::XYZ->new( comments => BOOL, level => LOG_LEVEL );
 ```
 
 Эти аргументы обрабатываются всеми классами-потомками одинаково.
@@ -69,14 +69,6 @@
     $log->info( '%s', '; optional string' );
     $log->comments(1);
     $log->error( '%s', '; maybe error' );
-```
-
-#### microsec => BOOL
-
-По умолчанию `FALSE`. В случае `TRUE` к дате в строке лога будут добавлены микросекунды:
-
-```
-    2023-06-28 22:09:08.562396 391634 INFO очень полезная информация
 ```
 
 #### fields => { STRING | ARRAY }
@@ -221,7 +213,6 @@
                     7   "DEBUG",
                     8   "TRACE"
                 },
-                microsec_     undef,
                 use_fields_   1
             }
         }

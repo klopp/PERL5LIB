@@ -71,8 +71,8 @@ sub import
 # ------------------------------------------------------------------------------
 #   level => [$LOG_INFO]
 #       log level
-#   microsec => [FALSE]
-#       use microseconds in time
+#### #   microsec => [FALSE]
+#### #       use microseconds in time
 #   comments => [FALSE]
 #       show log comments
 # ------------------------------------------------------------------------------
@@ -82,8 +82,8 @@ sub new
 
     $self->{level_} = $self->{level} // $LOG_INFO;
     delete $self->{level};
-    $self->{microsec_} = $self->{microsec};
-    delete $self->{microsec};
+####    $self->{microsec_} = $self->{microsec};
+####    delete $self->{microsec};
     $self->{comments_} = $self->{comments};
     delete $self->{comments};
 
@@ -200,10 +200,12 @@ sub _msg
         $self->{fields_}->{exe}   and $self->{log_}->{exe}   = $self->{exe_};
         $self->{fields_}->{host}  and $self->{log_}->{host}  = $self->{host_};
         if ( $self->{fields_}->{tstamp} ) {
-            $self->{log_}->{tstamp}
-                = $self->{microsec_}
-                ? $sec * 1_000_000 + $microsec
-                : $sec;
+            $self->{log_}->{tstamp} = $sec * 1_000_000 + $microsec;
+
+####            $self->{log_}->{tstamp}
+####                = $self->{microsec_}
+####                ? $sec * 1_000_000 + $microsec
+####                : $sec;
         }
         if ( $self->{fields_}->{trace} ) {
             my $depth = 3;
@@ -215,9 +217,10 @@ sub _msg
             $self->{log_}->{trace} = \@stack;
         }
     }
-    $self->{microsec_}
-        and return sprintf '%s.%-6u %-6u %s %s', ( strftime '%F %X', localtime $sec ), $microsec, $PID, $method,
-        $msg;
+
+####    $self->{microsec_}
+####        and return sprintf '%s.%-6u %-6u %s %s', ( strftime '%F %X', localtime $sec ), $microsec, $PID, $method,
+####            $msg;
     return sprintf '%s %-6u %s %s', ( strftime '%F %X', localtime $sec ), $PID, $method, $msg;
 }
 
@@ -234,7 +237,6 @@ __END__
 =head1 SYNOPSIS
 
     my $logger = Things::Log::XXX->new(
-        microsec => 1, 
         level => $LOG_INFO, 
         comments => 1 
     );
