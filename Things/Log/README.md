@@ -149,7 +149,7 @@
 
 ## [Things::Log::Code](Things/Log/Code.pm)
 
-Лог в произвольный метод пакета, унаследованного от `Things::Log::Base`:
+Лог в произвольный метод:
 
 ```perl
     use DDP;
