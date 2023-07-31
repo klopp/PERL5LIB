@@ -50,18 +50,17 @@ const my %METHODS => (
 );
 
 const my %FIELDS  => qw/tstamp 1 pid 1 level 1 exe 1 host 1 trace 1/;
-const my $FMT_DEF => '%Z %-6p %L %G';
+const my $FMT_DEF => '%Z %-6p %L %@';
 
-#use Exporter qw/import/;
 use parent qw/Exporter/;
 our @EXPORT = qw/$LOG_EMERG $LOG_ALERT $LOG_CRIT $LOG_ERROR $LOG_WARN $LOG_NOTICE $LOG_INFO $LOG_DEBUG $LOG_TRACE/;
 
 our $VERSION = 'v2.10';
 
 # ------------------------------------------------------------------------------
+## no critic (RequireArgUnpacking)
 sub import
 {
-    ## no critic (RequireArgUnpacking)
     if ( $self ne __PACKAGE__ ) {
         no strict 'refs';
         @{ $self . '::EXPORT' } = @EXPORT;
