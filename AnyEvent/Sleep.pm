@@ -5,8 +5,8 @@ use warnings;
 use AnyEvent;
 use Sub::Exporter -setup => {
     exports => [qw( sleep sleep_until )],
-    groups => { default => [qw( sleep sleep_until )] },
-    };
+    groups  => { default => [qw( sleep sleep_until )] },
+};
 
 =helper sub sleep( Num $secs ) is export
 
@@ -14,13 +14,14 @@ Sleep for $secs while allowing AnyEvent events to emit (and Coroutine threads to
 
 =cut
 
-sub sleep($) {
-    my( $sleep_for ) = @_;
+sub sleep($)
+{
+    my ($sleep_for) = @_;
     AE::now_update;
     my $start = AE::time;
     while ( AE::time - $start < $sleep_for ) {
         my $cv = AE::cv;
-        my $w=AE::timer( $sleep_for - (AE::time-$start), 0, sub { $cv->send } );
+        my $w  = AE::timer( $sleep_for - ( AE::time- $start ), 0, sub { $cv->send } );
         $cv->recv;
     }
     return;
@@ -32,11 +33,12 @@ Sleep until $epochtime while allowing events to emit (and Coroutine threads to r
 
 =cut
 
-sub sleep_until($) {
+sub sleep_until($)
+{
     my $for = $_[-1] - AE::time;
     return if $for <= 0;
     my $cv = AE::cv;
-    my $w=AE::timer( $for, 0, sub { $cv->send } );
+    my $w  = AE::timer( $for, 0, sub { $cv->send } );
     $cv->recv;
     undef $cv;
     return;

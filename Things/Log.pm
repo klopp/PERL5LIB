@@ -9,9 +9,9 @@ use English qw/-no_match_vars/;
 use parent qw/Exporter/;
 
 # ------------------------------------------------------------------------------
-our $log;
-our @EXPORT  = qw/$log/;
-our $VERSION = '1.00';
+use vars qw/$log @EXPORT $VERSION/;
+$VERSION = 'v1.00';
+@EXPORT  = qw/$log/;
 
 # ------------------------------------------------------------------------------
 sub import
@@ -20,12 +20,11 @@ sub import
     if ( !$module ) {
         Carp::confess sprintf "use %s %s::MODULE [, \@params];\n", $self, $self;
     }
-    $module =~ /^$self/ or $module = sprintf '%s::%s', $self, $module;
+    $module =~ /^$self/sm or $module = sprintf '%s::%s', $self, $module;
 
     if ( !$module->can('new') ) {
-        ( my $modfile = $module . '.pm' ) =~ s|::|/|gsm;
-        eval { require $modfile; };
-        $EVAL_ERROR and Carp::confess $EVAL_ERROR;
+        ( my $modfile = $module . '.pm' ) =~ s{::}{/}gsm;
+        eval { require $modfile; 1; } or Carp::confess $EVAL_ERROR;
     }
     $log = $module->new(@params);
     $self->export_to_level( 1, $self, qw/$log/ );
