@@ -93,11 +93,11 @@ sub get
 {
     my ($xpath) = @args;
     my $rc = xget( $self->{_}, $xpath );
-    $rc or return;
+    $rc or return q{};
     if ( ref $rc eq $HASH ) {
-        return wantarray ? %{$rc} : $rc;
+        return wantarray ? %{$rc} : ( $rc || q{} );
     }
-    return wantarray ? @{$rc} : $rc->[-1];
+    return wantarray ? @{$rc} : ( $rc->[-1] || q{} );
 }
 
 # ------------------------------------------------------------------------------
