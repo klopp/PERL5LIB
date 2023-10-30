@@ -16,6 +16,7 @@ use POSIX qw/strftime/;
 use Sys::Hostname;
 use Time::HiRes qw/gettimeofday usleep/;
 
+use Things::Bool;
 use Things::Const qw/:types/;
 use Things::Trim;
 
@@ -73,11 +74,13 @@ sub import
 }
 
 # ------------------------------------------------------------------------------
-sub _asc2level
+sub _level2asc
 {
-    my $asc = uc shift @args;
-    exists $METHODS{$asc} and return $METHODS{$asc};
-    return;
+    my ( $level ) = @_;
+    while( my ($asc, $num) = each %METHODS ) {
+        $num == $level and return $asc;
+    }
+    return 'INFO';
 }
 
 # ------------------------------------------------------------------------------
@@ -92,15 +95,15 @@ sub new
 {
     $self = bless {@args}, $self;
 
-    my $level = $self->{level} // $LOG_INFO;
-    if( $level !~ /^\d+$/ )
+    my $level = uc $self->{level}; # // $LOG_INFO;
+    if( $level =~ /^\d+$/ )
     {
-        $level = $self->_asc2level( $level );
+        $level = $self->_level2asc( $level );
     }
-    $self->{level_} = exists $METHODS{$level} ? $level : $LOG_INFO;
+    $self->{level_} = exists $METHODS{$level} ? $METHODS{$level} : $LOG_INFO;
     delete $self->{level};
 
-    $self->{comments_} = $self->{comments};
+    $self->{comments_} = parse_bool( $self->{comments} );
     delete $self->{comments};
     $self->{format_} = $self->{format} // $FMT_DEF;
     delete $self->{format};
