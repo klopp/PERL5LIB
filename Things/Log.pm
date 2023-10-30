@@ -18,7 +18,7 @@ sub import
 {
     my ( $self, $module, @params ) = @_;
     if ( !$module ) {
-        Carp::confess sprintf "use %s %s::MODULE [, \@params];\n", $self, $self;
+        Carp::confess sprintf 'use %s %s::MODULE [, @params];', $self, $self;
     }
     $module =~ /^$self/sm or $module = sprintf '%s::%s', $self, $module;
 
@@ -29,6 +29,13 @@ sub import
     $log = $module->new(@params);
     $self->export_to_level( 1, $self, qw/$log/ );
     return;
+}
+
+# ------------------------------------------------------------------------------
+sub DESTROY
+{
+    my ( $self ) = @_;
+    return $log->DESTROY;
 }
 
 # ------------------------------------------------------------------------------
