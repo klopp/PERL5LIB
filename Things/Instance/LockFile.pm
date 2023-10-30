@@ -7,7 +7,6 @@ use self;
 
 use English qw/-no_match_vars/;
 use Errno qw/:POSIX/;
-use Exporter qw/import/;
 
 use Things::Instance::LockBase;
 use base qw/Things::Instance::LockBase/;
