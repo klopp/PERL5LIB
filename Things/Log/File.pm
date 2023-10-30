@@ -10,6 +10,7 @@ use English qw/-no_match_vars/;
 use Fcntl qw/:flock/;
 use IO::Interactive qw/is_interactive/;
 
+use Things::Bool;
 use Things::Log::Base;
 use base qw/Things::Log::Base/;
 
@@ -35,7 +36,9 @@ sub new
             $self->{error} = sprintf 'Can not open file "%s" (%s)', $self->{file}, $ERRNO;
             return $self;
         }
+        $self->{stdout_} = parse_bool( $self->{stdout} );
     }
+    delete $self->{stdout};
     $self->{file_} = $self->{file};
     delete $self->{file};
     $self->{fh_}->autoflush(1);
@@ -54,6 +57,7 @@ sub plog
         if ( !$ERRNO ) {
             $self->{fh_}->print( $msg . "\n" );
             $self->{is_interactive_} or flock $self->{fh_}, LOCK_UN;
+            $self->{stdout_} and print( $msg . "\n" );
         }
         $self->{error} = $ERRNO;
     }
