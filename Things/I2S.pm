@@ -31,6 +31,9 @@ sub i2s
 sub interval_to_seconds
 {
     my ($interval) = @_;
+
+    $interval or return;
+
     my $seconds = 0;
     my @parts;
 
