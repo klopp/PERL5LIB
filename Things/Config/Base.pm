@@ -91,9 +91,12 @@ sub error
 # ------------------------------------------------------------------------------
 sub get
 {
-    my ( $xpath ) = @args;
+    my ($xpath) = @args;
     my $rc = xget( $self->{_}, $xpath );
     $rc or return;
+    if ( ref $rc eq $HASH ) {
+        return wantarray ? %{$rc} : $rc;
+    }
     return wantarray ? @{$rc} : $rc->[-1];
 }
 
