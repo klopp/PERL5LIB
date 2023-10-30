@@ -58,6 +58,9 @@ our @EXPORT = qw/$LOG_EMERG $LOG_ALERT $LOG_CRIT $LOG_ERROR $LOG_WARN $LOG_NOTIC
 our $VERSION = 'v2.10';
 
 # ------------------------------------------------------------------------------
+my @NB_LOGGERS;
+
+# ------------------------------------------------------------------------------
 ## no critic (RequireArgUnpacking)
 sub import
 {
@@ -67,6 +70,14 @@ sub import
     }
     @_ = ( $self, @args );
     goto &Exporter::import;
+}
+
+# ------------------------------------------------------------------------------
+sub _asc2level
+{
+    my $asc = uc shift @args;
+    exists $METHODS{$asc} and return $METHODS{$asc};
+    return;
 }
 
 # ------------------------------------------------------------------------------
@@ -81,8 +92,14 @@ sub new
 {
     $self = bless {@args}, $self;
 
-    $self->{level_} = $self->{level} // $LOG_INFO;
+    my $level = $self->{level};
+    if( $level !~ /^\d+$/ )
+    {
+        $level = $self->asc2level( $level );
+    }
+    $self->{level_} = $level // $LOG_INFO;
     delete $self->{level};
+
     $self->{comments_} = $self->{comments};
     delete $self->{comments};
     $self->{format_} = $self->{format} // $FMT_DEF;
@@ -131,6 +148,11 @@ sub new
         }
     }
 
+    if( $self->{async} || $self->{nb} ) {
+        $self->nb();
+        delete $self->{async};
+        delete $self->{nb};
+    }
     return $self;
 }
 
@@ -143,8 +165,9 @@ sub comments
 
 # ------------------------------------------------------------------------------
 sub nb
-{
+{   
     if ( !$self->{queue_} ) {
+        push @NB_LOGGERS, $self;
         $self->{queue_}    = Thread::Queue->new;
         $self->{comments_} = shared_clone( $self->{comments_} );
         threads->create(
@@ -167,6 +190,12 @@ sub _log
         $msg and $self->plog($msg);
     }
     return $self;
+}
+
+# ------------------------------------------------------------------------------
+sub END
+{
+    $_->DESTROY for @NB_LOGGERS;
 }
 
 # ------------------------------------------------------------------------------
