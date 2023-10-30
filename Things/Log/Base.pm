@@ -92,12 +92,12 @@ sub new
 {
     $self = bless {@args}, $self;
 
-    my $level = $self->{level};
+    my $level = $self->{level} // $LOG_INFO;
     if( $level !~ /^\d+$/ )
     {
-        $level = $self->asc2level( $level );
+        $level = $self->_asc2level( $level );
     }
-    $self->{level_} = $level // $LOG_INFO;
+    $self->{level_} = exists $METHODS{$level} ? $level : $LOG_INFO;
     delete $self->{level};
 
     $self->{comments_} = $self->{comments};
