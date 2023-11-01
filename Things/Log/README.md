@@ -106,7 +106,7 @@
 
 ##### l, L
 
-Строковое представление $LOG_LEVEL в верхнем или нижнем регистре.
+Строковое представление `$LOG_LEVEL` в верхнем или нижнем регистре.
 
 ##### p
 
@@ -122,15 +122,15 @@ PID процесса.
 
 ##### F 
 
-Сокращение для "%04y-%02m-%02d"
+Сокращение для `"%04y-%02m-%02d"`
 
 ##### X 
 
-Сокращение для "%02H:%02M:%02S"
+Сокращение для `"%02H:%02M:%02S"`
 
 ##### Z 
 
-Сокращение для "%F %X"
+Сокращение для `"%F %X"`
 
 ##### i
 
@@ -441,7 +441,7 @@ PID процесса.
 
 | message      | 
 | :------------- |
-| {XML | CSV | JSON} |
+| {XML or CSV or JSON} |
 
 Содержимое документа зависит от параметра `fields`, см. описания соответствующих классов.
 
@@ -481,5 +481,27 @@ PID процесса.
     exe=URL_ENCODE($PROGRAM_NAME @ARGV)  
     &
     ...
+```
+
+## Вспомогательные классы
+
+Преобразуют структуру `fields` в формат `CVS`, `XML` и `JSON`,  экспортируют соответствующие методы.
+
+### [Things::Log::CsvBase](Things/Log/CsvBase.pm)
+
+```perl
+    my $message = to_csv( $msg, $self )
+```
+
+### [Things::Log::XmlBase](Things/Log/XmlBase.pm)
+
+```perl
+    my $message = to_xml( $msg, $self )
+```
+
+### [Things::Log::JsonBase](Things/Log/JsonBase.pm)
+
+```perl
+    my $message = to_json( $msg, $self )
 ```
 

@@ -16,6 +16,7 @@ use POSIX qw/strftime/;
 use Sys::Hostname;
 use Time::HiRes qw/gettimeofday usleep/;
 
+use Things::Bool;
 use Things::Const qw/:types/;
 use Things::Trim;
 
@@ -58,6 +59,9 @@ our @EXPORT = qw/$LOG_EMERG $LOG_ALERT $LOG_CRIT $LOG_ERROR $LOG_WARN $LOG_NOTIC
 our $VERSION = 'v2.10';
 
 # ------------------------------------------------------------------------------
+my @NB_LOGGERS;
+
+# ------------------------------------------------------------------------------
 ## no critic (RequireArgUnpacking)
 sub import
 {
@@ -67,6 +71,16 @@ sub import
     }
     @_ = ( $self, @args );
     goto &Exporter::import;
+}
+
+# ------------------------------------------------------------------------------
+sub _level2asc
+{
+    my ( $level ) = @_;
+    while( my ($asc, $num) = each %METHODS ) {
+        $num == $level and return $asc;
+    }
+    return 'INFO';
 }
 
 # ------------------------------------------------------------------------------
@@ -81,9 +95,15 @@ sub new
 {
     $self = bless {@args}, $self;
 
-    $self->{level_} = $self->{level} // $LOG_INFO;
+    my $level = uc $self->{level}; # // $LOG_INFO;
+    if( $level =~ /^\d+$/ )
+    {
+        $level = $self->_level2asc( $level );
+    }
+    $self->{level_} = exists $METHODS{$level} ? $METHODS{$level} : $LOG_INFO;
     delete $self->{level};
-    $self->{comments_} = $self->{comments};
+
+    $self->{comments_} = parse_bool( $self->{comments} );
     delete $self->{comments};
     $self->{format_} = $self->{format} // $FMT_DEF;
     delete $self->{format};
@@ -131,6 +151,11 @@ sub new
         }
     }
 
+    if( $self->{async} || $self->{nb} ) {
+        $self->nb();
+        delete $self->{async};
+        delete $self->{nb};
+    }
     return $self;
 }
 
@@ -143,8 +168,9 @@ sub comments
 
 # ------------------------------------------------------------------------------
 sub nb
-{
+{   
     if ( !$self->{queue_} ) {
+        push @NB_LOGGERS, $self;
         $self->{queue_}    = Thread::Queue->new;
         $self->{comments_} = shared_clone( $self->{comments_} );
         threads->create(
@@ -167,6 +193,12 @@ sub _log
         $msg and $self->plog($msg);
     }
     return $self;
+}
+
+# ------------------------------------------------------------------------------
+sub END
+{
+    $_->DESTROY for @NB_LOGGERS;
 }
 
 # ------------------------------------------------------------------------------
@@ -317,8 +349,6 @@ sub _format
         }
     }
     return $message;
-
-    #    return sprintf '%s %-6u %s %s', ( strftime '%F %X', localtime $sec ), $pid, $method, $msg;
 }
 
 # ------------------------------------------------------------------------------

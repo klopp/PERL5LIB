@@ -6,7 +6,6 @@ use warnings;
 use self;
 
 use Encode qw/decode_utf8/;
-use Path::ExpandTilde;
 use Try::Catch;
 
 use Things::Bool qw/autodetect/;
@@ -22,27 +21,27 @@ our $VERSION = 'v2.0';
 sub new
 {
     $self = bless {}, $self;
-    ( $self, my $opt ) = selfopt( $self, @args );
+    my $opt = selfopt( $self, @args );
     $self->{error} and return $self;
 
     if ( !$opt->{file} ) {
-        $self->{error} = 'No required "file" parameter';
+        $self->{error} = 'No required {file} parameter';
         return $self;
     }
 
     if ( autodetect( $opt->{file} ) ) {
         $opt->{file} = Things::Config::Find->find;
         if ( !$opt->{file} ) {
-            $self->{error} = sprintf 'Can not find DEFAULT config file from: %s',
-                join( q{, }, Things::Config::Find->tested_files );
+            $self->{error} = sprintf 'Can not find DEFAULT config file from: "%s"',
+                join( q{", "}, Things::Config::Find->tested_files );
             return $self;
         }
     }
 
     try {
-        $self->_parse( expand_tilde( $opt->{file} ), $opt );
+        $self->_parse( $opt->{file}, $opt );
         if ( ref $self->{_} ne $ARRAY && ref $self->{_} ne $HASH ) {
-            Carp::croak sprintf 'Can not parse file "%s"', $opt->{file};
+            Carp::croak sprintf 'Can not parse file "%s" (%s)', $opt->{file}, $self->{error};
         }
     }
     catch {
@@ -76,6 +75,8 @@ sub _decode
     else {
         try {
             $src = decode_utf8 $src;
+        }
+        catch {
         };
     }
     return $src;
@@ -90,10 +91,13 @@ sub error
 # ------------------------------------------------------------------------------
 sub get
 {
-    my ( $xpath ) = @args;
+    my ($xpath) = @args;
     my $rc = xget( $self->{_}, $xpath );
-    $rc or return;
-    return wantarray ? @{$rc} : $rc->[-1];
+    $rc or return q{};
+    if ( ref $rc eq $HASH ) {
+        return wantarray ? %{$rc} : ( $rc || q{} );
+    }
+    return wantarray ? @{$rc} : ( $rc->[-1] || q{} );
 }
 
 # ------------------------------------------------------------------------------
