@@ -349,8 +349,6 @@ sub _format
         }
     }
     return $message;
-
-    #    return sprintf '%s %-6u %s %s', ( strftime '%F %X', localtime $sec ), $pid, $method, $msg;
 }
 
 # ------------------------------------------------------------------------------
