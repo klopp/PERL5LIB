@@ -14,24 +14,20 @@
 
 Всякие полезные модули.
 
-### [Things::I2S](Things/I2S.pm)
+### [Things::I2MS](Things/I2MS.pm)
 
 #### sub i2s( )
 #### sub interval_to_seconds( )
+#### sub i2m( )
+#### sub interval_to_microseconds( )
 
 Разбирают строки вида:
 
 ```perl
-"1d, 24m, 3h, 30s" => 1 day, 3 hours, 24 minutes, 30 seconds
-```
-или
-
-```perl
-"23:3:6:15" => 23 days, 3 hours, 6 minutes, 15 seconds
-"3:6:15"    => 3 hours, 6 minutes, 15 seconds
+"1d, 24m, 3h, 30s, 1_234i" # 1 day, 3 hours, 24 minutes, 30 seconds, 1234 microseconds
 ```
 
-Возвращают количество секунд.
+Возвращают количество микросекунд/секунд(double).
 
 ### [Things::IP](Things/IP.pm)
 
