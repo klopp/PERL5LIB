@@ -175,6 +175,10 @@ PID процесса.
     $logger->info( 'Hello from %s!', $PROGRAM_NAME );  
 ```
 
+### stdout => BOOL
+
+Дублировать вывод в STDOUT.
+
 ## [Things::Log::Std](Things/Log/Std.pm)
 
 Лог в `STDOUT`. Параметры `fields` игнорируются. Перехватываются:

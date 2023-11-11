@@ -28,7 +28,7 @@ sub _parse
         next unless $line;
         next if $line =~ /^[;:#'\"]/sm;
         if ( $line =~ /^\[(\S+)\]$/sm ) {
-            my @parts = split /\//, $opt->{nocase} ? lc $1 : $1;
+            my @parts = split /\//, $1;
             $section = \%{ $self->{_} };
             while ( my $part = shift @parts ) {
                 $section = \%{ $section->{$part} };
