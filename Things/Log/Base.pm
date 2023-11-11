@@ -76,8 +76,8 @@ sub import
 # ------------------------------------------------------------------------------
 sub _level2asc
 {
-    my ( $level ) = @_;
-    while( my ($asc, $num) = each %METHODS ) {
+    my ($level) = @_;
+    while ( my ( $asc, $num ) = each %METHODS ) {
         $num == $level and return $asc;
     }
     return 'INFO';
@@ -95,10 +95,9 @@ sub new
 {
     $self = bless {@args}, $self;
 
-    my $level = uc $self->{level}; # // $LOG_INFO;
-    if( $level =~ /^\d+$/ )
-    {
-        $level = $self->_level2asc( $level );
+    my $level = uc $self->{level};    # // $LOG_INFO;
+    if ( $level =~ /^\d+$/ ) {
+        $level = $self->_level2asc($level);
     }
     $self->{level_} = exists $METHODS{$level} ? $METHODS{$level} : $LOG_INFO;
     delete $self->{level};
@@ -136,6 +135,9 @@ sub new
         my $level = $METHODS{$method};
         $self->{methods_}->{$level} = $method;
         $method = lc $method;
+        
+        next if $self->can($method);
+
         no strict 'refs';
         *{"$package\::$method"} = sub {
             my $this = shift;
@@ -151,7 +153,7 @@ sub new
         }
     }
 
-    if( $self->{async} || $self->{nb} ) {
+    if ( $self->{async} || $self->{nb} ) {
         $self->nb();
         delete $self->{async};
         delete $self->{nb};
@@ -168,7 +170,7 @@ sub comments
 
 # ------------------------------------------------------------------------------
 sub nb
-{   
+{
     if ( !$self->{queue_} ) {
         push @NB_LOGGERS, $self;
         $self->{queue_}    = Thread::Queue->new;
@@ -246,8 +248,6 @@ sub _msg
         }
     }
     return $self->_format( $sec, $microsec, $PID, $self->{host_}, $method, $msg );
-
-    #    return sprintf '%s %-6u %s %s', ( strftime '%F %X', localtime $sec ), $PID, $method, $msg;
 }
 
 # ------------------------------------------------------------------------------
