@@ -1,16 +1,16 @@
-package Things::I2S;
+package Things::I2MS;
 
 use strict;
 use warnings;
 use base qw/Exporter/;
-our @EXPORT  = qw/i2s interval_to_seconds i2m interval_to_microseconds/;
+our @EXPORT  = qw/i2s interval_to_seconds i2ms interval_to_microseconds/;
 our $VERSION = 'v1.0';
 
 # ------------------------------------------------------------------------------
 use Things::Const qw/:datetime/;
 
 # ------------------------------------------------------------------------------
-sub i2m
+sub i2ms
 {
     goto &interval_to_microseconds;
 }
