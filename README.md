@@ -14,6 +14,23 @@
 
 Всякие полезные модули.
 
+### [Things::Inline](Things/Inline.pm)
+
+Обёртка для [Inline](https://metacpan.org/pod/Inline). 
+
+1. Задаёт временный каталог формата `$ENV{TEMP}/__PACKAGE__`
+2. Для C или CPP устанавливает `ccflags`.
+
+Использование:
+
+```perl
+    use Things::Inline;
+    use Inline Things::Inline::c_config;
+    # OR
+    use Things::Inline;
+    use Inline Things::Inline::config;
+```
+
 ### [Things::I2MS](Things/I2MS.pm)
 
 #### sub i2s( )
