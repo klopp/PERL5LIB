@@ -4,13 +4,16 @@ package Things::Inline;
 use strict;
 use warnings;
 
+use Const::Fast;
 use File::Path qw/make_path/;
 use File::Spec;
+
+const my $CCFLAGS => '-Wall -pedantic -pedantic-errors -Wextra';
 
 # ------------------------------------------------------------------------------
 sub config
 {
-    ( my $inline_temp = ( ( caller 2 )[0] || __PACKAGE__ ) ) =~ s/::/\//smg;
+    ( my $inline_temp = ( ( caller 1 )[0] || __PACKAGE__ ) ) =~ s/::/\//smg;
     $inline_temp = File::Spec->tmpdir() . '/.' . $inline_temp;
     make_path $inline_temp;
 
@@ -24,7 +27,7 @@ sub c_config
 {
     my @config = (
         C       => config,
-        ccflags => '-Wall -pedantic -pedantic-errors -Wextra',
+        ccflags => $CCFLAGS,
     );
 
     return @config;
