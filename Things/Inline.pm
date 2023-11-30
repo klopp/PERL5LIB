@@ -43,7 +43,7 @@ __END__
     use Inline Things::Inline::c_config;
     # OR
     use Things::Inline;
-    use Inline Things::Inline::c_config;
+    use Inline Things::Inline::config;
 
 =cut
 
