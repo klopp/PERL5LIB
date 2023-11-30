@@ -40,6 +40,7 @@ const my %METHODS => (
     'ERR'       => $LOG_ERROR,
     'WARNING'   => $LOG_WARN,
     'WARN'      => $LOG_WARN,
+    'WRN'       => $LOG_WARN,
     'NOTICE'    => $LOG_NOTICE,
     'NOT'       => $LOG_NOTICE,
     'INFO'      => $LOG_INFO,
