@@ -50,7 +50,7 @@ sub autodetect
 sub parse_bool
 {
     my ($bool) = @_;
-    return 0 if !$bool || $bool =~ /^0|no|false|none|never|jamais$/ism;
+    return 0 if !$bool || $bool =~ /^0|off|no|false|none|never|jamais$/ism;
     return 1;
 }
 
