@@ -26,7 +26,7 @@
 * alert()
 * critical(), crit()
 * error(), err()
-* warning(), warn()
+* warning(), warn(), wrn()
 * notice(), not()
 * info(), inf()
 * debug(), dbg()
@@ -147,7 +147,7 @@ PID процесса.
 Обобщённый интерфейс для логов. Экспортирует переменную `$log`.
 
 ```perl
-    use Things::Log 'File', file => '/var/log/my.log', comments => 1, level => $LOG_DEBUG;
+    my $log = Things::Log->new( 'File', file => '/var/log/my.log', comments => 1, level => $LOG_DEBUG );
     $log->info( 'хочу проинформировать' );
     #
     # Эквивалентно:
