@@ -14,8 +14,11 @@ our $VERSION = 'v2.0';
 # ------------------------------------------------------------------------------
 sub new
 {
-    my ( $host, $base, $user, $password, @dbargs ) = @args;
-    return bless { db => DBI->connect( sprintf( 'dbi:Pg:dbname=%s;host=%s', $base, $host ), $user, $password, @dbargs ) }, $self;
+    my ( $host, $base, $user, $password, $dbargs ) = @args;
+    $dbargs = $self->check_dbargs($dbargs);
+    return
+        bless { db => DBI->connect( sprintf( 'dbi:Pg:dbname=%s;host=%s', $base, $host ), $user, $password, $dbargs ) },
+        $self;
 }
 
 # ------------------------------------------------------------------------------
