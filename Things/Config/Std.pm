@@ -17,9 +17,7 @@ our $VERSION = 'v2.0';
 # ------------------------------------------------------------------------------
 sub _parse
 {
-    my ( $file, $opt ) = @args;
-
-    my @lines   = path($file)->lines;
+    my @lines   = path( $self->{opt_}->{file} )->lines;
     my $lineno  = 0;
     my $section = \%{ $self->{_} };
     while ( my $line = shift @lines ) {
@@ -37,12 +35,12 @@ sub _parse
         }
         if ( $line =~ /^(\S+)\s+(.+)$/sm ) {
             my ( $key, $value ) = ( $1, $2 );
-            $key = lc $key if $opt->{nocase};
+            $key = lc $key if $self->{opt_}->{nocase};
             $value =~ s/^["]|["]$//gsm;
             push @{ $section->{$key} }, unbackslash($value);
         }
         else {
-            Carp::croak sprintf 'Invalid config file "%s", line [%u]', $opt->{file}, $lineno;
+            Carp::croak sprintf 'Invalid config file "%s", line [%u]', $self->{opt_}->{file}, $lineno;
         }
     }
     return $self->{_};
