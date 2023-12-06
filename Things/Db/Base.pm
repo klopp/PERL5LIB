@@ -11,6 +11,8 @@ use Try::Catch;
 use Things::Autoload;
 use base qw/Things::Autoload/;
 
+use Things::Const qw/:types/;
+
 const my $CONFIG_TABLE => 'config';
 our $VERSION = 'v2.0';
 
@@ -18,6 +20,19 @@ our $VERSION = 'v2.0';
 sub new
 {
     return bless { db => undef }, $self;
+}
+
+# ------------------------------------------------------------------------------
+sub check_dbargs
+{
+    my ($dbargs) = @args;
+    if ( ref $dbargs ) {
+        ref $dbargs eq $HASH or Carp::confess 'Use HASH REF for $dbargs';
+    }
+    else {
+        undef $dbargs;
+    }
+    return $dbargs;
 }
 
 # ------------------------------------------------------------------------------

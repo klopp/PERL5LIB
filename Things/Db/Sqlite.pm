@@ -15,8 +15,11 @@ our $VERSION = 'v2.0';
 # ------------------------------------------------------------------------------
 sub new
 {
-    my ( $dbfile, @dbargs ) = @args;
-    return bless { db => DBI->connect( sprintf( 'dbi:SQLite:dbname=%s', $dbfile ), '', '', @dbargs ) }, $self;
+    my ( $dbfile, $dbargs ) = @args;
+
+    $dbargs = $self->check_dbargs($dbargs);
+    return bless { db => DBI->connect( sprintf( 'dbi:SQLite:dbname=%s', $dbfile ), undef, undef, $dbargs ) },
+        $self;
 }
 
 # ------------------------------------------------------------------------------

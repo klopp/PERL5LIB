@@ -21,17 +21,17 @@ our $VERSION = 'v2.0';
 sub new
 {
     $self = bless {}, $self;
-    my $opt = selfopt( $self, @args );
+    $self->{opt_} = selfopt( $self, @args );
     $self->{error} and return $self;
 
-    if ( !$opt->{file} ) {
+    if ( !$self->{opt_}->{file} ) {
         $self->{error} = 'No required {file} parameter';
         return $self;
     }
 
-    if ( autodetect( $opt->{file} ) ) {
-        $opt->{file} = Things::Config::Find->find;
-        if ( !$opt->{file} ) {
+    if ( autodetect( $self->{opt_}->{file} ) ) {
+        $self->{opt_}->{file} = Things::Config::Find->find;
+        if ( !$self->{opt_}->{file} ) {
             $self->{error} = sprintf 'Can not find DEFAULT config file from: "%s"',
                 join( q{", "}, Things::Config::Find->tested_files );
             return $self;
@@ -39,9 +39,9 @@ sub new
     }
 
     try {
-        $self->_parse( $opt->{file}, $opt );
+        $self->_parse();
         if ( ref $self->{_} ne $ARRAY && ref $self->{_} ne $HASH ) {
-            Carp::croak sprintf 'Can not parse file "%s" (%s)', $opt->{file}, $self->{error};
+            Carp::croak sprintf 'Can not parse file "%s" (%s)', $self->{opt_}->{file}, $self->{error};
         }
     }
     catch {
@@ -92,6 +92,7 @@ sub error
 sub get
 {
     my ($xpath) = @args;
+    $self->{opt_}->{nocase} and $xpath = lc $xpath;
     my $rc = xget( $self->{_}, $xpath );
     $rc or return q{};
     if ( ref $rc eq $HASH ) {

@@ -1,4 +1,4 @@
-package Things::Log;
+package Things::Db;
 
 # ------------------------------------------------------------------------------
 use strict;
@@ -8,13 +8,13 @@ use warnings;
 use Things::AutoMod;
 
 # ------------------------------------------------------------------------------
-our $VERSION = 'v1.10';
+our $VERSION = 'v1.00';
 
 # ------------------------------------------------------------------------------
 sub new
 {
     my ( undef, $target, @params ) = @_;
-    return Things::AutoMod->new( 'Log::' . $target, @params );
+    return Things::AutoMod->new( 'Db::' . $target, @params );
 }
 
 # ------------------------------------------------------------------------------
@@ -30,8 +30,7 @@ __END__
 
 =head1 SYNOPSIS
 
-    my $log = Things::Log->new( 'File', file => '/var/log/my.log' );
-    $log->info(...);
+    my $db = Things::Db->new( 'Mysql', ... );
 
 =cut
 

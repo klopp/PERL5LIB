@@ -17,15 +17,13 @@ our $VERSION = 'v2.0';
 # ------------------------------------------------------------------------------
 sub _parse
 {
-    my ( $file, $opt ) = @args;
-
     capture {
-        my $cfg = do $file;
+        my $cfg = do $self->{opt_}->{file};
         if ( !$cfg ) {
             $self->{error} = $EVAL_ERROR ? $EVAL_ERROR : $ERRNO;
         }
         else {
-            $self->{_} = $self->_multivals( $cfg, $opt );
+            $self->{_} = $self->_multivals( $cfg );
         }
     };
     return $self;
@@ -34,17 +32,17 @@ sub _parse
 #------------------------------------------------------------------------------
 sub _multivals
 {
-    my ( $src, $opt ) = @args;
+    my ( $src ) = @args;
 
     my $dest;
     if ( ref $src eq $ARRAY ) {
-        @{$dest} = map { $self->_multivals( $_, $opt ) } @{$src};
+        @{$dest} = map { $self->_multivals( $_ ) } @{$src};
     }
     elsif ( ref $src eq $HASH ) {
         while ( my ($key) = each %{$src} ) {
             my $value = $src->{$key};
-            $opt->{nocase} and $key = lc $key;
-            push @{ $dest->{$key} }, $self->_multivals( $value, $opt );
+            $self->{opt_}->{nocase} and $key = lc $key;
+            push @{ $dest->{$key} }, $self->_multivals( $value );
         }
     }
     else {
