@@ -9,7 +9,7 @@ use base qw/Exporter/;
 our @EXPORT_OK = qw/
     $YEAR_OFFSET
     $HOUR_IN_DAY $MIN_IN_HOUR $MIN_IN_DAY $SEC_IN_DAY $SEC_IN_HOUR $SEC_IN_MIN
-    $MICROSEC_IN_SEC $MICROSEC_IN_HOUR $MICROSEC_IN_MIN $MICROSEC_IN_DAY
+    $MICROSEC_IN_SEC $MILLISEC_IN_SEC $MICROSEC_IN_HOUR $MICROSEC_IN_MIN $MICROSEC_IN_DAY
     @MONTHS3 %MONTHS3
     $ARRAY $HASH $SCALAR $GLOB $CODE
     /;
@@ -24,7 +24,7 @@ our %EXPORT_TAGS = (
         qw/
             $YEAR_OFFSET
             $HOUR_IN_DAY $MIN_IN_HOUR $MIN_IN_DAY $SEC_IN_DAY $SEC_IN_HOUR $SEC_IN_MIN
-            $MICROSEC_IN_SEC $MICROSEC_IN_HOUR $MICROSEC_IN_MIN $MICROSEC_IN_DAY
+            $MILLISEC_IN_SEC $MICROSEC_IN_SEC $MICROSEC_IN_HOUR $MICROSEC_IN_MIN $MICROSEC_IN_DAY
             @MONTHS3 %MONTHS3
             /,
     ],
@@ -41,6 +41,7 @@ const our $GLOB             => 'GLOB';
 const our $CODE             => 'CODE';
 const our $YEAR_OFFSET      => 1900;
 const our $MICROSEC_IN_SEC  => 1_000_000;
+const our $MILLISEC_IN_SEC  => 1_000;
 const our $SEC_IN_MIN       => 60;
 const our $MICROSEC_IN_MIN  => $SEC_IN_MIN * $MICROSEC_IN_SEC;
 const our $HOUR_IN_DAY      => 24;
