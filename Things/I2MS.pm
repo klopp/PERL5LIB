@@ -26,7 +26,7 @@ sub interval_to_seconds
 {
     my $ms = interval_to_microseconds(shift);
     $ms or return;
-    return $ms / $MICROSEC_IN_SEC;
+    return int( $ms / $MICROSEC_IN_SEC );
 }
 
 # ------------------------------------------------------------------------------
