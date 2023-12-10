@@ -94,7 +94,8 @@ sub get
     my ($xpath) = @args;
     $self->{opt_}->{nocase} and $xpath = lc $xpath;
     my $rc = xget( $self->{_}, $xpath );
-    $rc or return q{};
+#    $rc or return q{};
+    $rc or return;
     if ( ref $rc eq $HASH ) {
         return wantarray ? %{$rc} : ( $rc || q{} );
     }
