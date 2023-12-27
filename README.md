@@ -14,6 +14,16 @@
 
 Всякие полезные модули.
 
+### [Things::Xdotool](Things/Xdotool.pm)
+
+Обёртка для [xdotool](https://manpages.org/xdotool). 
+
+Использование:
+
+```perl
+    my $active_window_name = xdotool( 'getwindowfocus', 'getwindowname', { timeout => 2 } );
+```
+
 ### [Things::Inline](Things/Inline.pm)
 
 Обёртка для [Inline](https://metacpan.org/pod/Inline). 
