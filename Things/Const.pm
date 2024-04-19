@@ -13,6 +13,7 @@ our @EXPORT_OK = qw/
     @MONTHS3 %MONTHS3
     $ARRAY $HASH $SCALAR $GLOB $CODE
     $GTK_MOUSE_LBTN $GTK_MOUSE_MBTN $GTK_MOUSE_RBTN
+    $HUNDERD $THOUSAND
     /;
 our %EXPORT_TAGS = (
     'all' => \@EXPORT_OK,
@@ -24,6 +25,11 @@ our %EXPORT_TAGS = (
     'types' => [
         qw/
             $ARRAY $HASH $SCALAR $GLOB $CODE
+            /,
+    ],
+    'num' => [
+        qw/
+            $HUNDERD $THOUSAND
             /,
     ],
     'dt' => [
@@ -45,6 +51,8 @@ const our $HASH             => 'HASH';
 const our $SCALAR           => 'SCALAR';
 const our $GLOB             => 'GLOB';
 const our $CODE             => 'CODE';
+const our $HUNDERD          => 100;
+const our $THOUSAND         => 1_000;
 const our $YEAR_OFFSET      => 1900;
 const our $MICROSEC_IN_SEC  => 1_000_000;
 const our $MILLISEC_IN_SEC  => 1_000;
