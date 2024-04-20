@@ -29,6 +29,7 @@ sub _parse
             my @parts = split /\//, $1;
             $section = \%{ $self->{_} };
             while ( my $part = shift @parts ) {
+                $self->{opt_}->{nocase} and $part = lc $part;
                 $section = \%{ $section->{$part} };
             }
             next;
