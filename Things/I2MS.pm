@@ -22,6 +22,7 @@ sub i2s
 }
 
 # ------------------------------------------------------------------------------
+## no critic (RequireArgUnpacking)
 sub interval_to_seconds
 {
     my $ms = interval_to_microseconds(shift);
