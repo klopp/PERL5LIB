@@ -19,6 +19,7 @@ sub _parse
 {
     my @lines   = path( $self->{opt_}->{file} )->lines;
     my $lineno  = 0;
+    my $cmt     = 0;
     my $section = \%{ $self->{_} };
 
     while ( my $line = shift @lines ) {
@@ -26,6 +27,19 @@ sub _parse
         trim( $line, 1 );
         next unless $line;
         next if $line =~ /^[;:#'\"]/sm;
+
+        if ( $line eq q{/*} ) {
+            ++$cmt;
+        }
+        elsif ( $line eq q{*/} ) {
+            --$cmt;
+            if ( $cmt < 0 ) {
+                Carp::croak sprintf 'Invalid config file "%s", line [%u]', $self->{opt_}->{file}, $lineno;
+            }
+            next;
+        }
+        $cmt and next;
+
         if( lc $line eq '[end]' ) {
             $section = \%{ $self->{_} };
         }
