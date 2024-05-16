@@ -45,8 +45,7 @@ sub new
         $self->_parse();
         $self->{_} //= {};
         if ( ref $self->{_} ne $ARRAY && ref $self->{_} ne $HASH ) {
-            Carp::croak sprintf 'Can not parse file "%s" (%s)', $self->{opt_}->{file},
-                ( $self->{error} || q{?} );
+            Carp::croak sprintf 'Can not parse file "%s" (%s)', $self->{opt_}->{file}, ( $self->{error} || q{?} );
         }
     }
     catch {
@@ -108,12 +107,13 @@ sub get_uint
     defined $uint or return;
     $uint =~ s/_*//gsm;
     $uint =~ /^\d+$/sm or return;
+
     $uint >= 0 or return;
 
-    if ($min) {
+    if (defined $min) {
         $uint >= $min or return;
     }
-    if ($max) {
+    if (defined $max) {
         $uint <= $max or return;
     }
     return $uint;
@@ -129,10 +129,10 @@ sub get_int
     $int =~ s/_*//gsm;
     $int =~ /^-?\d+$/sm or return;
 
-    if ($min) {
+    if (defined $min) {
         $int >= $min or return;
     }
-    if ($max) {
+    if (defined $max) {
         $int <= $max or return;
     }
     return $int;
@@ -149,9 +149,6 @@ sub get
     $rc or return $default;
     if ( ref $rc eq $HASH ) {
         return wantarray ? %{$rc} : $rc;
-    }
-    if ( ref $rc eq $ARRAY ) {
-        return wantarray ? @{$rc} : $rc;
     }
     return wantarray ? @{$rc} : $rc->[-1];
 }
