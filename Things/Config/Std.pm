@@ -12,7 +12,7 @@ use Things::Trim;
 
 use Things::Config::Base;
 use base qw/Things::Config::Base/;
-our $VERSION = 'v2.0';
+our $VERSION = 'v2.2';
 
 # ------------------------------------------------------------------------------
 sub _parse
@@ -33,14 +33,28 @@ sub _parse
         }
         elsif ( $line eq q{*/} ) {
             --$cmt;
-            if ( $cmt < 0 ) {
-                Carp::croak sprintf 'Invalid config file "%s", line [%u]', $self->{opt_}->{file}, $lineno;
-            }
+            $cmt < 0 and Carp::croak sprintf 'Invalid config file "%s", line [%u]', $self->{opt_}->{file}, $lineno;
             next;
         }
         $cmt and next;
 
-        if( lc $line eq '[end]' ) {
+        while ( $line =~ / \\\\$/sm ) {
+            my $next = shift @lines;
+            ++$lineno;
+            trim( $next, 1 );
+            $line =~ s/[ \t]+\\\\$//sm;
+            $line .= "\n" . $next;
+        }
+
+        while ( $line =~ / \\$/sm ) {
+            my $next = shift @lines;
+            ++$lineno;
+            trim( $next, 1 );
+            $line =~ s/[ \t]+\\$//sm;
+            $line .= q{ } . $next;
+        }
+
+        if ( lc $line eq '[end]' ) {
             $section = \%{ $self->{_} };
         }
         elsif ( $line =~ /^\[(\S+)\]$/sm ) {
