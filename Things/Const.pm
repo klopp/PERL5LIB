@@ -13,6 +13,7 @@ our @EXPORT_OK = qw/
     @MONTHS3 %MONTHS3
     $ARRAY $HASH $SCALAR $GLOB $CODE
     $GTK_MOUSE_LBTN $GTK_MOUSE_MBTN $GTK_MOUSE_RBTN
+    $HUNDERD $THOUSAND $MINUS_ONE
     /;
 our %EXPORT_TAGS = (
     'all' => \@EXPORT_OK,
@@ -24,6 +25,11 @@ our %EXPORT_TAGS = (
     'types' => [
         qw/
             $ARRAY $HASH $SCALAR $GLOB $CODE
+            /,
+    ],
+    'num' => [
+        qw/
+            $HUNDERD $THOUSAND $MINUS_ONE
             /,
     ],
     'dt' => [
@@ -45,7 +51,10 @@ const our $HASH             => 'HASH';
 const our $SCALAR           => 'SCALAR';
 const our $GLOB             => 'GLOB';
 const our $CODE             => 'CODE';
-const our $YEAR_OFFSET      => 1900;
+const our $MINUS_ONE        => -1;
+const our $HUNDERD          => 100;
+const our $THOUSAND         => 1_000;
+const our $YEAR_OFFSET      => 1_900;
 const our $MICROSEC_IN_SEC  => 1_000_000;
 const our $MILLISEC_IN_SEC  => 1_000;
 const our $SEC_IN_MIN       => 60;
@@ -55,8 +64,8 @@ const our $MIN_IN_HOUR      => 60;
 const our $MIN_IN_DAY       => $MIN_IN_HOUR * $HOUR_IN_DAY;
 const our $SEC_IN_HOUR      => $SEC_IN_MIN * $MIN_IN_HOUR;
 const our $MICROSEC_IN_HOUR => $SEC_IN_MIN * $MIN_IN_HOUR * $MICROSEC_IN_SEC;
-const our $SEC_IN_DAY       => $SEC_IN_HOUR * $HOUR_IN_DAY * $MICROSEC_IN_SEC;
-const our $MICROSEC_IN_DAY  => $SEC_IN_HOUR * $HOUR_IN_DAY;
+const our $MICROSEC_IN_DAY  => $SEC_IN_HOUR * $HOUR_IN_DAY * $MICROSEC_IN_SEC;
+const our $SEC_IN_DAY       => $SEC_IN_HOUR * $HOUR_IN_DAY;
 const our @MONTHS3          => qw/Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec/;
 const our %MONTHS3          => map { $_ => $MONTHS3[$_] } 0 .. @MONTHS3 - 1;
 const our $GTK_MOUSE_LBTN   => 1;

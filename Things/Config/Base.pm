@@ -11,8 +11,11 @@ use Try::Catch;
 use Things::Bool qw/autodetect/;
 use Things::Config::Find;
 use Things::Const qw/:types/;
+use Things::I2MS;
 use Things::Xargs;
 use Things::Xget;
+
+use DDP;
 
 our $VERSION = 'v2.0';
 
@@ -40,8 +43,9 @@ sub new
 
     try {
         $self->_parse();
+        $self->{_} //= {};
         if ( ref $self->{_} ne $ARRAY && ref $self->{_} ne $HASH ) {
-            Carp::croak sprintf 'Can not parse file "%s" (%s)', $self->{opt_}->{file}, $self->{error};
+            Carp::croak sprintf 'Can not parse file "%s" (%s)', $self->{opt_}->{file}, ( $self->{error} || q{?} );
         }
     }
     catch {
@@ -52,6 +56,12 @@ sub new
     _decode( $self->{_} );
 
     return $self;
+}
+
+# ------------------------------------------------------------------------------
+sub file
+{
+    return $self->{opt_}->{file};
 }
 
 # ------------------------------------------------------------------------------
@@ -89,17 +99,58 @@ sub error
 }
 
 # ------------------------------------------------------------------------------
+sub get_uint
+{
+    my ( $xpath, $min, $max ) = @args;
+
+    my $uint = $self->get($xpath);
+    defined $uint or return;
+    $uint =~ s/_*//gsm;
+    $uint =~ /^\d+$/sm or return;
+
+    $uint >= 0 or return;
+
+    if (defined $min) {
+        $uint >= $min or return;
+    }
+    if (defined $max) {
+        $uint <= $max or return;
+    }
+    return $uint;
+}
+
+# ------------------------------------------------------------------------------
+sub get_int
+{
+    my ( $xpath, $min, $max ) = @args;
+
+    my $int = $self->get($xpath);
+    defined $int or return;
+    $int =~ s/_*//gsm;
+    $int =~ /^-?\d+$/sm or return;
+
+    if (defined $min) {
+        $int >= $min or return;
+    }
+    if (defined $max) {
+        $int <= $max or return;
+    }
+    return $int;
+}
+
+# ------------------------------------------------------------------------------
 sub get
 {
-    my ($xpath) = @args;
+    my ( $xpath, $default ) = @args;
     $self->{opt_}->{nocase} and $xpath = lc $xpath;
+
     my $rc = xget( $self->{_}, $xpath );
-#    $rc or return q{};
-    $rc or return;
+
+    $rc or return $default;
     if ( ref $rc eq $HASH ) {
-        return wantarray ? %{$rc} : ( $rc || q{} );
+        return wantarray ? %{$rc} : $rc;
     }
-    return wantarray ? @{$rc} : ( $rc->[-1] || q{} );
+    return wantarray ? @{$rc} : $rc->[-1];
 }
 
 # ------------------------------------------------------------------------------

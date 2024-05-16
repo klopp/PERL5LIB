@@ -22,6 +22,7 @@ sub i2s
 }
 
 # ------------------------------------------------------------------------------
+## no critic (RequireArgUnpacking)
 sub interval_to_seconds
 {
     my $ms = interval_to_microseconds(shift);
@@ -43,7 +44,7 @@ sub interval_to_microseconds
 
     $interval or return;
 
-    my $ms = 0;
+    my $ms;
     my @parts;
 
     @parts = split /[,\s]+/sm, lc $interval;
@@ -51,7 +52,7 @@ sub interval_to_microseconds
         return unless /^([\d_]+)([ismhd]?)$/ism;
         my $n = $1;
         $n =~ s/_//gsm;
-        $n or return;
+        $n ne q{} or return;
         if ( $2 && $2 ne 'i' ) {
             if ( $2 eq 's' ) {
                 $ms += $n * $MICROSEC_IN_SEC;

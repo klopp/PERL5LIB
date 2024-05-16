@@ -14,6 +14,16 @@
 
 Всякие полезные модули.
 
+### [Things::Xdotool](Things/Xdotool.pm)
+
+Обёртка для [xdotool](https://manpages.org/xdotool). 
+
+Использование:
+
+```perl
+    my $active_window_name = xdotool( 'getwindowfocus', 'getwindowname', { timeout => 2 } );
+```
+
 ### [Things::Inline](Things/Inline.pm)
 
 Обёртка для [Inline](https://metacpan.org/pod/Inline). 
@@ -115,25 +125,44 @@
 
 ```ini
     # comment line, may start with [;] [:] [#] ['] ["]
+    
     root_value "root value"
     multiline "multi\nline"
+    
+    multiline2single multi \
+    2 \
+    single
+    # пробел перед \ обязателен, получится "multi 2 single"
+
+    multiline2multi multi \\
+    2 \\
+    multi
+    # пробел перед \\ обязателен, получится "multi\n2\nmulti"
+    
     [section]
     !key a
     ' keep spaces:
     !key " aa "
+    [end]
+    
+    /*
+        multiline comment
+    */
+    
+    LOCAL_TMP $ENV{HOME}/tmp
+
     [section/sub.section!]
     @key b
     ; escapes:
     @key "b\tb"
+    
     [section/sub.section!/sub.sub+section?]
     %key c
     $key cc
 ```
 
-  * Многострочных значений нет (но можно использовать `\n`).
-  * Комментарии только по одной строке целиком.
-  * Разделитель подсекций - `/`.
   * Ограничений на символы в именах ключей и секций нет. 
+  * Разделитель подсекций - `/`, любая секция выбрасывается в корень директивой `[End]` (нечувствительна к регистру).
 
 ### [Things::HashOrdered](Things/HashOrdered.pm)
 
