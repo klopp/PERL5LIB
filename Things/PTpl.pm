@@ -14,6 +14,11 @@ use Try::Catch;
 
 use Things::Xargs;
 
+our %TPL_VARS;
+
+use base qw/Exporter/;
+our @EXPORT = qw/%TPL_VARS/;
+
 use DDP;
 
 # ------------------------------------------------------------------------------
@@ -26,11 +31,13 @@ sub new
     $self->{opt_}->{path} //= q{.};
     $self->{opt_}->{path} .= q{/};
 
-    $self->{TPL_VARS} = { PID => $PID, };
+    $self->{TRX} = qr/(\$TPL_VARS(\{\S+\}(\S{0,}[\]\}])?))/sm;
 
-    $self->{CTX} = Eval::Context->new( PRE_CODE => "use strict;\nuse warnings;\n", );
-
-    $self->{TRX} = qr/(\$TPL_VARS\-\>(\{\S+\}(\S{0,}[\]\}])?))/sm;
+    $self->{CTX} = Eval::Context->new(
+        PRE_CODE     => "use strict;\nuse warnings;use Things::PTpl;\n",
+        INSTALL_SUBS => { 'pf' => sub { $self->pf(@_) } },
+    );
+    %TPL_VARS = %{ $self->{opt_}->{vars} };
 
     return $self;
 }
@@ -107,11 +114,7 @@ sub _parse_perl_block
     my $rc;
 
     try {
-        $rc = $self->{CTX}->eval(
-            CODE              => $perl,
-            INSTALL_VARIABLES => [ [ '$TPL_VARS' => $self->{TPL_VARS} => $Eval::Context::SHARED ], ],
-            INSTALL_SUBS      => { 'pf' => sub { $self->pf(@_) } },
-        );
+        $rc = $self->{CTX}->eval( CODE => $perl, );
     }
     catch {
         p $_;
@@ -133,7 +136,7 @@ sub _parse_text_block
     my @rc;
     while ( $text =~ /$self->{TRX}/g ) {
         try {
-            my $xxx = eval "\$self->{TPL_VARS}->$2";
+            my $xxx = eval "\$TPL_VARS$2";
             push @rc, $xxx // q{};
         }
         catch {
@@ -142,8 +145,8 @@ sub _parse_text_block
     }
 
     while ( @rc && $text =~ /$self->{TRX}/g ) {
-        my $rpl = shift @rc;
-        $text =~ s/$self->{TRX}/$rpl/sm;
+        my $xxx = shift @rc;
+        $text =~ s/$self->{TRX}/$xxx/sm;
     }
 
     return $text;
