@@ -175,6 +175,24 @@ sub pf
 }
 
 # ------------------------------------------------------------------------------
+
+=pod
+package PTplParser;
+
+use HTML::Parser;
+use base qw/HTML::Parser/;
+
+sub new
+{
+    my ( $class, @params ) = @_; 
+
+    my $self = $class->SUPER::new(@params);
+    
+    return $self;
+    
+}
+=cut
+# ------------------------------------------------------------------------------
 1;
 __END__
 
