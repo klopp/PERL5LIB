@@ -107,7 +107,7 @@
 Использование в качестве конфига файла с перловыми данными (только чтение).
 
 ```perl
-    my $conf = Things::Config::Perl->new( file => '/home/user/my.conf', nocase = 0 );
+    my $conf = Things::Config::Perl->new( file => '/home/user/my.conf', nocase => 0 );
     Carp::confess $conf->{error} if $conf->{error};
     my $value = $conf->get( '/some/key' ); 
 ```
