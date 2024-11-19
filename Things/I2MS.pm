@@ -25,7 +25,10 @@ sub i2s
 ## no critic (RequireArgUnpacking)
 sub interval_to_seconds
 {
-    my $ms = interval_to_microseconds(shift);
+    my ($arg) = @_;
+    $arg or return;
+    $arg =~ /^\d+$/ and $arg .= q{s};
+    my $ms = interval_to_microseconds($arg);
     $ms or return;
     return int( $ms / $MICROSEC_IN_SEC );
 }
