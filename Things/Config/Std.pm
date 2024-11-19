@@ -68,7 +68,7 @@ sub _parse
         elsif ( $line =~ /^(\S+)\s+(.+)$/sm ) {
             my ( $key, $value ) = ( $1, $2 );
             $key = lc $key if $self->{opt_}->{nocase};
-            $value =~ s/^["]|["]$//gsm;
+####            $value =~ s/^["]|["]$//gsm;
             $value =~ s/\$ENV\{([^}]+)\}/$ENV{$1}/gsm;
             push @{ $section->{$key} }, unbackslash($value);
         }
