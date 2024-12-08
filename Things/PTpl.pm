@@ -35,9 +35,9 @@ sub new
 
     $self->{CTX} = Eval::Context->new(
         PRE_CODE     => "use strict;\nuse warnings;use Things::PTpl;\n",
-        INSTALL_SUBS => { 'pf' => sub { $self->pf(@_) } },
+        INSTALL_SUBS => { 'tpl' => sub { $self->tpl(@_) } },
     );
-    %TPL_VARS = %{ $self->{opt_}->{vars} };
+    $self->{opt_}->{vars} and %TPL_VARS = %{ $self->{opt_}->{vars} };
 
     return $self;
 }
@@ -153,7 +153,7 @@ sub _parse_text_block
 }
 
 # ------------------------------------------------------------------------------
-sub pt
+sub tpl_text
 {
     my ( $text, %data ) = @args;
 
@@ -168,30 +168,23 @@ sub pt
 }
 
 # ------------------------------------------------------------------------------
-sub pf
+sub set
 {
-    my ( $file, %data ) = @args;
-    return $self->pt( path( $self->{opt_}->{path} . $file )->slurp_utf8, %data );
+    my ( $key, $value ) = @args;
+    $TPL_VARS{$key} = $value;
+
+####    p %TPL_VARS;
+
+    return $self;
 }
 
 # ------------------------------------------------------------------------------
-
-=pod
-package PTplParser;
-
-use HTML::Parser;
-use base qw/HTML::Parser/;
-
-sub new
+sub tpl
 {
-    my ( $class, @params ) = @_; 
-
-    my $self = $class->SUPER::new(@params);
-    
-    return $self;
-    
+    my ( $file, %data ) = @args;
+    return $self->tpl_text( path( $self->{opt_}->{path} . $file )->slurp_utf8, %data );
 }
-=cut
+
 # ------------------------------------------------------------------------------
 1;
 __END__

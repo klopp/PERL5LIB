@@ -20,7 +20,8 @@ use Things::Bool;
 use Things::Const qw/:types/;
 use Things::Trim;
 
-const our $LOG_EMERG  => 0;
+const our $LOG_FATAL  => 0;
+#const our $LOG_EMERG  => 0;
 const our $LOG_ALERT  => 1;
 const our $LOG_CRIT   => 2;
 const our $LOG_ERROR  => 3;
@@ -31,8 +32,9 @@ const our $LOG_DEBUG  => 7;
 const our $LOG_TRACE  => 8;
 
 const my %METHODS => (
-    'EMERGENCY' => $LOG_EMERG,
-    'EMERG'     => $LOG_EMERG,
+    'FATAL'     => $LOG_FATAL,
+#    'EMERGENCY' => $LOG_EMERG,
+#    'EMERG'     => $LOG_EMERG,
     'ALERT'     => $LOG_ALERT,
     'CRITICAL'  => $LOG_CRIT,
     'CRIT'      => $LOG_CRIT,
@@ -55,9 +57,9 @@ const my %FIELDS  => qw/tstamp 1 pid 1 level 1 exe 1 host 1 trace 1/;
 const my $FMT_DEF => '%Z %-6p %L %@';
 
 use parent qw/Exporter/;
-our @EXPORT = qw/$LOG_EMERG $LOG_ALERT $LOG_CRIT $LOG_ERROR $LOG_WARN $LOG_NOTICE $LOG_INFO $LOG_DEBUG $LOG_TRACE/;
+our @EXPORT = qw/$LOG_FATAL $LOG_EMERG $LOG_ALERT $LOG_CRIT $LOG_ERROR $LOG_WARN $LOG_NOTICE $LOG_INFO $LOG_DEBUG $LOG_TRACE/;
 
-our $VERSION = 'v2.10';
+our $VERSION = 'v2.11';
 
 # ------------------------------------------------------------------------------
 my @NB_LOGGERS;
