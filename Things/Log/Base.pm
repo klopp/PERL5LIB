@@ -21,7 +21,6 @@ use Things::Const qw/:types/;
 use Things::Trim;
 
 const our $LOG_FATAL  => 0;
-#const our $LOG_EMERG  => 0;
 const our $LOG_ALERT  => 1;
 const our $LOG_CRIT   => 2;
 const our $LOG_ERROR  => 3;
@@ -33,8 +32,6 @@ const our $LOG_TRACE  => 8;
 
 const my %METHODS => (
     'FATAL'     => $LOG_FATAL,
-#    'EMERGENCY' => $LOG_EMERG,
-#    'EMERG'     => $LOG_EMERG,
     'ALERT'     => $LOG_ALERT,
     'CRITICAL'  => $LOG_CRIT,
     'CRIT'      => $LOG_CRIT,
